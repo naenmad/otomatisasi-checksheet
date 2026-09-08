@@ -83,8 +83,8 @@ async def fill_checksheet_form(
     # 1. Part Category Type Selection
     part_no = meta["part_number"]
     print(f"[*] Checking Part Number: {part_no}...")
-    
-    part_selection_result = await page.evaluate("""(partNo) => {
+    # 1. Search in Regular Production Part first
+    part_selection_result = await page.evaluate(r"""(partNo) => {
         const cleanStr = (s) => (s || '').toUpperCase().replace(/[-\s_]/g, '');
         const targetClean = cleanStr(partNo);
 
@@ -210,20 +210,30 @@ async def fill_checksheet_form(
             
             const tr = tbody.children[index];
             if (tr) {
+                const setVal = (inp, val) => {
+                    if (inp) {
+                        inp.value = val;
+                        inp.dispatchEvent(new Event('input', { bubbles: true }));
+                        inp.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                };
+
                 const itemNoInp = tr.querySelector('input[name*="[item_no]"]');
-                if (itemNoInp) itemNoInp.value = item.item_no || (index + 1);
+                setVal(itemNoInp, item.item_no || (index + 1));
                 
                 const itemInp = tr.querySelector('input[name*="[inspection_item]"]');
-                if (itemInp) itemInp.value = item.inspection_item || '';
+                setVal(itemInp, item.inspection_item || '');
                 
                 const stdInp = tr.querySelector('input[name*="[standard]"]');
-                if (stdInp) stdInp.value = item.standard || '';
+                setVal(stdInp, item.standard || '');
                 
-                const methodInp = tr.querySelector('input[name*="[method]"], input[name*="[instrument_tools]"]');
-                if (methodInp) methodInp.value = item.method || '';
+                const methodInp = tr.querySelector('input[name*="[method]"], input[name*="[instrument_tools]"]') ||
+                                  (tr.cells && tr.cells[5] ? tr.cells[5].querySelector('input') : null);
+                setVal(methodInp, item.method || '');
                 
-                const masterInp = tr.querySelector('input[name*="[master_data]"]');
-                if (masterInp) masterInp.value = item.master_data || '';
+                const masterInp = tr.querySelector('input[name*="[master_data]"]') ||
+                                  (tr.cells && tr.cells[6] ? tr.cells[6].querySelector('input') : null);
+                setVal(masterInp, item.master_data || '');
             }
         });
         
