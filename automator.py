@@ -18,7 +18,7 @@ from typing import Optional, Dict, Any, List
 from playwright.async_api import async_playwright, Page, Browser
 from dotenv import load_dotenv
 
-from extractor import extract_metadata, extract_reference_images, extract_inspection_points
+from extractor import extract_metadata, extract_reference_images, extract_inspection_points, get_reference_images
 
 # Load configurations from .env
 load_dotenv()
@@ -58,7 +58,8 @@ async def fill_checksheet_form(
     page: Page,
     excel_path: str,
     submit: bool = False,
-    custom_doc_no: Optional[str] = None
+    custom_doc_no: Optional[str] = None,
+    manual_images_dir: Optional[str] = None
 ) -> Dict[str, Any]:
     """Extract data from Excel and fill checksheet master creation form."""
     print(f"\n[*] Processing Excel file: {excel_path}")
@@ -68,8 +69,8 @@ async def fill_checksheet_form(
 
     print(f"[+] Metadata: Part No = {meta['part_number']}, Doc No = {meta['doc_number']}, Name = {meta['part_name']}")
     
-    print("[*] Extracting reference images...")
-    images = extract_reference_images(excel_path)
+    print("[*] Checking reference images...")
+    images = get_reference_images(excel_path, manual_dir=manual_images_dir, part_number=meta['part_number'])
     print(f"[+] Found {len(images)} reference image(s).")
     
     print("[*] Extracting inspection points...")
@@ -257,7 +258,8 @@ async def run_automation(
     excel_path: str,
     headless: bool = False,
     submit: bool = False,
-    doc_number: Optional[str] = None
+    doc_number: Optional[str] = None,
+    manual_images_dir: Optional[str] = None
 ):
     """Main runner for checksheet automation."""
     async with async_playwright() as p:
@@ -275,7 +277,8 @@ async def run_automation(
                 page=page,
                 excel_path=excel_path,
                 submit=submit,
-                custom_doc_no=doc_number
+                custom_doc_no=doc_number,
+                manual_images_dir=manual_images_dir
             )
             
             if not headless and not submit:

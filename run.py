@@ -41,6 +41,12 @@ def main():
         default=None,
         help="Custom Doc Number (e.g. 'Form 6'). If not provided, extracted from file name."
     )
+    parser.add_argument(
+        "--images-dir",
+        type=str,
+        default=None,
+        help="Custom directory containing manual reference images (e.g. 'images/75511B040P/')"
+    )
 
     args = parser.parse_args()
 
@@ -56,6 +62,8 @@ def main():
     print(f" Action     : {'AUTO-SUBMIT' if args.submit else 'REVIEW & SAVE MANUAL'}")
     if args.doc_number:
         print(f" Doc Number : {args.doc_number}")
+    if args.images_dir:
+        print(f" Images Dir : {args.images_dir}")
     print("==================================================\n")
 
     headless = args.headless
@@ -64,7 +72,8 @@ def main():
             excel_path=args.excel,
             headless=headless,
             submit=args.submit,
-            doc_number=args.doc_number
+            doc_number=args.doc_number,
+            manual_images_dir=args.images_dir
         )
     )
 

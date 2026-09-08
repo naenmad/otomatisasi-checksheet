@@ -86,8 +86,14 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
         "filename": filename
     }
 
-def extract_reference_images(file_path: str, output_dir: str = "extracted_images") -> List[str]:
+def extract_reference_images(file_path: str, output_dir: Optional[str] = None, part_number: str = "") -> List[str]:
     """Extract part machine and layout images from sheets PAGE 4, PAGE 5, and EO."""
+    if not output_dir:
+        sub = part_number or os.path.splitext(os.path.basename(file_path))[0]
+        # Clean subfolder name
+        sub = re.sub(r'[^0-9A-Za-z_-]', '_', sub)
+        output_dir = os.path.join("extracted_images", sub)
+
     os.makedirs(output_dir, exist_ok=True)
     extracted_paths = []
     
@@ -144,6 +150,58 @@ def extract_reference_images(file_path: str, output_dir: str = "extracted_images
             extracted_paths.append(os.path.abspath(out_file))
 
     return extracted_paths
+
+def get_reference_images(
+    file_path: str,
+    manual_dir: Optional[str] = None,
+    part_number: Optional[str] = None
+) -> List[str]:
+    """
+    Get reference images with clear priority:
+    1. If manual_dir is specified and exists, load images from there.
+    2. If folder images/{part_number}/ exists and has images, load from there.
+    3. If folder images/ has images directly, load from there.
+    4. Otherwise, extract from Excel into extracted_images/{part_number}/.
+    """
+    image_exts = (".png", ".jpg", ".jpeg", ".webp")
+
+    # 1. Custom manual directory specified
+    if manual_dir and os.path.isdir(manual_dir):
+        files = [
+            os.path.abspath(os.path.join(manual_dir, f))
+            for f in sorted(os.listdir(manual_dir))
+            if f.lower().endswith(image_exts)
+        ]
+        if files:
+            print(f"[*] Menggunakan {len(files)} gambar dari folder manual: {manual_dir}")
+            return files
+
+    # 2. images/{part_number}/
+    if part_number:
+        part_dir = os.path.join("images", part_number)
+        if os.path.isdir(part_dir):
+            files = [
+                os.path.abspath(os.path.join(part_dir, f))
+                for f in sorted(os.listdir(part_dir))
+                if f.lower().endswith(image_exts)
+            ]
+            if files:
+                print(f"[*] Menggunakan {len(files)} gambar dari folder part: {part_dir}")
+                return files
+
+    # 3. images/ directly (if has files, not just subdirs)
+    if os.path.isdir("images"):
+        files = [
+            os.path.abspath(os.path.join("images", f))
+            for f in sorted(os.listdir("images"))
+            if f.lower().endswith(image_exts) and os.path.isfile(os.path.join("images", f))
+        ]
+        if files:
+            print(f"[*] Menggunakan {len(files)} gambar dari folder images/")
+            return files
+
+    # 4. Fallback: Extract from Excel
+    return extract_reference_images(file_path, part_number=part_number or "")
 
 def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
     """

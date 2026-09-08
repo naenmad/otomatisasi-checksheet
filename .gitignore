@@ -9,6 +9,7 @@ TODO.md
 
 # Media & Extracted files
 extracted_images/
+images/
 *.png
 *.jpg
 *.jpeg

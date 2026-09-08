@@ -99,6 +99,15 @@ Browser Chrome akan otomatis terbuka di layar, login ke FactoryHub, memilih part
   python run.py --excel "path/ke/file_checksheet_lain.xlsx"
   ```
 
+- **Menyertakan gambar manual (jika di Excel tidak ada gambar):**
+  Anda bisa menaruh gambar secara manual tanpa takut tertimpa:
+  1. **Otomatis per Part Number:** Buat folder `images/<part_number>/` (contoh: `images/75511B040P/`), skrip otomatis membaca gambar dari folder tersebut.
+  2. **Atau langsung di folder `images/`**.
+  3. **Atau tentukan folder bebas via opsi `--images-dir`:**
+     ```bash
+     python run.py --excel "Inspection_Standard_75511B040P.xlsx" --images-dir "path/ke/folder_gambar"
+     ```
+
 - **Menentukan Doc Number kustom:**
   ```bash
   python run.py --doc-number "Form 7"
