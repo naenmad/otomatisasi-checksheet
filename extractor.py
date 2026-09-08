@@ -19,16 +19,18 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
     filename = os.path.basename(file_path)
     
     # Extract Doc Number from filename prefix (e.g. '6. IR - ...' -> 'Form 6')
-    doc_number = "Form 6"
+    doc_number = "Form 1"
     doc_match = re.match(r"^(\d+)", filename)
     if doc_match:
         doc_number = f"Form {doc_match.group(1)}"
     
-    # Extract Part Number from filename (e.g. '51138E000P', '58336-BZ130', '11198-61J02-000')
+    # Extract Part Number from filename (e.g. '51138E000P', '75511B040P', '58336-BZ130')
     part_number = ""
-    part_match = re.search(r"(\b[0-9A-Z]+(?:-[0-9A-Z]+)+\b|\b[0-9A-Z]{8,15}\b)", filename, re.IGNORECASE)
-    if part_match:
-        part_number = part_match.group(1).upper()
+    tokens = re.split(r"[^0-9A-Za-z\-]+", filename)
+    for t in tokens:
+        if any(c.isdigit() for c in t) and len(t) >= 6 and not t.lower().startswith("form"):
+            part_number = t.upper()
+            break
         
     part_name = ""
     model = ""
@@ -177,81 +179,120 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
     for sheet_name, header_row in inspection_sheets:
         ws = wb[sheet_name]
         
-        # In Summit/MMKI Inspection Reports:
-        # Col 2: Balloon / Point No
-        # Col 3: Inspection Item Name
-        # Col 4: Pos Tag [TL], [BL]
-        # Col 5: Standard (Nominal)
-        # Col 6: Tolerance
-        col_item_no = 2
-        col_item_name = 3
-        col_pos = 4
-        col_std = 5
-        col_tol = 6
-
+        # Check header labels in header_row
+        headers_map = {}
         for c in range(1, min(ws.max_column + 1, 15)):
-            header_val = str(ws.cell(header_row, c).value or "").strip()
-            if "Standard" in header_val:
-                col_std = c
-                col_tol = c + 1
+            val = str(ws.cell(header_row, c).value or "").strip().lower()
+            if val:
+                headers_map[c] = val
 
-        r = header_row + 1
-        while r <= ws.max_row:
-            c2 = ws.cell(r, col_item_no).value  # Balloon No
-            c3 = ws.cell(r, col_item_name).value  # Item Name
-            c4 = ws.cell(r, col_pos).value  # Extra pos tag e.g. [ TL ], [ BL ]
-            c5 = ws.cell(r, col_std).value  # Standard
-            c6 = ws.cell(r, col_tol).value  # Tol upper
-            next_c4 = ws.cell(r+1, col_pos).value if r+1 <= ws.max_row else None
-            next_c5 = ws.cell(r+1, col_std).value if r+1 <= ws.max_row else None
-            next_c6 = ws.cell(r+1, col_tol).value if r+1 <= ws.max_row else None
+        # Detect format: Tabular "Inspection Standards" vs Multi-page IR
+        # In "Inspection Standards" format:
+        # Col 1: "No. / Item"
+        # Col 2: "Inspection Item"
+        # Col 3: "Standard"
+        # Col 4: "Inspection Method"
+        is_direct_table = any("no" in headers_map.get(1, "") or "item" in headers_map.get(1, "") for _ in [0]) and \
+                          any("inspection" in headers_map.get(2, "") for _ in [0]) and \
+                          any("standard" in headers_map.get(3, "") for _ in [0])
 
-            # Skip repeat headers or footnotes
-            if str(c2).strip() == "Inspection Item" or str(c5).strip() == "Standard":
+        if is_direct_table:
+            # Direct Tabular format (e.g. Inspection_Standard_*.xlsx)
+            r = header_row + 1
+            while r <= ws.max_row:
+                c1 = ws.cell(r, 1).value
+                c2 = ws.cell(r, 2).value
+                c3 = ws.cell(r, 3).value
+                c4 = ws.cell(r, 4).value
+
+                if c1 is not None and str(c1).strip():
+                    m = re.search(r"\d+", str(c1))
+                    current_balloon = m.group(0) if m else str(c1).strip()
+
+                if c2 is not None and str(c2).strip():
+                    item_name = str(c2).strip()
+                    std = str(c3).strip() if c3 is not None else ""
+                    std = re.sub(r"\s+", " ", std)
+                    
+                    items.append({
+                        "item_no": current_balloon,
+                        "inspection_item": item_name,
+                        "standard": std,
+                        "method": "",
+                        "master_data": ""
+                    })
                 r += 1
-                continue
+        else:
+            # Multi-page Summit/MMKI IR report format
+            col_item_no = 2
+            col_item_name = 3
+            col_pos = 4
+            col_std = 5
+            col_tol = 6
 
-            if c2 is not None and str(c2).strip():
-                current_balloon = str(c2).strip()
+            for c in range(1, min(ws.max_column + 1, 15)):
+                header_val = str(ws.cell(header_row, c).value or "").strip()
+                if "Standard" in header_val:
+                    col_std = c
+                    col_tol = c + 1
 
-            if c3 is not None and str(c3).strip():
-                item_name = str(c3).strip()
-                
-                # Check position tag
-                pos = ""
-                if c4 is not None and str(c4).strip():
-                    pos = str(c4).strip()
-                elif next_c4 is not None and "[" in str(next_c4):
-                    pos = str(next_c4).strip()
-                
-                # Format item name (e.g. 'DATUM HOLE [TL]')
-                full_name = f"{item_name} {pos}".strip()
-                full_name = re.sub(r"\[\s+", "[", full_name)
-                full_name = re.sub(r"\s+\]", "]", full_name)
+            r = header_row + 1
+            while r <= ws.max_row:
+                c2 = ws.cell(r, col_item_no).value  # Balloon No
+                c3 = ws.cell(r, col_item_name).value  # Item Name
+                c4 = ws.cell(r, col_pos).value  # Extra pos tag e.g. [ TL ], [ BL ]
+                c5 = ws.cell(r, col_std).value  # Standard
+                c6 = ws.cell(r, col_tol).value  # Tol upper
+                next_c4 = ws.cell(r+1, col_pos).value if r+1 <= ws.max_row else None
+                next_c5 = ws.cell(r+1, col_std).value if r+1 <= ws.max_row else None
+                next_c6 = ws.cell(r+1, col_tol).value if r+1 <= ws.max_row else None
 
-                # Format standard (e.g. 'Ø 12 + 0.2 / 0')
-                std = str(c5).strip() if c5 is not None else ""
-                if next_c5 is not None and str(next_c5).strip() in ["OK / NG"]:
-                    std = f"{std} {str(next_c5).strip()}".strip()
+                # Skip repeat headers or footnotes
+                if str(c2).strip() == "Inspection Item" or str(c5).strip() == "Standard":
+                    r += 1
+                    continue
 
-                tol = ""
-                if c6 is not None:
-                    tol = str(c6).strip()
-                    if next_c6 is not None and str(next_c6).strip().startswith(("-", "0", "+")):
-                        tol = f"{tol} / {str(next_c6).strip()}"
+                if c2 is not None and str(c2).strip():
+                    current_balloon = str(c2).strip()
 
-                full_std = f"{std} {tol}".strip()
-                full_std = re.sub(r"\s+", " ", full_std)
+                if c3 is not None and str(c3).strip():
+                    item_name = str(c3).strip()
+                    
+                    # Check position tag
+                    pos = ""
+                    if c4 is not None and str(c4).strip():
+                        pos = str(c4).strip()
+                    elif next_c4 is not None and "[" in str(next_c4):
+                        pos = str(next_c4).strip()
+                    
+                    # Format item name (e.g. 'DATUM HOLE [TL]')
+                    full_name = f"{item_name} {pos}".strip()
+                    full_name = re.sub(r"\[\s+", "[", full_name)
+                    full_name = re.sub(r"\s+\]", "]", full_name)
 
-                items.append({
-                    "item_no": current_balloon,
-                    "inspection_item": full_name,
-                    "standard": full_std,
-                    "method": "",
-                    "master_data": ""
-                })
-                
-            r += 1
+                    # Format standard (e.g. 'Ø 12 + 0.2 / 0')
+                    std = str(c5).strip() if c5 is not None else ""
+                    if next_c5 is not None and str(next_c5).strip() in ["OK / NG"]:
+                        std = f"{std} {str(next_c5).strip()}".strip()
+
+                    tol = ""
+                    if c6 is not None:
+                        tol = str(c6).strip()
+                        if next_c6 is not None and str(next_c6).strip().startswith(("-", "0", "+")):
+                            tol = f"{tol} / {str(next_c6).strip()}"
+
+                    full_std = f"{std} {tol}".strip()
+                    full_std = re.sub(r"\s+", " ", full_std)
+
+                    items.append({
+                        "item_no": current_balloon,
+                        "inspection_item": full_name,
+                        "standard": full_std,
+                        "method": "",
+                        "master_data": ""
+                    })
+                    
+                r += 1
 
     return items
 
