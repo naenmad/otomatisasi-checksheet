@@ -1,0 +1,33 @@
+# Environment Variables & Secrets
+.env
+TODO.md
+
+# Excel files & Data
+*.xlsx
+*.xls
+*.csv
+
+# Media & Extracted files
+extracted_images/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.html
+
+# Python & Environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# OS Specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
