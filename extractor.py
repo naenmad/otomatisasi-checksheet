@@ -262,6 +262,7 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
                 c2 = ws.cell(r, 2).value
                 c3 = ws.cell(r, 3).value
                 c4 = ws.cell(r, 4).value
+                c5 = ws.cell(r, 5).value
 
                 if c1 is not None and str(c1).strip():
                     m = re.search(r"\d+", str(c1))
@@ -271,13 +272,15 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
                     item_name = str(c2).strip()
                     std = str(c3).strip() if c3 is not None else ""
                     std = re.sub(r"\s+", " ", std)
+                    method = str(c4).strip() if c4 is not None else ""
+                    master = str(c5).strip() if c5 is not None else ""
                     
                     items.append({
                         "item_no": current_balloon,
                         "inspection_item": item_name,
                         "standard": std,
-                        "method": "",
-                        "master_data": ""
+                        "method": method,
+                        "master_data": master
                     })
                 r += 1
         else:
