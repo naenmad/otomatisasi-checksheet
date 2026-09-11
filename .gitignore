@@ -1,29 +1,46 @@
 # Environment Variables & Secrets
 .env
+.env.local
+.env.*.local
 TODO.md
 
-# Excel files & Data
+# Excel files & Working Data
 *.xlsx
 *.xls
 *.csv
+~$*.xlsx
+~$*.xls
 
-# Media & Extracted files
+# Checksheet Documents (Keep folder structure, ignore contents)
+documents/*
+!documents/.gitkeep
+
+# User Working Notes, Part Lists & Search Reports (Ignore all .txt except templates)
+*.txt
+!requirements.txt
+!parts.txt.example
+search_results.csv
+
+# Media & Temporary Browser Artifacts
 extracted_images/
 images/
 *.png
 *.jpg
 *.jpeg
+*.JPG
+*.JPEG
 *.gif
+*.webp
 *.html
 
-# Python & Environment
+# Python & Virtual Environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 .venv/
 venv/
 env/
+ENV/
 
 # OS Specific
 .DS_Store

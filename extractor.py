@@ -11,8 +11,11 @@ import os
 import re
 import zipfile
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Any
+import warnings
+from typing import Dict, List, Any, Optional
 import openpyxl
+
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 def extract_metadata(file_path: str) -> Dict[str, str]:
     """Extract metadata from file name and cover sheet."""
@@ -151,57 +154,207 @@ def extract_reference_images(file_path: str, output_dir: Optional[str] = None, p
 
     return extracted_paths
 
-def get_reference_images(
-    file_path: str,
-    manual_dir: Optional[str] = None,
-    part_number: Optional[str] = None
-) -> List[str]:
+def list_available_parts(documents_dir: str = "documents") -> List[Dict[str, Any]]:
     """
-    Get reference images with clear priority:
-    1. If manual_dir is specified and exists, load images from there.
-    2. If folder images/{part_number}/ exists and has images, load from there.
-    3. If folder images/ has images directly, load from there.
-    4. Otherwise, extract from Excel into extracted_images/{part_number}/.
+    List all available part folders inside documents_dir.
+    """
+    if not os.path.isdir(documents_dir):
+        return []
+
+    parts = []
+    image_exts = (".png", ".jpg", ".jpeg", ".webp")
+    for entry in sorted(os.listdir(documents_dir)):
+        folder_path = os.path.join(documents_dir, entry)
+        if not os.path.isdir(folder_path):
+            continue
+
+        # Find Excel files
+        excel_files = [
+            f for f in os.listdir(folder_path)
+            if f.lower().endswith((".xlsx", ".xls")) and not f.startswith("~$")
+        ]
+        if not excel_files:
+            continue
+
+        main_excel = excel_files[0]
+        excel_path = os.path.join(folder_path, main_excel)
+
+        # Count images in folder and subfolders (like images/)
+        images = [
+            os.path.join(folder_path, f)
+            for f in os.listdir(folder_path)
+            if f.lower().endswith(image_exts)
+        ]
+        img_sub = os.path.join(folder_path, "images")
+        if os.path.isdir(img_sub):
+            images.extend([
+                os.path.join(img_sub, f)
+                for f in os.listdir(img_sub)
+                if f.lower().endswith(image_exts)
+            ])
+
+        # Extract metadata
+        meta = extract_metadata(excel_path)
+        part_no = meta.get("part_number") or entry.upper()
+
+        parts.append({
+            "folder_name": entry,
+            "folder_path": folder_path,
+            "part_number": part_no,
+            "part_name": meta.get("part_name", ""),
+            "doc_number": meta.get("doc_number", "Form 1"),
+            "excel_file": main_excel,
+            "excel_path": excel_path,
+            "image_count": len(images),
+            "is_scan_data": len(images) > 0
+        })
+
+    return parts
+
+def resolve_part_document(
+    part_or_path: str,
+    scan_images: Optional[bool] = None,
+    documents_dir: str = "documents",
+    manual_images_dir: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Resolves part directory, excel file, and reference images based on part number or path.
+
+    Args:
+        part_or_path: Part number (e.g. '75511b040p'), folder name, or direct path to an Excel file.
+        scan_images:
+            - True: force extract embedded images from the Excel file (excel mentah)
+            - False: do not scan excel; use images found in the part folder (hasil scan data)
+            - None: auto-detect (if local images found in folder -> False, else True)
+        documents_dir: Root directory for part documents (default: 'documents')
+        manual_images_dir: Optional custom folder containing images
     """
     image_exts = (".png", ".jpg", ".jpeg", ".webp")
 
-    # 1. Custom manual directory specified
-    if manual_dir and os.path.isdir(manual_dir):
-        files = [
-            os.path.abspath(os.path.join(manual_dir, f))
-            for f in sorted(os.listdir(manual_dir))
+    # Case 1: Direct excel file passed
+    if os.path.isfile(part_or_path):
+        excel_path = os.path.abspath(part_or_path)
+        folder_path = os.path.dirname(excel_path)
+        meta = extract_metadata(excel_path)
+        part_no = meta.get("part_number") or os.path.splitext(os.path.basename(excel_path))[0]
+    else:
+        # Case 2: Match folder in documents_dir or direct path
+        target = part_or_path.strip().strip("/").strip("\\")
+        folder_path = None
+
+        # Check direct folder path first
+        if os.path.isdir(target):
+            folder_path = os.path.abspath(target)
+        elif os.path.isdir(os.path.join(documents_dir, target)):
+            folder_path = os.path.abspath(os.path.join(documents_dir, target))
+        else:
+            # Fuzzy / case-insensitive search in documents_dir
+            if os.path.isdir(documents_dir):
+                target_clean = re.sub(r"[^0-9A-Za-z]", "", target).lower()
+                for entry in sorted(os.listdir(documents_dir)):
+                    subpath = os.path.join(documents_dir, entry)
+                    if os.path.isdir(subpath):
+                        entry_clean = re.sub(r"[^0-9A-Za-z]", "", entry).lower()
+                        if target_clean == entry_clean or target_clean in entry_clean:
+                            folder_path = os.path.abspath(subpath)
+                            break
+                        # Also check excel files inside entry
+                        for f in os.listdir(subpath):
+                            if f.lower().endswith((".xlsx", ".xls")) and not f.startswith("~$"):
+                                f_clean = re.sub(r"[^0-9A-Za-z]", "", f).lower()
+                                if target_clean in f_clean:
+                                    folder_path = os.path.abspath(subpath)
+                                    break
+                    if folder_path:
+                        break
+
+        if not folder_path or not os.path.isdir(folder_path):
+            available = [p["folder_name"] for p in list_available_parts(documents_dir)]
+            avail_str = ", ".join(available) if available else "(folder documents/ kosong)"
+            raise FileNotFoundError(
+                f"Folder part '{part_or_path}' tidak ditemukan di '{documents_dir}/'. "
+                f"Part yang tersedia: {avail_str}"
+            )
+
+        # Locate Excel in folder
+        excel_candidates = [
+            os.path.join(folder_path, f)
+            for f in sorted(os.listdir(folder_path))
+            if f.lower().endswith((".xlsx", ".xls")) and not f.startswith("~$")
+        ]
+        if not excel_candidates:
+            raise FileNotFoundError(f"Tidak ada file Excel (.xlsx / .xls) di dalam folder: {folder_path}")
+
+        excel_path = excel_candidates[0]
+        meta = extract_metadata(excel_path)
+        part_no = meta.get("part_number") or os.path.basename(folder_path).upper()
+
+    # Find local images
+    local_images = []
+    if manual_images_dir and os.path.isdir(manual_images_dir):
+        local_images = [
+            os.path.abspath(os.path.join(manual_images_dir, f))
+            for f in sorted(os.listdir(manual_images_dir))
             if f.lower().endswith(image_exts)
         ]
-        if files:
-            print(f"[*] Menggunakan {len(files)} gambar dari folder manual: {manual_dir}")
-            return files
-
-    # 2. images/{part_number}/
-    if part_number:
-        part_dir = os.path.join("images", part_number)
-        if os.path.isdir(part_dir):
-            files = [
-                os.path.abspath(os.path.join(part_dir, f))
-                for f in sorted(os.listdir(part_dir))
-                if f.lower().endswith(image_exts)
-            ]
-            if files:
-                print(f"[*] Menggunakan {len(files)} gambar dari folder part: {part_dir}")
-                return files
-
-    # 3. images/ directly (if has files, not just subdirs)
-    if os.path.isdir("images"):
-        files = [
-            os.path.abspath(os.path.join("images", f))
-            for f in sorted(os.listdir("images"))
-            if f.lower().endswith(image_exts) and os.path.isfile(os.path.join("images", f))
+    else:
+        local_images = [
+            os.path.abspath(os.path.join(folder_path, f))
+            for f in sorted(os.listdir(folder_path))
+            if f.lower().endswith(image_exts)
         ]
-        if files:
-            print(f"[*] Menggunakan {len(files)} gambar dari folder images/")
-            return files
+        img_sub = os.path.join(folder_path, "images")
+        if os.path.isdir(img_sub):
+            local_images.extend([
+                os.path.abspath(os.path.join(img_sub, f))
+                for f in sorted(os.listdir(img_sub))
+                if f.lower().endswith(image_exts)
+            ])
 
-    # 4. Fallback: Extract from Excel
-    return extract_reference_images(file_path, part_number=part_number or "")
+    # Determine scan_images strategy
+    if scan_images is True:
+        print(f"[*] Mode: Scan Image dari Excel (Paksa) - Part: {part_no}")
+        images = extract_reference_images(excel_path, part_number=part_no)
+    elif scan_images is False:
+        print(f"[*] Mode: Tanpa Scan Excel (Hasil Scan Data) - Part: {part_no}")
+        print(f"[*] Mengambil {len(local_images)} gambar referensi dari folder: {folder_path}")
+        images = local_images
+    else:
+        # Auto-detect
+        if len(local_images) > 0:
+            print(f"[*] Deteksi Otomatis: Ditemukan {len(local_images)} gambar di folder '{os.path.basename(folder_path)}'.")
+            print(f"[*] Menggunakan file gambar folder (tanpa scan Excel).")
+            images = local_images
+            scan_images = False
+        else:
+            print(f"[*] Deteksi Otomatis: Tidak ada gambar di folder '{os.path.basename(folder_path)}'.")
+            print(f"[*] Mengekstrak gambar tersemat dari file Excel...")
+            images = extract_reference_images(excel_path, part_number=part_no)
+            scan_images = True
+
+    return {
+        "part_number": part_no,
+        "folder_path": folder_path,
+        "excel_path": excel_path,
+        "images": images,
+        "scan_images": scan_images,
+        "local_images": local_images,
+        "metadata": meta
+    }
+
+def get_reference_images(
+    file_path: str,
+    manual_dir: Optional[str] = None,
+    part_number: Optional[str] = None,
+    scan_images: Optional[bool] = None
+) -> List[str]:
+    """Compatibility wrapper around resolve_part_document."""
+    resolved = resolve_part_document(
+        part_or_path=part_number or file_path,
+        scan_images=scan_images,
+        manual_images_dir=manual_dir
+    )
+    return resolved["images"]
 
 def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
     """

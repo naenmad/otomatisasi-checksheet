@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Jalankan Otomatisasi Checksheet FactoryHub dalam Mode Visible (Jendela Browser Terbuka)
-cd "$(dirname "$0")"
-
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
-fi
-
-python run.py "$@"
+# Jalankan Otomatisasi Checksheet FactoryHub (Forward ke run.sh)
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec "$DIR/run.sh" "$@"

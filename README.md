@@ -6,20 +6,21 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
 
 ## Fitur Utama
 
-- **Ekstraksi Data Excel Otomatis**:
-  - Membaca metadata Part Number, Part Name, Model, dan Doc Number dari awalan nama file (contoh: `6. IR ...` $\rightarrow$ `Form 6`).
-  - Deteksi sheet dinamis: otomatis mendeteksi sheet mana pun yang memuat tabel inspeksi (*Inspection Item* & *Standard*).
-  - Mengekstrak semua gambar referensi mesin/part layout yang tersemat di lembar Excel.
-  - Mengekstrak seluruh baris inspection points dengan nomor titik (balloon number), standar nominal, dan toleransi.
-- **Pencocokan Part Otomatis**:
+- **Struktur Dokumen Terorganisir (`documents/<part_number>/`)**:
+  - File Excel dan gambar referensi dikelompokkan rapi per part number di dalam folder masing-masing.
+- **Deteksi Form Fleksibel (Hasil Scan Data vs Excel Mentah)**:
+  - **Hasil Scan Data (Hanya Teks)**: Jika checksheet berasal dari data ketikan/scan standar tanpa gambar tersemat di Excel, skrip otomatis mengambil gambar fisik dari folder part tanpa membongkar file Excel.
+  - **Excel Mentah (Embedded Drawing)**: Jika file Excel memiliki gambar layout/mesin tersemat (seperti file IR asli), skrip mengekstrak gambar langsung dari sheet lembar kerja Excel (PAGE 4, PAGE 5, EO).
+  - Mode ini dapat dideteksi secara otomatis atau ditentukan secara manual via argumen `yes`/`no`.
+- **Pencocokan Part Otomatis di Portal**:
   - Memeriksa ketersediaan part di **Regular Production Part**.
   - Jika belum terdaftar, otomatis beralih ke **New Project Part** dan mencocokkan part number.
 - **Mode Review Visual (Headed Mode)**:
-  - Secara default membuka jendela browser Chrome di layar Anda.
-  - Mengisi seluruh field, gambar, dan tabel inspeksi di depan Anda.
+  - Membuka jendela browser Chrome di layar Anda.
+  - Mengisi seluruh field, gambar, dan tabel inspeksi secara otomatis.
   - Jendela browser tetap terbuka agar Anda bisa memeriksa dan menekan tombol **"Save Template"** sendiri.
-- **Keamanan Kredensial**:
-  - Menggunakan file `.env` untuk NIK, password, dan URL FactoryHub sehingga tidak ada data sensitif yang bocor ke repository publik.
+- **Perintah Eksekusi Cepat (`run.sh`)**:
+  - Cukup jalankan `./run.sh <part_number>` atau `./run.sh` untuk memilih part secara interaktif.
 
 ---
 
@@ -27,14 +28,21 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
 
 ```text
 .
-├── extractor.py        # Modul pembaca dan parser data dari file Excel
-├── automator.py        # Modul otomatisasi browser (Playwright) ke FactoryHub
-├── run.py              # CLI Runner utama
-├── jalankan.sh         # Script shortcut eksekusi cepat
-├── requirements.txt    # Daftar dependensi Python
-├── .env.example        # Template konfigurasi environment
-├── .gitignore          # Konfigurasi file yang diabaikan Git (termasuk .env & file Excel)
-└── README.md           # Dokumentasi proyek
+├── documents/                              # Direktori utama semua checksheet
+│   ├── 75511b040p/                         # Folder part number (case-insensitive)
+│   │   ├── Inspection_Standard_...xlsx     # File Excel data
+│   │   └── IMG_6329.JPG, ...               # File gambar foto/layout part
+│   └── 51138e000p/
+│       └── 6. IR - 51138E000P...xlsx       # File Excel mentah dengan gambar tersemat
+├── extractor.py                            # Modul parser data & gambar Excel
+├── automator.py                            # Modul otomatisasi browser Playwright
+├── run.py                                  # CLI runner utama Python
+├── run.sh                                  # Script shortcut eksekusi cepat (Bash)
+├── jalankan.sh                             # Alias untuk run.sh
+├── requirements.txt                        # Dependensi Python
+├── .env.example                            # Template konfigurasi environment
+├── .gitignore                              # Konfigurasi keamanan Git
+└── README.md                               # Dokumentasi proyek
 ```
 
 ---
@@ -77,51 +85,142 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
    FACTORYHUB_BASE_URL=https://factoryhub.summitadyawinsa.co.id
    FACTORYHUB_NIK=your_employee_id
    FACTORYHUB_PASSWORD=your_password
-   DEFAULT_EXCEL_FILE=6. IR - 51138E000P_BRKT ASSY-RR TOWING HOOK #Rev New EO.xlsx
    ```
 
 ---
 
 ## Cara Penggunaan
 
-### 1. Eksekusi Cepat (Rekomendasi)
-Cukup jalankan script shortcut:
+### 1. Menjalankan Part Tertentu
+
+Format perintah:
 ```bash
-./jalankan.sh
+./run.sh <part_number> [scan_image: yes/no]
 ```
 
-Browser Chrome akan otomatis terbuka di layar, login ke FactoryHub, memilih part, mengunggah gambar referensi, dan mengisi seluruh titik inspeksi. Jendela browser akan tetap terbuka sehingga Anda bisa mereview hasilnya dan klik tombol **"Save Template"** sendiri.
+#### Contoh A: Hasil Scan Data (Hanya data di Excel, gambar dari folder)
+```bash
+# Otomatis mendeteksi gambar lokal di folder 75511b040p/:
+./run.sh 75511b040p
 
-### 2. Opsi Perintah Lanjutan (CLI)
+# Atau tegaskan tanpa scan Excel (no/tidak):
+./run.sh 75511b040p no
+```
 
-- **Menjalankan file Excel lain:**
+#### Contoh B: Excel Mentah (Gambar diekstrak dari dalam Excel)
+```bash
+# Otomatis mengekstrak gambar tersemat karena folder tidak memuat gambar lokal:
+./run.sh 51138e000p
+
+# Atau paksa ekstrak dari sheet Excel (yes/ya):
+./run.sh 51138e000p yes
+```
+
+---
+
+### 2. Memilih Part Secara Interaktif
+
+Jika Anda menjalankan `./run.sh` tanpa parameter, sistem akan menampilkan daftar part yang ada di folder `documents/`:
+```bash
+./run.sh
+```
+Contoh tampilan:
+```text
+==================================================
+   FactoryHub Checksheet Master Automation
+==================================================
+Tersedia dokumen part di folder documents/:
+  [1] 51138e000p (Part No: 51138E000P) -> Excel Mentah (scan dari excel)
+  [2] 75511b040p (Part No: 75511B040P) -> Hasil Scan Data (4 gambar)
+==================================================
+Pilih nomor [1-2] atau ketik part number [1]:
+```
+
+---
+
+### 3. Uji Coba Tanpa Buka Browser (Dry Run)
+
+Gunakan flag `--dry-run` untuk memverifikasi apakah pembacaan tabel dan gambar sudah benar tanpa login atau membuka browser:
+```bash
+./run.sh 75511b040p --dry-run
+./run.sh 51138e000p --dry-run
+```
+
+---
+
+### 4. Opsi Lanjutan
+
+- **Melihat daftar part di folder `documents/`:**
   ```bash
-  python run.py --excel "path/ke/file_checksheet_lain.xlsx"
+  ./run.sh --list
   ```
 
-- **Menyertakan gambar manual (jika di Excel tidak ada gambar):**
-  Anda bisa menaruh gambar secara manual tanpa takut tertimpa:
-  1. **Otomatis per Part Number:** Buat folder `images/<part_number>/` (contoh: `images/75511B040P/`), skrip otomatis membaca gambar dari folder tersebut.
-  2. **Atau langsung di folder `images/`**.
-  3. **Atau tentukan folder bebas via opsi `--images-dir`:**
-     ```bash
-     python run.py --excel "Inspection_Standard_75511B040P.xlsx" --images-dir "path/ke/folder_gambar"
-     ```
+- **Menjalankan di latar belakang tanpa jendela (Headless):**
+  ```bash
+  ./run.sh 75511b040p --headless
+  ```
+
+- **Langsung klik "Save Template" otomatis:**
+  ```bash
+  ./run.sh 75511b040p --submit
+  ```
 
 - **Menentukan Doc Number kustom:**
   ```bash
-  python run.py --doc-number "Form 7"
+  ./run.sh 75511b040p --doc-number "Form 7"
   ```
 
-- **Menjalankan di latar belakang tanpa membuka jendela (Headless):**
+- **Menggunakan path Excel langsung:**
   ```bash
-  python run.py --headless
+  ./run.sh --excel "path/ke/file_lain.xlsx"
   ```
 
-- **Langsung submit / save template secara otomatis tanpa jeda review:**
-  ```bash
-  python run.py --submit
-  ```
+---
+
+## Pengecekan Cepat Part Number (`./search.sh`)
+
+Gunakan script ini untuk memeriksa secara massal apakah part-part yang ingin Anda proses sudah terdaftar di portal FactoryHub (**Regular Production Part** maupun **New Project Part**):
+
+### 1. Menggunakan File `parts.txt` (Paling Praktis)
+Tuliskan daftar kode part di file `parts.txt` (satu baris satu part):
+```text
+62130-3K6-K001-H1
+65750-T86A-K002-H1
+75511B040P
+51138E000P
+```
+Lalu cukup jalankan:
+```bash
+./search.sh
+```
+
+### 2. Cek Part Langsung Lewat Argumen
+```bash
+./search.sh 65750-T86A-K002-H1
+# Atau banyak part sekaligus:
+./search.sh 62130-3K6-K001-H1 65750-T86A-K002-H1 75511B040P
+```
+
+### 3. Cek Semua Part yang Ada di Folder `documents/`
+```bash
+./search.sh --documents
+```
+
+> **Catatan**: Script ini hanya membuka halaman FactoryHub sekali di background (headless) dan mengecek seluruh part dalam beberapa detik saja. Hasilnya langsung dicetak dalam bentuk tabel dan diekspor ke `search_results.txt` serta `search_results.csv`.
+
+
+---
+
+## Menambahkan Dokumen Part Baru
+
+Cukup buat folder baru di dalam `documents/` dengan nama part number:
+1. Buat folder `documents/<part_number>/` (contoh: `documents/58336-bz130/`).
+2. Masukkan file Excel checksheet (`.xlsx`).
+3. Jika form hasil scan (tidak ada gambar di Excel), letakkan file foto/gambar part (`.jpg`/`.png`) di folder tersebut.
+4. Jalankan:
+   ```bash
+   ./run.sh 58336-bz130
+   ```
 
 ---
 
@@ -130,7 +229,7 @@ Browser Chrome akan otomatis terbuka di layar, login ke FactoryHub, memilih part
 Repository ini secara ketat mengabaikan file rahasia melalui `.gitignore`:
 - File kredensial `.env`
 - Seluruh file Excel (`*.xlsx`, `*.xls`)
-- Gambar dan tangkapan layar sementara (`extracted_images/`, `*.png`)
+- Seluruh file gambar (`*.jpg`, `*.png`, `extracted_images/`)
 - Virtual environment (`.venv/`)
 
 ---
