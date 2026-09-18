@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 TODO.md
+.doc_cache.json
 
 # Excel files & Working Data
 *.xlsx
@@ -14,6 +15,19 @@ TODO.md
 # Checksheet Documents (Keep folder structure, ignore contents)
 documents/*
 !documents/.gitkeep
+!documents/belum/
+!documents/done/
+!documents/tidak_ada_part/
+documents/belum/*
+documents/done/*
+documents/tidak_ada_part/*
+!documents/belum/.gitkeep
+!documents/done/.gitkeep
+!documents/tidak_ada_part/.gitkeep
+
+# Centralized Logs
+logs/*
+!logs/.gitkeep
 
 # User Working Notes, Part Lists & Search Reports (Ignore all .txt except templates)
 *.txt
@@ -32,6 +46,7 @@ images/
 *.gif
 *.webp
 *.html
+!static/*.html
 
 # Python & Virtual Environments
 __pycache__/

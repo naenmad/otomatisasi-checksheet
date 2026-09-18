@@ -6,21 +6,20 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
 
 ## Fitur Utama
 
-- **Struktur Dokumen Terorganisir (`documents/<part_number>/`)**:
-  - File Excel dan gambar referensi dikelompokkan rapi per part number di dalam folder masing-masing.
-- **Deteksi Form Fleksibel (Hasil Scan Data vs Excel Mentah)**:
-  - **Hasil Scan Data (Hanya Teks)**: Jika checksheet berasal dari data ketikan/scan standar tanpa gambar tersemat di Excel, skrip otomatis mengambil gambar fisik dari folder part tanpa membongkar file Excel.
-  - **Excel Mentah (Embedded Drawing)**: Jika file Excel memiliki gambar layout/mesin tersemat (seperti file IR asli), skrip mengekstrak gambar langsung dari sheet lembar kerja Excel (PAGE 4, PAGE 5, EO).
-  - Mode ini dapat dideteksi secara otomatis atau ditentukan secara manual via argumen `yes`/`no`.
-- **Pencocokan Part Otomatis di Portal**:
-  - Memeriksa ketersediaan part di **Regular Production Part**.
-  - Jika belum terdaftar, otomatis beralih ke **New Project Part** dan mencocokkan part number.
+- **Web Dashboard GUI Studio (`./gui.sh`)**:
+  - Tampilan web interaktif berbasis FastAPI dan modern UI untuk memantau status dokumen (`belum` vs `done`), menjalankan otomasi, membandingkan diff template, dan mencari batch part number.
+- **Partisi Dokumen Terorganisir (`documents/belum/` & `documents/done/`)**:
+  - Memisahkan dokumen yang belum dikerjakan dengan yang sudah selesai.
+- **Dukungan File PDF (`.pdf`) & Excel (`.xlsx`, `.xls`)**:
+  - Membaca metadata, gambar tersemat, dan tabel titik inspeksi langsung dari dokumen PDF maupun Excel.
+- **Perbandingan Template (Diff Viewer)**:
+  - Otomatis membandingkan template yang sudah ada di database dengan dokumen baru pada mode EDIT (menampilkan titik ditambah, diubah, dan dihapus).
+- **Pencatatan Log Terpusat (`logs/history.xlsx` 2 Sheets)**:
+  - Mencatat seluruh riwayat eksekusi dan pencarian part ke dalam Excel (`logs/history.xlsx`), JSON, dan teks log.
+- **Pencarian Cepat Batch Part (`./search.sh`)**:
+  - Mendukung input satu atau banyak nomor part dipisahkan koma.
 - **Mode Review Visual (Headed Mode)**:
-  - Membuka jendela browser Chrome di layar Anda.
-  - Mengisi seluruh field, gambar, dan tabel inspeksi secara otomatis.
-  - Jendela browser tetap terbuka agar Anda bisa memeriksa dan menekan tombol **"Save Template"** sendiri.
-- **Perintah Eksekusi Cepat (`run.sh`)**:
-  - Cukup jalankan `./run.sh <part_number>` atau `./run.sh` untuk memilih part secara interaktif.
+  - Mengisi seluruh field, gambar, dan tabel inspeksi secara otomatis dengan browser terbuka untuk verifikasi manual sebelum simpan.
 
 ---
 
@@ -28,17 +27,23 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
 
 ```text
 .
-├── documents/                              # Direktori utama semua checksheet
-│   ├── 75511b040p/                         # Folder part number (case-insensitive)
-│   │   ├── Inspection_Standard_...xlsx     # File Excel data
-│   │   └── IMG_6329.JPG, ...               # File gambar foto/layout part
-│   └── 51138e000p/
-│       └── 6. IR - 51138E000P...xlsx       # File Excel mentah dengan gambar tersemat
-├── extractor.py                            # Modul parser data & gambar Excel
-├── automator.py                            # Modul otomatisasi browser Playwright
-├── run.py                                  # CLI runner utama Python
-├── run.sh                                  # Script shortcut eksekusi cepat (Bash)
-├── jalankan.sh                             # Alias untuk run.sh
+├── documents/                              # Direktori utama dokumen checksheet
+│   ├── belum/                              # Dokumen part yang belum selesai (10 part)
+│   └── done/                               # Dokumen part yang sudah selesai
+├── static/                                 # Antarmuka Web Dashboard GUI (HTML/CSS/JS)
+├── logs/                                   # Folder log terpusat
+│   ├── history.xlsx                        # Excel 2 Sheets: Execution & Search History
+│   ├── execution_history.json              # Data log terstruktur JSON
+│   └── activity.log                        # Log teks berurutan
+├── gui.sh                                  # Script launcher Web Dashboard GUI
+├── run.sh                                  # Script eksekusi otomasi checksheet (Bash)
+├── search.sh                               # Script batch checker part number (Bash)
+├── web_app.py                              # Backend server FastAPI untuk Web Dashboard
+├── extractor.py                            # Modul ekstraksi data & gambar (Excel & PDF)
+├── automator.py                            # Modul otomatisasi Playwright & Diff Engine
+├── logger.py                               # Modul pencatatan log Excel & JSON
+├── run.py                                  # CLI runner otomasi checksheet
+├── search.py                               # CLI runner pencarian batch part
 ├── requirements.txt                        # Dependensi Python
 ├── .env.example                            # Template konfigurasi environment
 ├── .gitignore                              # Konfigurasi keamanan Git
@@ -208,6 +213,44 @@ Lalu cukup jalankan:
 
 > **Catatan**: Script ini hanya membuka halaman FactoryHub sekali di background (headless) dan mengecek seluruh part dalam beberapa detik saja. Hasilnya langsung dicetak dalam bentuk tabel dan diekspor ke `search_results.txt` serta `search_results.csv`.
 
+
+---
+
+## Optimasi & Kompresi Gambar ke WebP (`./compress_images.sh` & Web GUI)
+
+Untuk menghemat ruang disk dan mempercepat proses upload gambar ke portal FactoryHub (mencegah lag / timeout saat upload foto kamera ponsel beresolusi tinggi), sistem menyediakan **WebP Image Optimizer**:
+
+### 1. Lewat Antarmuka Web Dashboard
+- Klik tombol **`⚡ Kompres WebP`** di bagian atas header.
+- Modal akan menampilkan perbandingan ukuran sebelum & sesudah, persentase penghematan (~85%), slider kualitas WebP (50% - 95%), serta opsi hapus file asli (*auto clean*).
+
+### 2. Rumus Shell Script (`./compress_images.sh`)
+Script bash siap pakai yang otomatis mengonversi seluruh file gambar (`.png`, `.jpg`, `.jpeg`) menjadi `.webp` berukuran optimal:
+```bash
+# Jalankan kompresi standar (kualitas 82%, hapus file lama untuk hemat storage):
+./compress_images.sh
+
+# Cek statistik penggunaan & potensi hemat tanpa mengubah file:
+./compress_images.sh --stats
+
+# Simulasi konversi tanpa menulis file (Dry Run):
+./compress_images.sh --dry-run
+
+# Kustomisasi kualitas (misal 85%) dan batasan resolusi (maks 1920px):
+./compress_images.sh --quality 85 --max-dim 1920
+
+# Hanya simpan WebP tanpa menghapus file PNG/JPG asli:
+./compress_images.sh --keep-original
+```
+
+### 3. Rumus One-Liner CLI (Python / Shell)
+```bash
+# Menjalankan optimasi langsung via CLI Python:
+python3 compress_webp.py documents extracted_images --quality 82
+
+# Rumus cepat satu baris (One-liner):
+python3 -c "from compress_webp import convert_images_to_webp; print(convert_images_to_webp(['documents', 'extracted_images']))"
+```
 
 ---
 

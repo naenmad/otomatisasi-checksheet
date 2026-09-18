@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 CLI Runner for Summit Adyawinsa Checksheet Automation
+Supports Excel (.xlsx) and PDF (.pdf) checksheets.
 Usage:
     python run.py [part_number] [scan_image: yes/no]
+    python run.py 75510W050P
     python run.py 75511b040p no
     python run.py 51138e000p yes
-    python run.py --part 75511b040p --no-scan-image
-    python run.py --excel "path/to/file.xlsx"
+    python run.py --part 75510W050P --dry-run
 """
 
 import argparse
@@ -21,6 +22,7 @@ from automator import run_automation
 
 load_dotenv()
 
+
 def parse_scan_image_value(val: Optional[str]) -> Optional[bool]:
     """Parse string representation of scan_images flag."""
     if val is None:
@@ -31,6 +33,7 @@ def parse_scan_image_value(val: Optional[str]) -> Optional[bool]:
     if v in ["false", "0", "no", "n", "tidak", "no-scan", "noscan", "no-scan-image", "no_scan_image"]:
         return False
     return None
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -44,14 +47,14 @@ def main():
             "Argumen posisi fleksibel:\n"
             "  1. <part_number> [scan_image]\n"
             "     Contoh: run.py 75511b040p no\n"
-            "     Contoh: run.py 51138e000p yes\n"
+            "     Contoh: run.py 75510W050P\n"
         )
     )
     parser.add_argument(
         "-p", "--part",
         type=str,
         default=None,
-        help="Part number atau nama folder di documents/ (contoh: 75511b040p, 51138e000p)"
+        help="Part number atau nama folder di documents/ (contoh: 75510W050P, 51138e000p)"
     )
     parser.add_argument(
         "--scan-image",
@@ -59,20 +62,21 @@ def main():
         action="store_const",
         const=True,
         default=None,
-        help="Paksa ekstrak gambar tersemat dari file Excel (mode Excel mentah)"
+        help="Paksa ekstrak gambar tersemat dari file Excel/PDF"
     )
     parser.add_argument(
         "--no-scan-image",
         dest="scan_image",
         action="store_const",
         const=False,
-        help="Jangan scan Excel; gunakan file gambar dari folder part (mode hasil scan data)"
+        help="Gunakan file gambar dari folder part (hasil scan data)"
     )
     parser.add_argument(
-        "--excel",
+        "--excel", "--file",
+        dest="excel",
         type=str,
         default=None,
-        help="Path langsung ke file Excel (.xlsx) jika tidak menggunakan struktur documents/"
+        help="Path langsung ke file dokumen (.xlsx / .pdf)"
     )
     parser.add_argument(
         "--headless",
@@ -82,7 +86,7 @@ def main():
     parser.add_argument(
         "--submit",
         action="store_true",
-        help="Otomatis klik 'Save Template' (default: pause untuk review manual)"
+        help="Otomatis klik 'Save / Update Template' (default: pause untuk review manual)"
     )
     parser.add_argument(
         "--doc-number",
@@ -102,6 +106,12 @@ def main():
         help="Tampilkan daftar part yang tersedia di folder documents/ lalu keluar"
     )
     parser.add_argument(
+        "--browser",
+        type=str,
+        default=os.getenv("BROWSER_CHANNEL", "chromium"),
+        help="Pilihan engine browser: chromium (Chrome Testing, default), chrome (Google Chrome), msedge (Microsoft Edge)"
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Uji coba parsing data dan gambar tanpa membuka browser/FactoryHub"
@@ -116,8 +126,10 @@ def main():
         if not available_parts:
             print(" (Belum ada part di folder documents/)")
         for i, p in enumerate(available_parts, 1):
-            mode_desc = "Hasil Scan Data (gambar lokal)" if p["is_scan_data"] else "Excel Mentah (gambar di excel)"
-            print(f" [{i}] {p['folder_name']} | Part: {p['part_number']} | Excel: {p['excel_file']} | {p['image_count']} gambar | {mode_desc}")
+            status_tag = f"[{p.get('status', 'belum').upper()}]"
+            type_tag = p.get('file_type', 'excel').upper()
+            mode_desc = f"Scan Data ({p['image_count']} gambar)" if p["is_scan_data"] else f"{type_tag} Mentah"
+            print(f" {status_tag:<8} [{i:<2}] {p['folder_name']} | Part: {p['part_number']} | File: {p['excel_file']} | {mode_desc}")
         sys.exit(0)
 
     # Resolve positional arguments
@@ -126,7 +138,6 @@ def main():
 
     pos_args = args.part_or_scan or []
     if len(pos_args) == 1:
-        # Could be part or boolean flag
         bool_val = parse_scan_image_value(pos_args[0])
         if bool_val is not None:
             if scan_images is None:
@@ -135,7 +146,6 @@ def main():
             if not target_part:
                 target_part = pos_args[0]
     elif len(pos_args) >= 2:
-        # Check which is bool and which is part
         b0 = parse_scan_image_value(pos_args[0])
         b1 = parse_scan_image_value(pos_args[1])
         if b0 is not None and b1 is None:
@@ -160,10 +170,11 @@ def main():
             print("==================================================")
             print("Tersedia dokumen part di folder documents/:")
             for i, p in enumerate(available_parts, 1):
-                type_label = f"Hasil Scan Data ({p['image_count']} gambar)" if p["is_scan_data"] else "Excel Mentah (scan dari excel)"
-                print(f"  [{i}] {p['folder_name']} (Part No: {p['part_number']}) -> {type_label}")
+                status_tag = f"[{p.get('status', 'belum').upper()}]"
+                type_label = f"Hasil Scan Data ({p['image_count']} gambar)" if p["is_scan_data"] else f"{p.get('file_type','excel').upper()} Mentah"
+                print(f"  {status_tag:<8} [{i:<2}] {p['folder_name']} (Part No: {p['part_number']}) -> {type_label}")
             print("==================================================")
-            
+
             if sys.stdin.isatty():
                 try:
                     choice = input(f"Pilih nomor [1-{len(available_parts)}] atau ketik part number [1]: ").strip()
@@ -177,12 +188,10 @@ def main():
                     print("\nDibatalkan.")
                     sys.exit(0)
             else:
-                # Default to first available part if non-interactive
                 target_part = available_parts[0]["folder_name"]
                 print(f"[*] Non-interaktif: Menggunakan part pertama: {target_part}")
         else:
             print("[!] Error: Tidak ada part yang ditemukan di folder documents/ dan opsi --excel tidak diberikan.")
-            print("[!] Harap letakkan dokumen di folder documents/<part_number>/ atau tentukan path file.")
             sys.exit(1)
 
     part_or_excel = args.excel if args.excel else target_part
@@ -199,37 +208,42 @@ def main():
         sys.exit(1)
 
     part_no = doc_pkg["part_number"]
-    excel_path = doc_pkg["excel_path"]
+    file_path = doc_pkg["file_path"]
+    file_type = doc_pkg["file_type"]
     images = doc_pkg["images"]
     actual_scan_mode = doc_pkg["scan_images"]
     meta = doc_pkg["metadata"]
     doc_no = args.doc_number or meta.get("doc_number", "Form 1")
+    status = doc_pkg.get("status", "belum")
 
     print("\n==================================================")
     print("   FactoryHub Checksheet Master Automation")
     print("==================================================")
     print(f" Part Number : {part_no}")
+    print(f" Status      : {status.upper()}")
     print(f" Folder      : {doc_pkg['folder_path']}")
-    print(f" Excel File  : {os.path.basename(excel_path)}")
+    print(f" Document    : {os.path.basename(file_path)} ({file_type.upper()})")
     print(f" Doc Number  : {doc_no}")
     print(f" Part Name   : {meta.get('part_name') or '-'}")
     print(f" Model       : {meta.get('model') or '-'}")
-    print(f" Scan Excel  : {'YA (Ekstrak dari sheet Excel)' if actual_scan_mode else 'TIDAK (Ambil gambar dari folder)'}")
+    print(f" Scan Mode   : {'YA (Ekstrak dari dokumen)' if actual_scan_mode else 'TIDAK (Ambil gambar dari folder)'}")
     print(f" Ref Images  : {len(images)} file gambar")
     print(f" Browser     : {'Headless' if args.headless else 'Visible (Siap Review)'}")
     print(f" Action      : {'AUTO-SUBMIT' if args.submit else 'REVIEW & SAVE MANUAL'}")
     print("==================================================\n")
 
     if args.dry_run:
-        print("[*] DRY RUN MODE: Membaca titik inspeksi...")
-        items = extract_inspection_points(excel_path)
+        print(f"[*] DRY RUN MODE: Membaca titik inspeksi dari {file_type.upper()}...")
+        items = extract_inspection_points(file_path)
         print(f"[+] Berhasil mengekstrak {len(items)} titik inspeksi.")
         print("[*] Sampel 5 titik inspeksi pertama:")
         for idx, it in enumerate(items[:5], 1):
-            print(f"    {idx}. Balloon #{it['item_no']} | {it['inspection_item']} | Std: {it['standard']}")
-        print("\n[*] Daftar Gambar Referensi:")
-        for idx, img in enumerate(images, 1):
-            print(f"    {idx}. {os.path.basename(img)} ({img})")
+            print(f"    {idx}. Balloon #{it['item_no']} | {it['inspection_item']} | Std: {it['standard']} | Method: {it['method']}")
+        print(f"\n[*] Daftar Gambar Referensi ({len(images)} file):")
+        for idx, img in enumerate(images[:5], 1):
+            print(f"    {idx}. {os.path.basename(img)}")
+        if len(images) > 5:
+            print(f"    ... dan {len(images) - 5} gambar lainnya")
         print("\n[✓] Dry-run selesai. Semua data siap diproses ke FactoryHub.")
         sys.exit(0)
 
@@ -240,12 +254,14 @@ def main():
             submit=args.submit,
             doc_number=doc_no,
             manual_images_dir=args.images_dir,
-            scan_images=actual_scan_mode
+            scan_images=actual_scan_mode,
+            browser_channel=args.browser
         )
     )
 
     if result and result.get("status") == "part_not_registered":
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
