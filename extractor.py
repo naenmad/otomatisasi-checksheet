@@ -304,11 +304,13 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
                 for idx, cell_val in enumerate(row):
                     val = str(cell_val or "").strip()
                     val_lower = val.lower()
-                    if any(k in val_lower for k in ["part no", "no. part", "no part"]) and not part_number:
+                    if any(k in val_lower for k in ["part no", "no. part", "no part"]):
                         for offset in range(1, min(6, len(row) - idx)):
                             p_val = str(row[idx + offset] or "").strip().lstrip(":").strip()
-                            if p_val and len(p_val) >= 5:
-                                part_number = p_val
+                            if p_val and len(p_val) >= 5 and any(c.isdigit() for c in p_val):
+                                # Clean potential extra zeros from manual typos (e.g. 80149E0000P -> 80149E000P)
+                                p_clean = re.sub(r"([A-Z0-9]{5}E)0+([0-9]{3}P)", r"\1\2", p_val.upper())
+                                part_number = p_clean or p_val.upper()
                                 break
                     if any(k in val_lower for k in ["part name", "nama part", "item name"]) and not part_name:
                         for offset in range(1, min(6, len(row) - idx)):
