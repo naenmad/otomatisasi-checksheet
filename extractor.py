@@ -310,7 +310,12 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
                             if p_val and len(p_val) >= 5 and any(c.isdigit() for c in p_val):
                                 # Clean potential extra zeros from manual typos (e.g. 80149E0000P -> 80149E000P)
                                 p_clean = re.sub(r"([A-Z0-9]{5}E)0+([0-9]{3}P)", r"\1\2", p_val.upper())
-                                part_number = p_clean or p_val.upper()
+                                cand_p = p_clean or p_val.upper()
+                                # If cover sheet part number is 9 chars missing letter (e.g. 76715000P) and filename has 10 chars (76715E000P), prefer filename
+                                if len(cand_p) == 9 and part_number and len(part_number) == 10:
+                                    pass
+                                else:
+                                    part_number = cand_p
                                 break
                     if any(k in val_lower for k in ["part name", "nama part", "item name"]) and not part_name:
                         for offset in range(1, min(6, len(row) - idx)):
