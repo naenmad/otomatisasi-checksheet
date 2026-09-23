@@ -154,3 +154,25 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
 
     await db.commit()
     return {"status": "success", "updated_points": len(payload.points)}
+
+
+class BatchAssignSchema(BaseModel):
+    checksheet_ids: List[int]
+    assigned_to: str
+
+
+@router.post("/batch-assign")
+async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession = Depends(get_db)):
+    """Assign multiple checksheets to a team member simultaneously."""
+    stmt = (
+        update(Checksheet)
+        .where(Checksheet.id.in_(payload.checksheet_ids))
+        .values(assigned_to=payload.assigned_to)
+    )
+    await db.execute(stmt)
+    await db.commit()
+    return {
+        "status": "success",
+        "updated_count": len(payload.checksheet_ids),
+        "assigned_to": payload.assigned_to
+    }

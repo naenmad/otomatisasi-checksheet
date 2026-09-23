@@ -82,3 +82,48 @@ async def execute_checksheet_submission(
 
     except Exception as e:
         yield f"[ERROR] Terjadi kesalahan saat otomatisasi: {str(e)}\n"
+
+
+async def execute_batch_submission(
+    checksheet_ids: list,
+    session: AsyncSession,
+    submit: bool = True,
+    headless: bool = False,
+    browser_channel: str = "chrome"
+) -> AsyncGenerator[str, None]:
+    """
+    Execute batch checksheet submission sequentially and stream logs in real-time.
+    """
+    total = len(checksheet_ids)
+    yield f"[*] Memulai batch submission untuk {total} checksheet...\n"
+
+    success_count = 0
+    fail_count = 0
+
+    for idx, cs_id in enumerate(checksheet_ids, 1):
+        cs = await get_checksheet_by_id(session, cs_id)
+        pno = cs.part_number if cs else f"ID #{cs_id}"
+        yield f"\n==================================================\n"
+        yield f"[BATCH {idx}/{total}] Memproses: {pno}\n"
+        yield f"==================================================\n"
+
+        part_success = False
+        async for line in execute_checksheet_submission(
+            checksheet_id=cs_id,
+            session=session,
+            submit=submit,
+            headless=headless,
+            browser_channel=browser_channel
+        ):
+            yield line
+            if "[✓] Sukses submit" in line:
+                part_success = True
+
+        if part_success:
+            success_count += 1
+        else:
+            fail_count += 1
+
+        yield f"[PROGRESS] Selesai {idx}/{total} (Sukses: {success_count}, Gagal: {fail_count})\n"
+
+    yield f"\n[BATCH_DONE] Selesai memproses {total} part! (Sukses: {success_count}, Gagal: {fail_count})\n"

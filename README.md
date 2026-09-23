@@ -4,20 +4,72 @@ Sistem otomatisasi untuk mengekstrak data checksheet dari file Excel (*Inspectio
 
 ---
 
-## Fitur Utama
+## 👥 Platform Kolaborasi Tim (Zul, Iqbal, Rama, Yogi)
 
-- **Web Dashboard GUI Studio (`./gui.sh`)**:
-  - Tampilan web interaktif berbasis FastAPI dan modern UI untuk memantau status dokumen (`belum` vs `done`), menjalankan otomasi, membandingkan diff template, dan mencari batch part number.
+Sistem ini kini dilengkapi dengan **Web Dashboard Multi-User**, **Shared Database (Supabase PostgreSQL)**, dan **Batch Automator** yang memungkinkan tim berkolaborasi secara real-time.
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                 TEAM SHARED DATABASE                        │
+│            Supabase PostgreSQL (atau SQLite Fallback)       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                ┌──────────────┴──────────────┐
+                │  FastAPI Backend (Port 8000)│
+                └──────────────┬──────────────┘
+                               │
+     ┌──────────────────┬──────┴───────────┬──────────────────┐
+     │                  │                  │                  │
+┌────┴─────┐      ┌─────┴────┐       ┌─────┴────┐       ┌─────┴────┐
+│   Zul    │      │  Iqbal   │       │   Rama   │       │   Yogi   │
+└──────────┘      └──────────┘       └──────────┘       └──────────┘
+```
+
+### 1. Menjalankan Web Dashboard
+```bash
+# Jalankan server
+python run_server.py
+```
+Buka di browser: **`http://localhost:8000`**
+
+### 2. Berbagi Akses ke Laptop Rekan Tim (`./share.sh`)
+Gunakan script pembagi jaringan untuk membagikan akses ke Zul, Iqbal, Rama, atau Yogi:
+```bash
+./share.sh
+```
+Pilihan koneksi:
+- **Pilihan 1 (Jaringan Wi-Fi / Kantor Sama):**
+  Rekan tim cukup membuka URL IP lokal di browser mereka (contoh: `http://192.168.1.171:8000`).
+- **Pilihan 2 (Cloudflare Tunnel - Remote / WFH):**
+  Membuat URL publik HTTPS gratis (contoh: `https://xxxx.trycloudflare.com`) sehingga rekan tim bisa mengakses dari mana saja tanpa perlu satu jaringan Wi-Fi.
+
+### 3. Fitur Utama Web Dashboard
+1. **Filter Pembagian Tugas Tim:**
+   - Tab filter instan untuk melihat part milik **Semua**, **Zul**, **Iqbal**, **Rama**, atau **Yogi**.
+2. **Batch Upload & Modular Parsers:**
+   - Drag & drop banyak file Excel/PDF sekaligus. Sistem otomatis mendeteksi format (MMKI IR, MMKI IPQC, IQC Incoming, PDF) dan mengekstrak tabel serta gambar part.
+3. **Multi-Select & Batch Actions:**
+   - Centang beberapa part sekaligus.
+   - Pindahkan penugasan tim hanya dengan 1 klik.
+   - **Batch Submit ke FactoryHub**: Eksekusi pengisian checksheet berurutan di browser dengan streaming log realtime via SSE.
+4. **Export & Google Spreadsheet Sync:**
+   - **Download Excel**: Unduh rekap format resmi langsung dari browser.
+   - **Sync Google Sheet**: Sinkronisasi data ke Google Spreadsheet monitoring tim hanya dengan 1 klik.
+
+---
+
+## Fitur Utama Sistem
+
+- **Web Dashboard GUI Studio (`python run_server.py` & `http://localhost:8000`)**:
+  - Tampilan modern berbasis Vue 3 + Tailwind CSS (zero Node.js build requirement) untuk review, edit titik inspeksi, live stream log otomasi, dan batch submission.
+- **Shared Cloud Database (Supabase PostgreSQL)**:
+  - Database terpusat sehingga seluruh anggota tim melihat data progres yang sinkron secara real-time.
+- **Modular Parsers (`parsers/`)**:
+  - `mmki_ir.py`, `mmki_ipqc.py`, `iqc_incoming.py`, `pdf_parser.py`, `generic_excel.py`.
 - **Partisi Dokumen Terorganisir (`documents/belum/` & `documents/done/`)**:
   - Memisahkan dokumen yang belum dikerjakan dengan yang sudah selesai.
-- **Dukungan File PDF (`.pdf`) & Excel (`.xlsx`, `.xls`)**:
-  - Membaca metadata, gambar tersemat, dan tabel titik inspeksi langsung dari dokumen PDF maupun Excel.
-- **Perbandingan Template (Diff Viewer)**:
-  - Otomatis membandingkan template yang sudah ada di database dengan dokumen baru pada mode EDIT (menampilkan titik ditambah, diubah, dan dihapus).
-- **Pencatatan Log Terpusat (`logs/history.xlsx` 2 Sheets)**:
-  - Mencatat seluruh riwayat eksekusi dan pencarian part ke dalam Excel (`logs/history.xlsx`), JSON, dan teks log.
-- **Pencarian Cepat Batch Part (`./search.sh`)**:
-  - Mendukung input satu atau banyak nomor part dipisahkan koma.
+- **Pencatatan Log Terpusat (`logs/history.xlsx`)**:
+  - Mencatat riwayat eksekusi checksheet dan hasil pencarian part.
 - **Mode Review Visual (Headed Mode)**:
   - Mengisi seluruh field, gambar, dan tabel inspeksi secara otomatis dengan browser terbuka untuk verifikasi manual sebelum simpan.
 
