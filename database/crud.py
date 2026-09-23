@@ -97,11 +97,11 @@ async def create_checksheet(
 
     # Add images
     if images:
-        for img_path in images:
+        for img_idx, img_path in enumerate(images):
             pimg = PartImage(
                 checksheet_id=target.id,
                 image_path=img_path,
-                image_url=f"/api/images/{target.id}/{len(target.images) if target.images else 0}"
+                image_url=img_path
             )
             session.add(pimg)
 

@@ -15,6 +15,7 @@ from server.routes.automation import router as automation_router
 from server.routes.export import router as export_router
 from server.routes.auth import router as auth_router
 from server.routes.users import router as users_router
+from server.routes.catalog import router as catalog_router
 
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     os.makedirs("storage/uploads", exist_ok=True)
     os.makedirs("storage/images", exist_ok=True)
+    os.makedirs("extracted_images", exist_ok=True)
     os.makedirs("static", exist_ok=True)
     yield
 
@@ -47,6 +49,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(checksheets_router)
+app.include_router(catalog_router)
 app.include_router(upload_router)
 app.include_router(automation_router)
 app.include_router(export_router)
@@ -54,6 +57,9 @@ app.include_router(export_router)
 # Mount media & static files
 if os.path.exists("storage/images"):
     app.mount("/media/images", StaticFiles(directory="storage/images"), name="images")
+
+if os.path.exists("extracted_images"):
+    app.mount("/media/extracted", StaticFiles(directory="extracted_images"), name="extracted")
 
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 
 from database.connection import get_db
 from database.models import Checksheet, InspectionPoint
@@ -101,15 +101,47 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
             }
             for p in cs.inspection_points
         ],
-        "images": [
-            {
-                "id": img.id,
-                "image_url": img.image_url,
-                "image_path": img.image_path
-            }
-            for img in cs.images
-        ]
+        "images": _build_checksheet_images(cs)
     }
+
+
+def _build_checksheet_images(cs: Checksheet) -> list:
+    import os
+    res = []
+    for img in cs.images:
+        path = img.image_path or ""
+        url = img.image_url or ""
+        if "storage/images" in path:
+            sub = path.split("storage/images", 1)[1].lstrip("/\\")
+            url = f"/media/images/{sub}"
+        elif "extracted_images" in path:
+            sub = path.split("extracted_images", 1)[1].lstrip("/\\")
+            url = f"/media/extracted/{sub}"
+        res.append({
+            "id": img.id,
+            "image_url": url,
+            "image_path": path,
+            "filename": os.path.basename(path)
+        })
+
+    if not res:
+        import os
+        from database.crud import clean_str
+        clean_p = clean_str(cs.part_number)
+        for folder in [cs.part_number, clean_p]:
+            dir_path = os.path.join("extracted_images", folder)
+            if os.path.isdir(dir_path):
+                for f in sorted(os.listdir(dir_path)):
+                    if f.lower().endswith((".webp", ".png", ".jpg", ".jpeg")):
+                        res.append({
+                            "id": f,
+                            "image_url": f"/media/extracted/{folder}/{f}",
+                            "image_path": os.path.join(dir_path, f),
+                            "filename": f
+                        })
+                if res:
+                    break
+    return res
 
 
 @router.put("/{checksheet_id}")
