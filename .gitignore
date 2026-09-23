@@ -37,9 +37,6 @@ documents/rekap/*
 !documents/tidak_ada_part/.gitkeep
 !documents/rekap/.gitkeep
 
-# Data Lists & Dumps
-data/lists/*
-!data/lists/.gitkeep
 
 # Storage Uploads & Media (Keep folder structure, ignore contents)
 storage/uploads/*
