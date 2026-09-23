@@ -18,7 +18,7 @@ import warnings
 from typing import Dict, List, Any, Optional, Tuple
 import openpyxl
 
-from smart_parser import (
+from parsers.smart_parser import (
     SemanticStandardParser,
     FuzzyToolNormalizer,
     SpatialBlockDetector,

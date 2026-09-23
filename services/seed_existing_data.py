@@ -2,6 +2,7 @@
 Seeding script to populate database with existing checksheets.
 """
 import asyncio
+from pathlib import Path
 import openpyxl
 from database.connection import init_db, AsyncSessionLocal
 from database.crud import get_or_create_user, create_checksheet
@@ -17,8 +18,12 @@ async def seed_data():
         print("[+] Users seeded.")
         
         # Load from REKAP_ALL_91_PARTS_HPM.xlsx if exists
+        rekap_path = Path("documents/rekap/REKAP_ALL_91_PARTS_HPM.xlsx")
+        if not rekap_path.exists():
+            rekap_path = Path("REKAP_ALL_91_PARTS_HPM.xlsx")
+
         try:
-            wb = openpyxl.load_workbook("REKAP_ALL_91_PARTS_HPM.xlsx", data_only=True)
+            wb = openpyxl.load_workbook(rekap_path, data_only=True)
             ws = wb.active
             count = 0
             for row in ws.iter_rows(min_row=2, values_only=True):

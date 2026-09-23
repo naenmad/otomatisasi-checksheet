@@ -10,6 +10,7 @@ from parsers.mmki_ipqc import MMKIIPQCParser
 from parsers.pdf_parser import PDFParser
 from parsers.generic_excel import GenericExcelParser
 from parsers.image_extractor import extract_excel_images
+from parsers.smart_parser import SemanticStandardParser, FuzzyToolNormalizer, SpatialBlockDetector
 
 __all__ = [
     "BaseParser",
@@ -20,4 +21,7 @@ __all__ = [
     "PDFParser",
     "GenericExcelParser",
     "extract_excel_images",
+    "SemanticStandardParser",
+    "FuzzyToolNormalizer",
+    "SpatialBlockDetector",
 ]

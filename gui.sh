@@ -36,7 +36,7 @@ echo ""
 (sleep 1.2 && open "$URL" 2>/dev/null) &
 
 # Run FastAPI server via uvicorn with auto-reload (excluding static/uploads/data/cache directories)
-python3 -m uvicorn web_app:app --host "$HOST" --port "$PORT" --reload \
+python3 -m uvicorn server.main:app --host "$HOST" --port "$PORT" --reload \
     --timeout-keep-alive 5 \
     --reload-exclude "extracted_images/*" \
     --reload-exclude "documents/*" \

@@ -27,12 +27,19 @@ documents/*
 !documents/belum/
 !documents/done/
 !documents/tidak_ada_part/
+!documents/rekap/
 documents/belum/*
 documents/done/*
 documents/tidak_ada_part/*
+documents/rekap/*
 !documents/belum/.gitkeep
 !documents/done/.gitkeep
 !documents/tidak_ada_part/.gitkeep
+!documents/rekap/.gitkeep
+
+# Data Lists & Dumps
+data/lists/*
+!data/lists/.gitkeep
 
 # Storage Uploads & Media (Keep folder structure, ignore contents)
 storage/uploads/*
