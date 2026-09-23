@@ -8,6 +8,8 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db
+from database.models import User
+from server.auth import require_admin
 from services.parser_service import parse_and_save_checksheet
 
 router = APIRouter(prefix="/api/upload", tags=["Upload"])
@@ -21,6 +23,7 @@ async def upload_checksheets(
     files: List[UploadFile] = File(...),
     assigned_to: str = Form("Zul"),
     custom_doc_no: Optional[str] = Form(None),
+    admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     results = []

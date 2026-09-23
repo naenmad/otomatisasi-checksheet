@@ -1420,6 +1420,9 @@
           try {
             const res = await fetch('/api/upload', {
               method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + authToken.value
+              },
               body: formData
             });
             if (res.ok) {
@@ -1427,7 +1430,8 @@
               selectedFiles.value = [];
               await loadChecksheets();
             } else {
-              alert('Gagal mengunggah file.');
+              const err = await res.json();
+              alert('Gagal mengunggah: ' + (err.detail || 'Akses ditolak'));
             }
           } catch (e) {
             alert('Terjadi kesalahan saat upload.');
