@@ -1,0 +1,71 @@
+"""
+Main FastAPI server entrypoint.
+"""
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+from database.connection import init_db
+from server.routes.checksheets import router as checksheets_router
+from server.routes.upload import router as upload_router
+from server.routes.automation import router as automation_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    await init_db()
+    os.makedirs("storage/uploads", exist_ok=True)
+    os.makedirs("storage/images", exist_ok=True)
+    os.makedirs("static", exist_ok=True)
+    yield
+
+
+app = FastAPI(
+    title="Summit FactoryHub Checksheet Automation",
+    description="Sistem Kolaborasi Otomasi Checksheet Tim (Zul, Iqbal, Rama, Yogi)",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+# Enable CORS for local dev / cross-origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API Routers
+app.include_router(checksheets_router)
+app.include_router(upload_router)
+app.include_router(automation_router)
+
+# Mount media & static files
+if os.path.exists("storage/images"):
+    app.mount("/media/images", StaticFiles(directory="storage/images"), name="images")
+
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+async def root():
+    index_file = "static/index.html"
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {
+        "app": "Summit FactoryHub Checksheet Automation API",
+        "version": "2.0.0",
+        "docs_url": "/docs",
+        "status": "online"
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,1195 +1,502 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summit Adyawinsa - Checksheet Master Automation Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Summit FactoryHub — Otomasi Checksheet Kolaboratif</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .mono { font-family: 'JetBrains+Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
 </head>
-<body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="navbar">
-            <div class="brand">
-                <div class="brand-logo">
-                    <svg class="brand-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                    </svg>
-                </div>
-                <div class="brand-text">
-                    <h1>Summit Checksheet Studio</h1>
-                    <p class="subtitle">Automasi Master Checksheet FactoryHub</p>
-                </div>
-            </div>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col">
+  <div id="app" class="flex-1 flex flex-col">
 
-            <!-- Navigation Tabs -->
-            <nav class="nav-tabs">
-                <button class="nav-btn active" data-tab="tab-docs" id="nav-btn-docs">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-                    <span>Dokumen Part</span>
-                </button>
-                <button class="nav-btn" data-tab="tab-search" id="nav-btn-search">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <span>Batch Part Search</span>
-                </button>
-                <button class="nav-btn" data-tab="tab-diff" id="nav-btn-diff">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                    <span>Perbandingan Diff</span>
-                </button>
-                <button class="nav-btn" data-tab="tab-logs" id="nav-btn-logs">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-                    <span>Log & Riwayat (Excel)</span>
-                </button>
-                <button class="nav-btn" data-tab="tab-catalog" id="nav-btn-catalog">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-                    <span>Katalog Master</span>
-                    <span class="badge-count" id="badge-catalog-count">1.188</span>
-                </button>
-            </nav>
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+            Summit FactoryHub Checksheet
+          </h1>
+          <p class="text-xs text-slate-400 font-medium flex items-center gap-2">
+            <span>Sistem Otomasi Kolaboratif Tim</span>
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-emerald-400">Online</span>
+          </p>
+        </div>
+      </div>
 
-            <div class="header-actions">
-                <button class="btn btn-outline" id="btn-open-palette" title="Pencarian Cepat & Aksi (Shortcut: ⌘K / Ctrl+K)">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span>Cari...</span>
-                    <kbd class="kbd-badge">⌘K</kbd>
-                </button>
-                <button class="btn btn-secondary" id="btn-open-create-folder" title="Buat Folder Part Baru">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                    <span>+ Buat Folder</span>
-                </button>
-                <button class="btn btn-secondary" id="btn-open-duplicate" title="Duplikasi Data Part, Dokumen & Gambar">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                    <span>Duplikat Part</span>
-                </button>
-                <button class="btn btn-primary" id="btn-open-upload" title="Upload Dokumen Checksheet atau Gambar Part">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span>Upload Dokumen</span>
-                </button>
-                <button class="btn btn-secondary" id="btn-open-compress" title="Optimasi & Kompresi Semua Gambar ke WebP">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    <span>Kompres WebP</span>
-                </button>
-                <button class="btn btn-outline" id="btn-refresh-all" title="Muat Ulang Dokumen & Cache">
-                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                    <span>Refresh</span>
-                </button>
-            </div>
-        </header>
+      <div class="flex items-center gap-3">
+        <button @click="showUploadModal = true" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Upload Checksheet
+        </button>
+      </div>
+    </header>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- TAB 1: DOCUMENTS -->
-            <section class="tab-pane active" id="tab-docs">
-                <!-- Metrics Bar -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-icon belum">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Belum Dikerjakan</span>
-                            <span class="metric-value" id="count-belum">0</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon tidak-ada">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Belum Ada Part</span>
-                            <span class="metric-value" id="count-tidak-ada">0</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon done">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Sudah Selesai (Done)</span>
-                            <span class="metric-value" id="count-done">0</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon total">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Total Dokumen</span>
-                            <span class="metric-value" id="count-total">0</span>
-                        </div>
-                    </div>
-                </div>
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
 
-                <!-- Status Filter & Search -->
-                <div class="toolbar">
-                    <div class="segmented-control">
-                        <button class="segment-btn active" data-filter="belum" id="filter-belum-btn">
-                            Belum Dikerjakan <span class="badge" id="badge-belum">0</span>
-                        </button>
-                        <button class="segment-btn filter-tidak-ada" data-filter="tidak_ada_part" id="filter-tidak-ada-btn">
-                            Belum Ada Part <span class="badge badge-rose" id="badge-tidak-ada">0</span>
-                        </button>
-                        <button class="segment-btn" data-filter="done" id="filter-done-btn">
-                            Sudah Selesai (Done) <span class="badge" id="badge-done">0</span>
-                        </button>
-                    </div>
-
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <button class="btn btn-warning btn-check-server" id="btn-check-server-tidak-ada" style="display: none;" title="Cek apakah part di 'Belum Ada Part' sudah didaftarkan ke server FactoryHub">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-                            <span>Cek Status di Server</span>
-                        </button>
-
-                        <div class="search-box">
-                            <svg class="svg-icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" id="doc-search-input" placeholder="Cari nomor part atau nama dokumen...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Banner for Belum Ada Part -->
-                <div class="tidak-ada-banner" id="tidak-ada-banner" style="display: none;">
-                    <div class="tidak-ada-banner-content">
-                        <div class="tidak-ada-banner-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <div class="tidak-ada-banner-text">
-                            <div class="tidak-ada-banner-title">Pengecekan Server FactoryHub</div>
-                            <div class="tidak-ada-banner-desc">Dokumen di kategori ini belum terdaftar di Master Part FactoryHub saat scan sebelumnya. Tekan <strong>Cek Semua di Server</strong> untuk memeriksa apakah part-part ini sekarang sudah ditambahkan oleh tim ke server. Part yang sudah terdaftar akan otomatis dipindahkan ke <strong>Belum Dikerjakan</strong>.</div>
-                        </div>
-                    </div>
-                    <div class="tidak-ada-banner-actions">
-                        <button class="btn btn-warning" id="btn-banner-check-server" style="font-weight: 600; white-space: nowrap;">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-                            <span>Cek Semua di Server</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Documents Grid -->
-                <div class="doc-grid" id="doc-grid">
-                    <!-- Cards injected by JS -->
-                </div>
-            </section>
-
-            <!-- TAB 2: BATCH SEARCH -->
-            <section class="tab-pane" id="tab-search">
-                <div class="card search-card">
-                    <div class="card-header">
-                        <div class="header-with-icon">
-                            <svg class="section-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <div>
-                                <h2>Pengecekan Batch Part Number di FactoryHub</h2>
-                                <p class="description">Cek apakah part sudah terdaftar di <strong>Regular Production Part</strong> atau <strong>New Project Part</strong> untuk pembuatan template baru.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="search-form">
-                        <label for="search-input-area" class="input-label">Masukkan Nomor Part (bisa satu atau banyak dipisahkan koma / baris baru):</label>
-                        <textarea id="search-input-area" rows="4" placeholder="Contoh: 510C1W000P, 745C0E040P, 745C0W000P, 75510W050P"></textarea>
-                        
-                        <div class="search-actions">
-                            <div class="quick-presets">
-                                <span>Cepat:</span>
-                                <button class="btn-chip" id="btn-quick-belum">Isi Part Belum</button>
-                                <button class="btn-chip" id="btn-quick-tidak-ada">Isi Part Belum Ada</button>
-                            </div>
-                            <button class="btn btn-primary" id="btn-execute-search">
-                                <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                                <span>Cek ke FactoryHub</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Search Result Summary Banner -->
-                    <div class="search-summary-banner" id="search-summary" style="display: none;">
-                        <div class="summary-stat total">
-                            <span class="num" id="stat-search-total">0</span>
-                            <span class="lbl">Total Dicek</span>
-                        </div>
-                        <div class="summary-stat ada">
-                            <span class="num" id="stat-search-ada">0</span>
-                            <span class="lbl">ADA di Master Part</span>
-                        </div>
-                        <div class="summary-stat tidak">
-                            <span class="num" id="stat-search-tidak">0</span>
-                            <span class="lbl">TIDAK ADA</span>
-                        </div>
-                        <div class="summary-actions">
-                            <button class="btn btn-secondary btn-sm" id="btn-copy-missing" style="display: none;">
-                                <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                                <span>Salin Part Tidak Ada</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Results Table -->
-                    <div class="table-container" id="search-table-wrapper" style="display: none;">
-                        <table class="data-table" id="search-results-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Part Number</th>
-                                    <th>Status FH</th>
-                                    <th>Kategori</th>
-                                    <th>Dokumen Lokal</th>
-                                    <th>Keterangan / Master Data</th>
-                                </tr>
-                            </thead>
-                            <tbody id="search-results-tbody">
-                                <!-- Injected by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 3: DIFF & COMPARISON -->
-            <section class="tab-pane" id="tab-diff">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="header-with-icon">
-                            <svg class="section-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                            <div>
-                                <h2>Tabel Perbandingan Template (Diff Comparison Viewer)</h2>
-                                <p class="description">Bandingkan side-by-side setiap titik inspeksi antara template FactoryHub dengan checksheet Excel/PDF.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Diff Controls Bar -->
-                    <div class="diff-controls-bar">
-                        <div class="diff-select-group">
-                            <label for="diff-part-select" class="diff-select-label">Pilih Part untuk Dianalisis:</label>
-                            <select id="diff-part-select" class="form-select">
-                                <option value="">-- Pilih Part Number --</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" id="btn-run-diff-compare">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                            <span>Bandingkan Sekarang</span>
-                        </button>
-                        <div class="diff-filter-group" id="diff-filter-group" style="display: none;">
-                            <span class="filter-label">Filter:</span>
-                            <button class="btn-chip active" data-diff-filter="all">Semua Titik (<span id="chip-count-all">0</span>)</button>
-                            <button class="btn-chip" data-diff-filter="changed">Perubahan Saja (<span id="chip-count-changed">0</span>)</button>
-                            <button class="btn-chip" data-diff-filter="added">Ditambah (<span id="chip-count-added">0</span>)</button>
-                            <button class="btn-chip" data-diff-filter="modified">Diubah (<span id="chip-count-modified">0</span>)</button>
-                            <button class="btn-chip" data-diff-filter="removed">Dihapus (<span id="chip-count-removed">0</span>)</button>
-                        </div>
-                    </div>
-
-                    <div class="diff-viewer-wrapper" id="diff-viewer-wrapper">
-                        <div class="empty-state" id="diff-empty-state">
-                            <svg class="empty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                            <h3>Pilih Part untuk Melihat Tabel Perbandingan</h3>
-                            <p>Pilih nomor part pada dropdown di atas atau jalankan otomasi untuk melihat rincian perbandingan side-by-side.</p>
-                        </div>
-
-                        <div class="diff-content" id="diff-content" style="display: none;">
-                            <!-- Injected by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 4: LOGS & HISTORY (IN-WEB EXCEL VIEWER) -->
-            <section class="tab-pane" id="tab-logs">
-                <div class="card">
-                    <div class="card-header logs-header">
-                        <div class="header-with-icon">
-                            <svg class="section-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-                            <div>
-                                <h2>Logbook & Riwayat Eksekusi (In-Web Excel Viewer)</h2>
-                                <p class="description">Semua riwayat eksekusi dan pencarian part dapat dilihat langsung di sini tanpa harus mendownload file Excel.</p>
-                            </div>
-                        </div>
-                        <div class="logs-actions">
-                            <button class="btn btn-outline btn-sm" id="btn-refresh-logs">
-                                <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                                <span>Muat Ulang</span>
-                            </button>
-                            <a href="/api/download/history" class="btn btn-outline btn-sm" id="btn-download-excel">
-                                <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                <span>Unduh history.xlsx</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Sub-tabs for Excel Sheets -->
-                    <div class="subtabs-nav">
-                        <button class="subtab-btn active" id="subtab-exec-btn" data-subtab="subtab-exec">
-                            <span>Riwayat Eksekusi Checksheet</span>
-                            <span class="subtab-badge" id="count-log-exec">0</span>
-                        </button>
-                        <button class="subtab-btn" id="subtab-search-btn" data-subtab="subtab-search">
-                            <span>Riwayat Pencarian Part</span>
-                            <span class="subtab-badge" id="count-log-search">0</span>
-                        </button>
-                    </div>
-
-                    <!-- Sheet 1: Execution History -->
-                    <div class="subtab-pane active" id="subtab-exec">
-                        <div class="subtab-toolbar">
-                            <div class="search-box small-search">
-                                <svg class="svg-icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" id="exec-search-input" placeholder="Cari part number, dokumen, atau hasil...">
-                            </div>
-                        </div>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Waktu</th>
-                                        <th>Part Number</th>
-                                        <th>Dokumen File</th>
-                                        <th>Tipe</th>
-                                        <th>Mode Scan</th>
-                                        <th>Hasil</th>
-                                        <th>Titik</th>
-                                        <th>Gambar</th>
-                                        <th>Ringkasan Perubahan / Catatan</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="logs-tbody">
-                                    <!-- Injected by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Sheet 2: Search History -->
-                    <div class="subtab-pane" id="subtab-search" style="display: none;">
-                        <div class="subtab-toolbar">
-                            <div class="search-box small-search">
-                                <svg class="svg-icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" id="search-log-filter" placeholder="Cari part number atau kata kunci...">
-                            </div>
-                        </div>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Waktu</th>
-                                        <th>Search Query</th>
-                                        <th>Part Number</th>
-                                        <th>Status FH</th>
-                                        <th>Kategori</th>
-                                        <th>Dokumen Lokal</th>
-                                        <th>Keterangan / Master Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="search-logs-tbody">
-                                    <!-- Injected by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 5: KATALOG MASTER & GAP RADAR -->
-            <section class="tab-pane" id="tab-catalog">
-                <!-- Metrics Bar -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-icon total">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Total Part FactoryHub</span>
-                            <span class="metric-value" id="cat-stat-total">1.188</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon done">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Sudah Ada di Workspace</span>
-                            <span class="metric-value" id="cat-stat-local">21</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon tidak-ada">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Checksheet Belum Ada (Gap)</span>
-                            <span class="metric-value" id="cat-stat-gap">1.167</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon belum">
-                            <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Template di FactoryHub</span>
-                            <span class="metric-value" id="cat-stat-templates">155</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Toolbar: Search & Filters -->
-                <div class="toolbar" style="margin-top: 1rem;">
-                    <div style="display: flex; gap: 0.75rem; flex: 1; align-items: center; flex-wrap: wrap;">
-                        <div class="search-box" style="flex: 1; min-width: 260px; max-width: 420px;">
-                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" id="cat-search-input" placeholder="Cari di 1.188 part FactoryHub..." autocomplete="off">
-                        </div>
-                        <div class="segmented-control" id="cat-category-filters">
-                            <button class="segment-btn active" data-cat="ALL">Semua (<span id="cat-count-all">1.188</span>)</button>
-                            <button class="segment-btn" data-cat="REGULAR">Regular (<span id="cat-count-reg">1.121</span>)</button>
-                            <button class="segment-btn" data-cat="NEW PROJECT">New Project (<span id="cat-count-proj">67</span>)</button>
-                        </div>
-                        <button class="btn btn-outline btn-sm" id="btn-toggle-gap-only" title="Hanya tampilkan part yang belum ada dokumen lokal di workspace">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                            <span id="btn-toggle-gap-label">Filter Gap (Belum Ada)</span>
-                        </button>
-                    </div>
-                    <div style="display: flex; gap: 0.6rem; align-items: center;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted);" id="cat-last-sync-time">Disinkronkan: Baru saja</span>
-                        <button class="btn btn-secondary btn-sm" id="btn-sync-catalog" title="Tarik ulang data terbaru dari portal FactoryHub">
-                            <svg class="svg-icon" id="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                            <span>Sinkronkan Ulang</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Catalog Table Container -->
-                <div class="catalog-table-container">
-                    <table class="catalog-table" id="catalog-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 48px;">No</th>
-                                <th style="width: 220px;">Part Number</th>
-                                <th style="width: 140px;">Kategori</th>
-                                <th>Nama Part / Deskripsi</th>
-                                <th style="width: 180px;">Template FactoryHub</th>
-                                <th style="width: 160px;">Dokumen Workspace</th>
-                                <th style="width: 170px; text-align: right;">Aksi Cepat</th>
-                            </tr>
-                        </thead>
-                        <tbody id="catalog-table-body">
-                            <!-- Injected via JS -->
-                        </tbody>
-                    </table>
-                    <div id="catalog-empty-state" style="display: none; padding: 3rem; text-align: center; color: var(--text-muted);">
-                        Tidak ada part yang cocok dengan kriteria pencarian.
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- RUN AUTOMATION MODAL -->
-        <div class="modal-overlay" id="modal-run">
-            <div class="modal-dialog">
-                <div class="modal-header">
-                    <div class="header-with-icon">
-                        <svg class="svg-icon" style="color: var(--accent-blue);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        <h3 id="modal-run-title">Jalankan Otomasi Checksheet</h3>
-                    </div>
-                    <button class="modal-close" id="modal-run-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Part Target:</label>
-                        <input type="text" id="modal-run-part" class="form-input" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Mode Scan Gambar:</label>
-                        <div class="radio-cards">
-                            <label class="radio-card">
-                                <input type="radio" name="modal-scan-mode" value="auto" checked>
-                                <div class="radio-body">
-                                    <span class="radio-title">
-                                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                                        Otomatis (Rekomendasi)
-                                    </span>
-                                    <span class="radio-desc">Gunakan gambar folder jika ada; jika kosong ekstrak langsung dari Excel/PDF.</span>
-                                </div>
-                            </label>
-                            <label class="radio-card">
-                                <input type="radio" name="modal-scan-mode" value="folder">
-                                <div class="radio-body">
-                                    <span class="radio-title">
-                                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-                                        Hasil Scan Data (Folder Images)
-                                    </span>
-                                    <span class="radio-desc">Ambil gambar referensi dari file dalam folder part (tanpa scan dokumen).</span>
-                                </div>
-                            </label>
-                            <label class="radio-card">
-                                <input type="radio" name="modal-scan-mode" value="scan">
-                                <div class="radio-body">
-                                    <span class="radio-title">
-                                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                        Scan Image dari Dokumen Mentah
-                                    </span>
-                                    <span class="radio-desc">Ekstrak gambar tersemat dari sheet Excel atau halaman PDF.</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group" id="run-image-preview-group">
-                        <div class="preview-header-bar">
-                            <label class="form-label" style="margin-bottom: 0;">Pratinjau Gambar Upload FactoryHub:</label>
-                            <span class="preview-source-badge" id="run-preview-badge">Memuat pratinjau...</span>
-                        </div>
-                        <div class="run-image-preview-gallery" id="run-image-preview-gallery">
-                            <!-- Thumbnails dynamically rendered -->
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Mode Eksekusi:</label>
-                        <div class="checkbox-wrapper">
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="modal-submit-toggle">
-                                <span class="checkmark"></span>
-                                <span class="cb-label">Auto-Submit (Langsung klik Save/Update Template tanpa menunggu review manual)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Progress / Log stream -->
-                    <div class="run-output-box" id="run-output-box" style="display: none;">
-                        <div class="output-header">
-                            <span class="output-title">Log Proses:</span>
-                            <span class="spinner" id="run-spinner"></span>
-                        </div>
-                        <pre class="output-pre" id="run-output-pre"></pre>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="modal-run-cancel">Batal</button>
-                    <button class="btn btn-primary" id="modal-run-start">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                        <span>Mulai Otomasi</span>
-                    </button>
-                </div>
-            </div>
+      <!-- Summary KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Total Checksheet</p>
+            <p class="text-2xl font-bold text-white mt-1">{{ checksheets.length }}</p>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-lg text-indigo-400">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
         </div>
 
-        <!-- DETAILS & PREVIEW MODAL -->
-        <div class="modal-overlay" id="modal-details">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-header">
-                    <div class="header-with-icon">
-                        <svg class="svg-icon" style="color: var(--accent-cyan);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                        <h3 id="modal-details-title">Detail Dokumen & Titik Inspeksi</h3>
-                    </div>
-                    <button class="modal-close" id="modal-details-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="details-meta-grid" id="details-meta-grid">
-                        <!-- Metadata badges -->
-                    </div>
-
-                    <div class="details-section">
-                        <div class="preview-header-bar" style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                                <h4>Gambar Referensi (<span id="details-img-count">0</span> file)</h4>
-                                <span class="preview-source-badge" id="details-source-badge">-</span>
-                            </div>
-                            <div>
-                                <input type="file" id="details-add-img-input" accept="image/*,.xlsx,.pdf" multiple style="display: none;">
-                                <button type="button" class="btn btn-outline btn-sm" id="btn-details-add-img" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;" title="Upload gambar langsung ke folder part ini">
-                                    <svg class="svg-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                    <span>Tambah Gambar</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="details-gallery" id="details-gallery">
-                            <!-- Image thumbnails -->
-                        </div>
-                    </div>
-
-                    <div class="details-section">
-                        <h4>Titik Inspeksi (<span id="details-pts-count">0</span> titik)</h4>
-                        <div class="table-container small-table">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>No Balloon</th>
-                                        <th>Item Inspeksi</th>
-                                        <th>Standard Toleransi</th>
-                                        <th>Metode</th>
-                                        <th>Master Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="details-pts-tbody">
-                                    <!-- Rows -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <button class="btn btn-outline btn-sm" id="btn-details-copy-pts" title="Salin seluruh titik inspeksi ke clipboard">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            <span>Salin Titik</span>
-                        </button>
-                        <button class="btn btn-outline btn-sm" id="btn-details-export-json" title="Download Data Titik Format JSON">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>JSON</span>
-                        </button>
-                        <button class="btn btn-outline btn-sm" id="btn-details-export-csv" title="Download Data Titik Format CSV / Excel">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            <span>CSV</span>
-                        </button>
-                        <button class="btn btn-outline btn-sm" id="btn-details-open-finder" title="Buka Folder Dokumen di macOS Finder">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
-                            <span>Buka di Finder</span>
-                        </button>
-                        <button class="btn btn-outline btn-sm" id="btn-details-duplicate" title="Duplikasi Dokumen dan Gambar ke Part Baru">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            <span>Duplikat ke Part...</span>
-                        </button>
-                    </div>
-                    <button class="btn btn-secondary" id="modal-details-close-btn">Tutup</button>
-                </div>
-            </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Checksheet Done</p>
+            <p class="text-2xl font-bold text-emerald-400 mt-1">{{ countStatus('Checksheet Done') }}</p>
+          </div>
+          <div class="p-3 bg-emerald-950/40 border border-emerald-800/40 rounded-lg text-emerald-400">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
         </div>
 
-        <!-- WEBP IMAGE COMPRESSION / OPTIMIZER MODAL -->
-        <div class="modal-overlay" id="modal-compress" style="display: none;">
-            <div class="modal-container" style="max-width: 680px;">
-                <div class="modal-header">
-                    <div class="header-with-icon">
-                        <svg class="svg-icon" style="color: var(--accent-blue);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        <h3 id="modal-compress-title">Optimasi &amp; Kompresi Gambar ke WebP</h3>
-                    </div>
-                    <button class="modal-close" id="modal-compress-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.25rem;">
-                        Alat otomatis untuk merubah semua file gambar (PNG &amp; JPG) menjadi format <strong>WebP terkompresi</strong>. Menghemat ruang penyimpanan hingga <strong>80-90%</strong> dan mempercepat waktu upload ke FactoryHub.
-                    </p>
-
-                    <!-- Storage Stats Grid -->
-                    <div class="compress-stats-grid" id="compress-stats-grid">
-                        <div class="compress-stat-card">
-                            <span class="compress-stat-label">File Non-WebP (PNG/JPG)</span>
-                            <span class="compress-stat-val" id="stat-non-webp-count">-</span>
-                            <span class="compress-stat-sub" id="stat-non-webp-size">- MB</span>
-                        </div>
-                        <div class="compress-stat-card">
-                            <span class="compress-stat-label">File Sudah WebP</span>
-                            <span class="compress-stat-val" id="stat-webp-count">-</span>
-                            <span class="compress-stat-sub" id="stat-webp-size">- MB</span>
-                        </div>
-                        <div class="compress-stat-card highlight">
-                            <span class="compress-stat-label">Estimasi Penghematan</span>
-                            <span class="compress-stat-val" style="color: #34d399;" id="stat-est-savings">- MB</span>
-                            <span class="compress-stat-sub">Hemat ~82% Ruang</span>
-                        </div>
-                    </div>
-
-                    <!-- Compression Settings Form -->
-                    <div class="form-group" style="margin-top: 1.25rem;">
-                        <label class="form-label">Folder Target:</label>
-                        <select class="form-input" id="compress-target-select">
-                            <option value="all">Semua Folder (documents/ &amp; extracted_images/)</option>
-                            <option value="documents">Hanya Folder Dokumen (documents/)</option>
-                            <option value="extracted_images">Hanya Folder Ekstrak Dokumen (extracted_images/)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                            <label class="form-label" style="margin-bottom: 0;">Kualitas Kompresi WebP:</label>
-                            <span id="compress-quality-display" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-blue);">82% (Rekomendasi Optimal)</span>
-                        </div>
-                        <input type="range" class="form-range" id="compress-quality-range" min="50" max="95" value="82" step="1" style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            <span>50% (Ukuran Minimum)</span>
-                            <span>82% (Seimbang &amp; Tajam)</span>
-                            <span>95% (Kualitas Maksimum)</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Opsi Tambahan:</label>
-                        <div class="checkbox-wrapper" style="margin-bottom: 0.5rem;">
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="compress-delete-toggle" checked>
-                                <span class="checkmark"></span>
-                                <span class="cb-label">Hapus file asli PNG/JPG setelah sukses dikonversi ke WebP (Hemat storage)</span>
-                            </label>
-                        </div>
-                        <div class="checkbox-wrapper">
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="compress-resize-toggle" checked>
-                                <span class="checkmark"></span>
-                                <span class="cb-label">Batasi resolusi maksimum ke 1920px (Gambar foto kamera/HP diperkecil otomatis)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Progress / Results Box -->
-                    <div id="compress-result-box" style="display: none; margin-top: 1.25rem;">
-                        <div id="compress-progress" style="display: none; padding: 1rem; text-align: center;">
-                            <span class="spinner" style="width: 24px; height: 24px; margin-bottom: 0.5rem; display: inline-block;"></span>
-                            <div style="font-size: 0.88rem; color: var(--text-secondary);">Sedang mengonversi dan mengompresi gambar ke WebP...</div>
-                        </div>
-
-                        <div id="compress-summary-banner" class="alert-box success" style="display: none; margin-bottom: 1rem;">
-                            <div style="font-weight: 600; font-size: 0.95rem;" id="compress-summary-title">Berhasil!</div>
-                            <div style="font-size: 0.82rem; margin-top: 0.25rem;" id="compress-summary-details"></div>
-                        </div>
-
-                        <div id="compress-files-list-wrap" style="display: none;">
-                            <label class="form-label" style="font-size: 0.8rem;">Daftar File yang Telah Dikonversi:</label>
-                            <div class="table-container small-table" style="max-height: 200px; overflow-y: auto;">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>File</th>
-                                            <th>Ukuran Asli</th>
-                                            <th>Ukuran WebP</th>
-                                            <th>Penghematan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="compress-files-tbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="modal-compress-cancel">Tutup</button>
-                    <button class="btn btn-primary" id="btn-start-compress">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        <span>Mulai Konversi ke WebP</span>
-                    </button>
-                </div>
-            </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Belum Di Input</p>
+            <p class="text-2xl font-bold text-amber-400 mt-1">{{ countStatus('Belum Di Input') }}</p>
+          </div>
+          <div class="p-3 bg-amber-950/40 border border-amber-800/40 rounded-lg text-amber-400">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
         </div>
 
-        <!-- IMAGE LIGHTBOX / FULLSCREEN VIEWER MODAL -->
-        <div class="modal-overlay lightbox-overlay" id="modal-lightbox" style="display: none;">
-            <div class="lightbox-container">
-                <div class="lightbox-header">
-                    <div class="lightbox-title-wrap">
-                        <div class="header-with-icon">
-                            <svg class="svg-icon" style="color: var(--accent-blue);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                            <h4 id="lightbox-title">Pratinjau Gambar Sketsa</h4>
-                        </div>
-                        <span class="preview-source-badge" id="lightbox-badge">-</span>
-                    </div>
-                    <div class="lightbox-tools">
-                        <button class="btn-icon-square" id="lightbox-zoom-out" title="Perkecil (-)">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                        </button>
-                        <button class="btn-icon-square" id="lightbox-zoom-reset" title="Reset Zoom">100%</button>
-                        <button class="btn-icon-square" id="lightbox-zoom-in" title="Perbesar (+)">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                        </button>
-                        <button class="modal-close" id="lightbox-close">&times;</button>
-                    </div>
-                </div>
-                <div class="lightbox-body">
-                    <button class="lightbox-nav-btn prev" id="lightbox-prev" title="Gambar Sebelumnya">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                    </button>
-                    <div class="lightbox-viewport" id="lightbox-viewport">
-                        <img src="" id="lightbox-img" alt="Pratinjau Sketsa Part" draggable="false">
-                    </div>
-                    <button class="lightbox-nav-btn next" id="lightbox-next" title="Gambar Berikutnya">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                </div>
-                <div class="lightbox-footer">
-                    <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
-                    <div class="lightbox-subinfo" id="lightbox-subinfo">Dimensi: - | Ukuran: -</div>
-                </div>
-            </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Tidak Ada Part</p>
+            <p class="text-2xl font-bold text-rose-400 mt-1">{{ countStatus('Tidak Ada Part') }}</p>
+          </div>
+          <div class="p-3 bg-rose-950/40 border border-rose-800/40 rounded-lg text-rose-400">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs & Search Controls -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-4">
+        <!-- Team Tabs -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+          <button v-for="member in ['Semua', 'Zul', 'Iqbal', 'Rama', 'Yogi']" :key="member"
+                  @click="activeTeam = member"
+                  :class="activeTeam === member ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+                  class="px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all">
+            {{ member }}
+          </button>
         </div>
 
-        <!-- GLOBAL DRAG & DROP OVERLAY -->
-        <div class="drag-drop-overlay" id="drag-drop-overlay" style="display: none;">
-            <div class="drag-drop-box">
-                <div class="drag-drop-icon-anim">
-                    <svg class="svg-icon-hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                </div>
-                <h2>Lepaskan File di Sini</h2>
-                <p>Tarik &amp; letakkan file <strong>.xlsx</strong>, <strong>.pdf</strong>, atau <strong>gambar sketsa part</strong>.</p>
-                <div class="drag-drop-badge">✨ Auto-detect Part Number &amp; Buat Folder Otomatis</div>
-            </div>
+        <!-- Search & Status Filter -->
+        <div class="flex items-center gap-3 flex-1 max-w-md ml-auto">
+          <div class="relative w-full">
+            <input v-model="searchQuery" type="text" placeholder="Cari Part Number / Nama Part..."
+                   class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <select v-model="statusFilter" class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+            <option value="ALL">Semua Status</option>
+            <option value="Checksheet Done">Checksheet Done</option>
+            <option value="Belum Di Input">Belum Di Input</option>
+            <option value="Tidak Ada Part">Tidak Ada Part</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Checksheet Table -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
+              <tr>
+                <th class="py-3 px-4 w-12 text-center">No</th>
+                <th class="py-3 px-4 w-28">Penanggung Jawab</th>
+                <th class="py-3 px-4">Part Number</th>
+                <th class="py-3 px-4">Part Name</th>
+                <th class="py-3 px-4 w-20">Model</th>
+                <th class="py-3 px-4 w-24">Customer</th>
+                <th class="py-3 px-4 w-32">Status</th>
+                <th class="py-3 px-4">Keterangan</th>
+                <th class="py-3 px-4 w-28 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
+                  class="hover:bg-slate-800/40 transition-colors group">
+                <td class="py-3 px-4 text-center font-mono text-slate-400">{{ idx + 1 }}</td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+                    {{ cs.assigned_to }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 font-mono font-bold text-white">{{ cs.part_number }}</td>
+                <td class="py-3 px-4 font-medium text-slate-200">{{ cs.part_name || '-' }}</td>
+                <td class="py-3 px-4 text-slate-300">{{ cs.model || '-' }}</td>
+                <td class="py-3 px-4 text-slate-400">{{ cs.customer || '-' }}</td>
+                <td class="py-3 px-4">
+                  <span v-if="cs.status === 'Checksheet Done'" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 flex items-center gap-1.5 w-fit">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Done
+                  </span>
+                  <span v-else-if="cs.status === 'Belum Di Input'" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-400 border border-amber-800/60 flex items-center gap-1.5 w-fit">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Ready
+                  </span>
+                  <span v-else class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-950/80 text-rose-400 border border-rose-800/60 flex items-center gap-1.5 w-fit">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> No Part
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-slate-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
+                <td class="py-3 px-4 text-center">
+                  <button @click="openDetail(cs.id)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-semibold border border-slate-700 transition-colors">
+                    Review
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="filteredChecksheets.length === 0">
+                <td colspan="9" class="py-12 text-center text-slate-500">
+                  Tidak ada checksheet yang sesuai dengan filter.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Slide-over / Modal Review & Submit -->
+    <div v-if="activeChecksheet" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
+      <div class="bg-slate-900 border-l border-slate-800 w-full max-w-2xl h-full flex flex-col p-6 shadow-2xl overflow-y-auto">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-base font-bold text-white font-mono">{{ activeChecksheet.part_number }}</h2>
+            <p class="text-xs text-slate-400">{{ activeChecksheet.part_name }} • Model: {{ activeChecksheet.model }}</p>
+          </div>
+          <button @click="activeChecksheet = null; stopLogStream()" class="text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
-        <!-- CREATE FOLDER MODAL -->
-        <div class="modal-overlay" id="modal-create-folder">
-            <div class="modal-dialog" style="max-width: 480px;">
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span style="color: var(--accent-blue); display: flex;">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
-                        </span>
-                        <h3>Buat Folder Part Baru</h3>
-                    </div>
-                    <button class="modal-close" id="modal-create-folder-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group" style="position: relative;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                            <label class="form-label" style="margin-bottom: 0;">Nama Folder / Part Number:</label>
-                            <span class="fh-catalog-hint" id="fh-catalog-hint" title="Terhubung ke 1.188 Part Master FactoryHub">
-                                <svg class="svg-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
-                                <span>Auto-fill Katalog Master</span>
-                            </span>
-                        </div>
-                        <div class="input-with-icon">
-                            <input type="text" id="create-folder-name" class="form-input" placeholder="Ketik part number (misal: 5251, 62130, 11198)..." autocomplete="off">
-                            <div id="create-folder-spinner" class="input-spinner" style="display: none;"></div>
-                        </div>
-                        <!-- Autocomplete Dropdown List -->
-                        <div class="catalog-autocomplete-dropdown" id="create-folder-autocomplete" style="display: none;">
-                        </div>
-                    </div>
-
-                    <!-- Selected Snippet Preview Card -->
-                    <div class="catalog-snippet-preview" id="catalog-snippet-preview" style="display: none;">
-                        <div class="snippet-header">
-                            <div class="snippet-tag" id="snippet-tag-category">REGULAR PART</div>
-                            <div class="snippet-tmpl-tag" id="snippet-tag-template">✓ Template di FactoryHub</div>
-                        </div>
-                        <div class="snippet-body">
-                            <div class="snippet-part-num" id="snippet-part-num">5251D432</div>
-                            <div class="snippet-part-name" id="snippet-part-name">MBR COMP-RR FLOOR SIDE,RH</div>
-                            <div class="snippet-notice">
-                                <svg class="svg-icon" style="width: 13px; height: 13px; color: var(--accent-green);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                <span>File snippet <code>info.json</code> akan otomatis dibuat di folder ini.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Kategori Awal Dokumen:</label>
-                        <select id="create-folder-status" class="form-select">
-                            <option value="belum" selected>Belum Dikerjakan (belum)</option>
-                            <option value="tidak_ada_part">Belum Ada Part (tidak_ada_part)</option>
-                            <option value="done">Selesai (done)</option>
-                        </select>
-                    </div>
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.75rem;">
-                        Folder akan dibuat di <code>documents/&lt;kategori&gt;/&lt;nama_folder&gt;</code>. Anda dapat langsung drop file ke dalamnya setelah dibuat.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="create-folder-cancel">Batal</button>
-                    <button class="btn btn-primary" id="create-folder-submit">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Buat Folder</span>
-                    </button>
-                </div>
-            </div>
+        <!-- Assignment & Controls -->
+        <div class="grid grid-cols-2 gap-3 my-4">
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium">Penanggung Jawab</label>
+            <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200">
+              <option value="Zul">Zul</option>
+              <option value="Iqbal">Iqbal</option>
+              <option value="Rama">Rama</option>
+              <option value="Yogi">Yogi</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium">Doc Number</label>
+            <input v-model="activeChecksheet.doc_number" @blur="saveChecksheetMeta" type="text" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+          </div>
         </div>
 
-        <!-- DUPLICATE PART MODAL -->
-        <div class="modal-overlay" id="modal-duplicate">
-            <div class="modal-dialog" style="max-width: 580px;">
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span style="color: var(--accent-blue); display: flex;">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                        </span>
-                        <h3>Duplikasi Checksheet &amp; Gambar Part</h3>
-                    </div>
-                    <button class="modal-close" id="modal-duplicate-close">&times;</button>
-                </div>
-
-                <!-- Sub-nav Tabs -->
-                <div class="dup-tab-nav" style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-hover); padding: 0 1rem;">
-                    <button class="dup-tab-btn active" id="dup-tab-server-btn" style="padding: 0.75rem 1rem; font-weight: 600; font-size: 0.85rem; border: none; background: transparent; cursor: pointer; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue);">
-                        🌐 Dari Server FactoryHub
-                    </button>
-                    <button class="dup-tab-btn" id="dup-tab-local-btn" style="padding: 0.75rem 1rem; font-weight: 600; font-size: 0.85rem; border: none; background: transparent; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent;">
-                        📁 Dari Folder Lokal
-                    </button>
-                </div>
-
-                <div class="modal-body">
-                    <!-- SECTION 1: DUPLIKAT DARI SERVER FACTORYHUB -->
-                    <div id="dup-section-server">
-                        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 0.75rem 0.9rem; margin-bottom: 1rem; font-size: 0.82rem; color: var(--text-color); line-height: 1.45;">
-                            <strong>⚡ Duplikasi Server-ke-Server:</strong> Mengunduh data checksheet &amp; gambar referensi dari template part asal di FactoryHub, membuat file Excel &amp; gambar backup lokal, lalu otomatis mengisi form checksheet part baru di FactoryHub.
-                        </div>
-
-                        <!-- Source Part Input (Server) -->
-                        <div class="form-group" style="position: relative;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                                <label class="form-label" style="margin-bottom: 0;">Part Asal di FactoryHub (Sumber Data):</label>
-                                <span class="fh-catalog-hint" title="Cari dari 1.188 Part Master FactoryHub">
-                                    <svg class="svg-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
-                                    <span>Part Master FH</span>
-                                </span>
-                            </div>
-                            <div class="input-with-icon">
-                                <input type="text" id="dup-srv-source-part" class="form-input" placeholder="Ketik part asal (misal: 76750B040P)..." autocomplete="off">
-                                <div id="dup-srv-src-spinner" class="input-spinner" style="display: none;"></div>
-                            </div>
-                            <div class="catalog-autocomplete-dropdown" id="dup-srv-src-autocomplete" style="display: none;"></div>
-                        </div>
-
-                        <!-- Target Part Input (Server) -->
-                        <div class="form-group" style="position: relative; margin-top: 0.9rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                                <label class="form-label" style="margin-bottom: 0;">Part Baru Tujuan (Target Checksheet):</label>
-                                <span class="fh-catalog-hint" title="Cari dari 1.188 Part Master FactoryHub">
-                                    <svg class="svg-icon" style="width: 13px; height: 13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
-                                    <span>Part Master FH</span>
-                                </span>
-                            </div>
-                            <div class="input-with-icon">
-                                <input type="text" id="dup-srv-target-part" class="form-input" placeholder="Ketik part tujuan (misal: 76750B040PQ)..." autocomplete="off">
-                                <div id="dup-srv-tgt-spinner" class="input-spinner" style="display: none;"></div>
-                            </div>
-                            <div class="catalog-autocomplete-dropdown" id="dup-srv-tgt-autocomplete" style="display: none;"></div>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 0.9rem;">
-                            <label class="form-label">Kategori Folder Cadangan Lokal:</label>
-                            <select id="dup-srv-target-status" class="form-select">
-                                <option value="belum" selected>Belum Dikerjakan (belum)</option>
-                                <option value="done">Selesai (done)</option>
-                                <option value="tidak_ada_part">Belum Ada Part (tidak_ada_part)</option>
-                            </select>
-                        </div>
-
-                        <div style="margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.85rem; color: var(--text-color);">
-                                <input type="checkbox" id="dup-srv-submit" style="width: 16px; height: 16px;">
-                                <span><strong>Auto-Submit:</strong> Otomatis simpan template ke FactoryHub (jika tidak dicentang, browser akan terbuka untuk ditinjau)</span>
-                            </label>
-                        </div>
-
-                        <!-- Real-time Progress Log Box -->
-                        <div id="dup-srv-log-box" style="display: none; margin-top: 1rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem; font-family: monospace; font-size: 0.78rem; max-height: 180px; overflow-y: auto; white-space: pre-wrap; color: #a5f3fc;">
-                        </div>
-                    </div>
-
-                    <!-- SECTION 2: DUPLIKAT DARI FOLDER LOKAL -->
-                    <div id="dup-section-local" style="display: none;">
-                        <!-- Source Part Summary Card -->
-                        <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Folder Part Asal (Lokal)</span>
-                                <span class="badge" id="dup-source-status-badge">BELUM</span>
-                            </div>
-                            <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-color); font-family: monospace;" id="dup-source-part-display">-</div>
-                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;" id="dup-source-meta-display">Memuat metadata...</div>
-                            <input type="hidden" id="dup-source-part">
-                            <input type="hidden" id="dup-source-status">
-                        </div>
-
-                        <div class="form-group" style="position: relative;">
-                            <label class="form-label">Nomor Part Baru Tujuan:</label>
-                            <div class="input-with-icon">
-                                <input type="text" id="dup-target-part" class="form-input" placeholder="Ketik part number baru (misal: 76750B040PQ)..." autocomplete="off">
-                                <div id="dup-target-spinner" class="input-spinner" style="display: none;"></div>
-                            </div>
-                            <div class="catalog-autocomplete-dropdown" id="dup-target-autocomplete" style="display: none;"></div>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label class="form-label">Kategori Folder Tujuan:</label>
-                            <select id="dup-target-status" class="form-select">
-                                <option value="belum" selected>Belum Dikerjakan (belum) - Siap Otomasi</option>
-                                <option value="tidak_ada_part">Belum Ada Part (tidak_ada_part)</option>
-                                <option value="done">Selesai (done)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 0.8rem;">
-                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.85rem; color: var(--text-color);">
-                                <input type="checkbox" id="dup-rename-files" checked style="width: 16px; height: 16px;">
-                                <span>Ganti nama file dokumen sesuai nomor part baru (Direkomendasikan)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="modal-duplicate-cancel">Batal</button>
-                    <button class="btn btn-primary" id="modal-duplicate-submit">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                        <span id="modal-duplicate-submit-label">Mulai Duplikasi dari Server</span>
-                    </button>
-                </div>
-            </div>
+        <!-- Inspection Points Table -->
+        <div class="flex-1 my-2">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              Titik Inspeksi ({{ activeChecksheet.points.length }} items)
+            </h3>
+            <button @click="savePoints" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+              Simpan Perubahan
+            </button>
+          </div>
+          <div class="border border-slate-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-950 text-slate-400 font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2 w-12">No</th>
+                  <th class="p-2">Item Inspeksi</th>
+                  <th class="p-2">Standar / Toleransi</th>
+                  <th class="p-2 w-24">Metode</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                <tr v-for="pt in activeChecksheet.points" :key="pt.id" class="hover:bg-slate-800/40">
+                  <td class="p-1.5 font-mono text-center">
+                    <input v-model="pt.item_no" class="w-8 bg-transparent text-center border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                  </td>
+                  <td class="p-1.5">
+                    <input v-model="pt.inspection_item" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                  </td>
+                  <td class="p-1.5 font-mono">
+                    <input v-model="pt.standard" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                  </td>
+                  <td class="p-1.5">
+                    <input v-model="pt.method" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- UPLOAD DOCUMENT MODAL -->
-        <div class="modal-overlay" id="modal-upload">
-            <div class="modal-dialog" style="max-width: 580px;">
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span style="color: var(--accent-blue); display: flex;">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        </span>
-                        <h3>Upload File Dokumen Part</h3>
-                    </div>
-                    <button class="modal-close" id="modal-upload-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <!-- Dropzone -->
-                    <div class="upload-modal-dropzone" id="upload-modal-dropzone">
-                        <input type="file" id="upload-file-input" multiple style="display: none;" accept=".xlsx,.pdf,.png,.jpg,.jpeg,.webp">
-                        <div class="upload-dropzone-icon">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
-                        </div>
-                        <h4>Tarik & Lepaskan File di Sini</h4>
-                        <p>Mendukung file dokumen <code>.xlsx</code>, <code>.pdf</code> dan gambar <code>.png, .jpg, .webp</code></p>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-files">Pilih File dari Komputer</button>
-                    </div>
-
-                    <!-- Selected Files List -->
-                    <div id="upload-files-preview" style="margin-top: 1rem; display: none;">
-                        <div class="upload-preview-header">
-                            <span class="form-label" style="margin: 0;">File Terpilih (<span id="upload-file-count">0</span>):</span>
-                            <button type="button" class="btn-text" id="btn-clear-upload-files">Hapus Semua</button>
-                        </div>
-                        <div class="upload-file-items" id="upload-file-items-list"></div>
-                    </div>
-
-                    <!-- Target Folder Override & Status -->
-                    <div class="form-grid" style="margin-top: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Kategori Tujuan:</label>
-                            <select id="upload-status" class="form-select">
-                                <option value="belum">Belum Dikerjakan (belum)</option>
-                                <option value="tidak_ada_part">Belum Ada Part (tidak_ada_part)</option>
-                                <option value="done">Selesai (done)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nama Folder (Opsional):</label>
-                            <input type="text" id="upload-custom-folder" class="form-input" placeholder="Otomatis dari Part No file">
-                        </div>
-                    </div>
-                    <div class="alert-box info" style="margin-top: 0.75rem; padding: 0.65rem 0.85rem; font-size: 0.82rem;">
-                        💡 <strong>Tips Cerdas:</strong> Jika nama folder dikosongkan, sistem akan otomatis membaca cover sheet dokumen dan membuatkan folder sesuai nomor part secara instan!
-                    </div>
-
-                    <!-- Upload Progress -->
-                    <div id="upload-progress-wrap" style="display: none; margin-top: 1rem;">
-                        <div class="progress-bar-wrap">
-                            <div class="progress-bar-fill" id="upload-progress-bar" style="width: 0%;"></div>
-                        </div>
-                        <div id="upload-progress-text" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">Mengunggah...</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="modal-upload-cancel">Batal</button>
-                    <button class="btn btn-primary" id="modal-upload-submit" disabled>
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Mulai Upload</span>
-                    </button>
-                </div>
-            </div>
+        <!-- Automation Terminal Live Log -->
+        <div v-if="liveLogs.length > 0" class="mt-4 bg-slate-950 border border-slate-800 rounded-lg p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+            <span class="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Playwright Automation
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">{{ liveLogs.length }} lines</span>
+          </div>
+          <div class="max-h-40 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1">
+            <div v-for="(line, lidx) in liveLogs" :key="lidx">{{ line }}</div>
+          </div>
         </div>
 
-        <!-- COMMAND PALETTE (CMD+K) MODAL -->
-        <div class="modal-overlay" id="modal-palette">
-            <div class="palette-container">
-                <div class="palette-search-wrap">
-                    <svg class="svg-icon palette-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="palette-input" class="palette-input" placeholder="Cari part number, nama part, atau aksi... (Esc untuk keluar)" autocomplete="off">
-                    <kbd class="kbd-badge">ESC</kbd>
-                </div>
-                <div class="palette-results" id="palette-results">
-                    <!-- Injected by JS -->
-                </div>
-                <div class="palette-footer">
-                    <span>Gunakan <kbd class="kbd-sm">↑</kbd> <kbd class="kbd-sm">↓</kbd> untuk memilih</span>
-                    <span><kbd class="kbd-sm">Enter</kbd> untuk aksi</span>
-                    <span><kbd class="kbd-sm">Esc</kbd> untuk keluar</span>
-                </div>
-            </div>
+        <!-- Action Buttons -->
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3 mt-auto">
+          <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
+                  class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-colors">
+            Dry Run (Review Form)
+          </button>
+          <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
+                  class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+            <svg v-if="isAutomating" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Auto Submit ke FactoryHub
+          </button>
         </div>
 
-        <!-- SERVER AVAILABILITY CHECK RESULT MODAL -->
-        <div class="modal-overlay" id="modal-server-check-result">
-            <div class="modal-dialog" style="max-width: 680px;">
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span style="color: #f59e0b; display: flex;">
-                            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-                        </span>
-                        <h3>Pengecekan Server FactoryHub</h3>
-                    </div>
-                    <button class="modal-close" id="modal-server-check-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <!-- Loading State -->
-                    <div id="server-check-loading" style="text-align: center; padding: 2.5rem 1rem;">
-                        <div class="spinner" style="width: 38px; height: 38px; border-width: 3px; border-top-color: #f59e0b; margin: 0 auto 1.25rem auto;"></div>
-                        <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff;">Menghubungi Server FactoryHub...</h4>
-                        <p id="server-check-loading-desc" style="color: var(--text-muted); font-size: 0.85rem; max-width: 440px; margin: 0 auto; line-height: 1.5;">
-                            Sedang memeriksa apakah data part di folder <code>documents/tidak_ada_part</code> sudah didaftarkan ke Master Part server. Proses ini memakan waktu beberapa detik.
-                        </p>
-                    </div>
-
-                    <!-- Result State -->
-                    <div id="server-check-results" style="display: none;">
-                        <!-- Stat Summary Cards -->
-                        <div class="server-check-summary-grid">
-                            <div class="server-check-stat-box success">
-                                <span class="server-check-stat-number" id="server-check-moved-count">0</span>
-                                <span class="server-check-stat-label">Sudah Ada di Server &amp; Dipindahkan ke Belum Dikerjakan</span>
-                            </div>
-                            <div class="server-check-stat-box warning">
-                                <span class="server-check-stat-number" id="server-check-remaining-count">0</span>
-                                <span class="server-check-stat-label">Masih Belum Terdaftar di Server FactoryHub</span>
-                            </div>
-                        </div>
-
-                        <!-- Moved Parts List -->
-                        <div id="server-check-moved-section" style="margin-bottom: 1.25rem;">
-                            <div style="font-weight: 700; font-size: 0.88rem; color: #34d399; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
-                                <svg class="svg-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                <span>Part Berhasil Dipindahkan ke 'Belum Dikerjakan' (<span id="server-check-moved-list-count">0</span>)</span>
-                            </div>
-                            <div class="server-check-list" id="server-check-moved-list">
-                                <!-- Injected by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Remaining Parts List -->
-                        <div id="server-check-remaining-section">
-                            <div style="font-weight: 700; font-size: 0.88rem; color: #fbbf24; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
-                                <svg class="svg-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                <span>Tetap di 'Belum Ada Part' (<span id="server-check-remaining-list-count">0</span>)</span>
-                            </div>
-                            <div class="server-check-list" id="server-check-remaining-list">
-                                <!-- Injected by JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="modal-server-check-dismiss">Tutup</button>
-                    <button class="btn btn-primary" id="modal-server-check-goto-belum" style="display: none;">
-                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                        <span>Buka Tab Belum Dikerjakan</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast Notifications -->
-        <div class="toast-container" id="toast-container"></div>
+      </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Upload Modal -->
+    <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+        <h3 class="text-base font-bold text-white mb-1">Upload Berkas Checksheet</h3>
+        <p class="text-xs text-slate-400 mb-4">Mendukung berkas Excel (.xlsx, .xls) dan PDF. Data tabel & gambar sketsa akan otomatis diekstrak ke database.</p>
+
+        <div class="mb-4">
+          <label class="text-xs text-slate-300 font-medium">Tugaskan ke Penanggung Jawab:</label>
+          <div class="grid grid-cols-4 gap-2 mt-1.5">
+            <button v-for="m in ['Zul', 'Iqbal', 'Rama', 'Yogi']" :key="m"
+                    @click="uploadAssignee = m"
+                    :class="uploadAssignee === m ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-slate-400 border-slate-800'"
+                    class="py-1.5 rounded-lg text-xs font-semibold border transition-all text-center">
+              {{ m }}
+            </button>
+          </div>
+        </div>
+
+        <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-8 text-center bg-slate-950/60 transition-colors cursor-pointer"
+             @click="$refs.fileInput.click()">
+          <input type="file" ref="fileInput" multiple accept=".xlsx,.xls,.pdf" class="hidden" @change="handleFileSelect">
+          <svg class="w-10 h-10 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <p class="text-xs text-slate-300 font-semibold">Klik untuk memilih file checksheet</p>
+          <p class="text-[11px] text-slate-500 mt-1">Bisa pilih beberapa file sekaligus (batch upload)</p>
+        </div>
+
+        <div v-if="selectedFiles.length > 0" class="mt-3 text-xs text-indigo-400 font-medium">
+          {{ selectedFiles.length }} file dipilih untuk di-upload.
+        </div>
+
+        <div class="flex items-center justify-end gap-3 mt-6">
+          <button @click="showUploadModal = false; selectedFiles = []" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">
+            Batal
+          </button>
+          <button @click="submitUpload" :disabled="selectedFiles.length === 0 || isUploading"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50">
+            {{ isUploading ? 'Memproses...' : 'Mulai Ekstraksi' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const checksheets = ref([]);
+        const activeTeam = ref('Semua');
+        const searchQuery = ref('');
+        const statusFilter = ref('ALL');
+        const showUploadModal = ref(false);
+        const uploadAssignee = ref('Zul');
+        const selectedFiles = ref([]);
+        const isUploading = ref(false);
+
+        const activeChecksheet = ref(null);
+        const liveLogs = ref([]);
+        const isAutomating = ref(false);
+        let eventSource = null;
+
+        const loadChecksheets = async () => {
+          try {
+            const res = await fetch('/api/checksheets');
+            if (res.ok) {
+              checksheets.value = await res.json();
+            }
+          } catch (e) {
+            console.error('Failed fetching checksheets:', e);
+          }
+        };
+
+        const countStatus = (status) => {
+          return checksheets.value.filter(c => c.status === status).length;
+        };
+
+        const filteredChecksheets = computed(() => {
+          return checksheets.value.filter(c => {
+            const matchTeam = activeTeam.value === 'Semua' || c.assigned_to === activeTeam.value;
+            const matchStatus = statusFilter.value === 'ALL' || c.status === statusFilter.value;
+            const q = searchQuery.value.toLowerCase();
+            const matchQuery = !q || c.part_number.toLowerCase().includes(q) || (c.part_name && c.part_name.toLowerCase().includes(q));
+            return matchTeam && matchStatus && matchQuery;
+          });
+        });
+
+        const openDetail = async (id) => {
+          try {
+            const res = await fetch(`/api/checksheets/${id}`);
+            if (res.ok) {
+              activeChecksheet.value = await res.json();
+              liveLogs.value = [];
+            }
+          } catch (e) {
+            alert('Gagal mengambil data checksheet');
+          }
+        };
+
+        const saveChecksheetMeta = async () => {
+          if (!activeChecksheet.value) return;
+          await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assigned_to: activeChecksheet.value.assigned_to,
+              doc_number: activeChecksheet.value.doc_number
+            })
+          });
+          loadChecksheets();
+        };
+
+        const savePoints = async () => {
+          if (!activeChecksheet.value) return;
+          const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/points`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points: activeChecksheet.value.points })
+          });
+          if (res.ok) {
+            alert('Perubahan titik inspeksi berhasil disimpan!');
+          }
+        };
+
+        const startAutomation = (id, submit) => {
+          liveLogs.value = [];
+          isAutomating.value = true;
+          stopLogStream();
+
+          eventSource = new EventSource(`/api/automation/stream/${id}?submit=${submit}&headless=false`);
+          eventSource.onmessage = (e) => {
+            liveLogs.value.push(e.data);
+            if (e.data.includes('[DONE]')) {
+              stopLogStream();
+              isAutomating.value = false;
+              loadChecksheets();
+            }
+          };
+          eventSource.onerror = () => {
+            stopLogStream();
+            isAutomating.value = false;
+            loadChecksheets();
+          };
+        };
+
+        const stopLogStream = () => {
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+        };
+
+        const handleFileSelect = (e) => {
+          selectedFiles.value = Array.from(e.target.files);
+        };
+
+        const submitUpload = async () => {
+          if (selectedFiles.value.length === 0) return;
+          isUploading.value = true;
+
+          const formData = new FormData();
+          for (let f of selectedFiles.value) {
+            formData.append('files', f);
+          }
+          formData.append('assigned_to', uploadAssignee.value);
+
+          try {
+            const res = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData
+            });
+            if (res.ok) {
+              showUploadModal.value = false;
+              selectedFiles.value = [];
+              await loadChecksheets();
+            } else {
+              alert('Gagal mengunggah file.');
+            }
+          } catch (e) {
+            alert('Terjadi kesalahan saat upload.');
+          } finally {
+            isUploading.value = false;
+          }
+        };
+
+        onMounted(() => {
+          loadChecksheets();
+        });
+
+        return {
+          checksheets,
+          activeTeam,
+          searchQuery,
+          statusFilter,
+          showUploadModal,
+          uploadAssignee,
+          selectedFiles,
+          isUploading,
+          activeChecksheet,
+          liveLogs,
+          isAutomating,
+          countStatus,
+          filteredChecksheets,
+          openDetail,
+          saveChecksheetMeta,
+          savePoints,
+          startAutomation,
+          stopLogStream,
+          handleFileSelect,
+          submitUpload
+        };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>

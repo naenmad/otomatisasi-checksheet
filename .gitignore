@@ -17,6 +17,9 @@ scratch/
 cs_incoming_analysis.json
 *.json
 !data/factoryhub_catalog.json
+*.db
+*.sqlite
+*.sqlite3
 
 # Checksheet Documents (Keep folder structure, ignore contents)
 documents/*
