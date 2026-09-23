@@ -31,6 +31,12 @@ documents/tidak_ada_part/*
 !documents/done/.gitkeep
 !documents/tidak_ada_part/.gitkeep
 
+# Storage Uploads & Media (Keep folder structure, ignore contents)
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/images/*
+!storage/images/.gitkeep
+
 # Centralized Logs
 logs/*
 !logs/.gitkeep
