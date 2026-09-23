@@ -12,6 +12,7 @@ from database.connection import init_db
 from server.routes.checksheets import router as checksheets_router
 from server.routes.upload import router as upload_router
 from server.routes.automation import router as automation_router
+from server.routes.export import router as export_router
 
 
 @asynccontextmanager
@@ -44,6 +45,7 @@ app.add_middleware(
 app.include_router(checksheets_router)
 app.include_router(upload_router)
 app.include_router(automation_router)
+app.include_router(export_router)
 
 # Mount media & static files
 if os.path.exists("storage/images"):

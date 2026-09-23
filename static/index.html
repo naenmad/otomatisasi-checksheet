@@ -43,7 +43,16 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <button @click="showUploadModal = true" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+        <a :href="'/api/export/excel?assigned_to=' + activeTeam" download class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download Excel
+        </a>
+        <button @click="syncGoogleSheet" :disabled="isSyncing" class="px-3.5 py-2 bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/80 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50">
+          <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <svg v-else class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          {{ isSyncing ? 'Menyinkronkan...' : 'Sync Google Sheet' }}
+        </button>
+        <button @click="showUploadModal = true" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           Upload Checksheet
         </button>
@@ -469,6 +478,27 @@
           }
         };
 
+        const isSyncing = ref(false);
+        const syncGoogleSheet = async () => {
+          if (!confirm(`Sinkronkan data ${activeTeam.value} ke Google Spreadsheet sekarang?`)) return;
+          isSyncing.value = true;
+          try {
+            const res = await fetch(`/api/export/sync-google-sheet?assigned_to=${activeTeam.value === 'Semua' ? 'Zul' : activeTeam.value}`, {
+              method: 'POST'
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              alert(`Berhasil sinkron ${data.synced_count} baris ke Google Spreadsheet!`);
+            } else {
+              alert('Gagal sinkron: ' + (data.detail || data.message || 'Terjadi kesalahan'));
+            }
+          } catch (e) {
+            alert('Gagal memanggil API sinkronisasi.');
+          } finally {
+            isSyncing.value = false;
+          }
+        };
+
         onMounted(() => {
           loadChecksheets();
         });
@@ -493,7 +523,9 @@
           startAutomation,
           stopLogStream,
           handleFileSelect,
-          submitUpload
+          submitUpload,
+          isSyncing,
+          syncGoogleSheet
         };
       }
     }).mount('#app');

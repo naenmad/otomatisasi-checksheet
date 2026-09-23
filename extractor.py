@@ -257,6 +257,17 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
         _METADATA_CACHE[cache_key] = res
         return dict(res)
 
+    # Try specialized modular parser
+    try:
+        from parsers import get_parser_for_file
+        mod_parser = get_parser_for_file(file_path)
+        mod_meta = mod_parser.extract_metadata(file_path)
+        if mod_meta and mod_meta.get("part_number"):
+            _METADATA_CACHE[cache_key] = mod_meta
+            return dict(mod_meta)
+    except Exception:
+        pass
+
     filename = os.path.basename(file_path)
 
     # Extract Doc Number from filename prefix (e.g. '6. IR - ...' -> 'Form 6')
@@ -1685,6 +1696,17 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
         res = extract_pdf_inspection_points(file_path)
         _POINTS_CACHE[cache_key] = res
         return [dict(it) for it in res]
+
+    # Try specialized modular parser
+    try:
+        from parsers import get_parser_for_file
+        mod_parser = get_parser_for_file(file_path)
+        mod_points = mod_parser.extract_inspection_points(file_path)
+        if mod_points:
+            _POINTS_CACHE[cache_key] = mod_points
+            return [dict(it) for it in mod_points]
+    except Exception:
+        pass
 
     wb = None
     all_items = []

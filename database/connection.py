@@ -29,6 +29,17 @@ else:
 connect_args = {}
 if "sqlite" in db_url:
     connect_args["check_same_thread"] = False
+elif "postgresql" in db_url:
+    # Clean query parameters for asyncpg compatibility
+    if "?" in db_url:
+        base_db_url, query_part = db_url.split("?", 1)
+        db_url = base_db_url
+    # Supabase requires SSL
+    import ssl
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    connect_args["ssl"] = ssl_context
 
 engine = create_async_engine(
     db_url,
