@@ -12,13 +12,16 @@ from database.connection import Base
 
 
 class User(Base):
-    """Team members (Zul, Iqbal, Rama, Yogi, etc.)."""
+    """Team members and admins with role-based access control."""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=False, index=True)
     nik = Column(String(50), nullable=True)
-    role = Column(String(50), default="member")
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(50), default="operator")  # "admin" or "operator"
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships

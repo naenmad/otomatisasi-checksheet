@@ -13,6 +13,8 @@ from server.routes.checksheets import router as checksheets_router
 from server.routes.upload import router as upload_router
 from server.routes.automation import router as automation_router
 from server.routes.export import router as export_router
+from server.routes.auth import router as auth_router
+from server.routes.users import router as users_router
 
 
 @asynccontextmanager
@@ -42,6 +44,8 @@ app.add_middleware(
 )
 
 # Include API Routers
+app.include_router(auth_router)
+app.include_router(users_router)
 app.include_router(checksheets_router)
 app.include_router(upload_router)
 app.include_router(automation_router)
