@@ -43,7 +43,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 # Known company logo dimensions (PT. Summit Adyawinsa, MMKI, Honda, ISO badges) to strictly exclude
 KNOWN_LOGO_DIMENSIONS = {
-    (530, 200), (396, 158), (240, 119), (149, 52), (154, 53), (162, 56), (144, 72)
+    (530, 200), (396, 158), (240, 119), (149, 52), (154, 53), (162, 56), (144, 72), (629, 245)
 }
 
 
@@ -290,14 +290,18 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
                 break
 
         if cover_sheet is None and len(wb.sheetnames) > 0:
-            cover_sheet = wb[wb.sheetnames[0]]
-            for s in wb.sheetnames:
-                if any(skip in s.lower() for skip in ["drawing", "eo"]):
-                    continue
-                s_lower = s.lower().replace(" ", "").replace("_", "")
-                if file_rev and f"rev.{file_rev}".lower() in s_lower or f"rev{file_rev}".lower() in s_lower:
-                    cover_sheet = wb[s]
-                    break
+            rev_sheets = [s for s in wb.sheetnames if "(rev)" in s.lower()]
+            if rev_sheets:
+                cover_sheet = wb[rev_sheets[0]]
+            else:
+                cover_sheet = wb[wb.sheetnames[0]]
+                for s in wb.sheetnames:
+                    if any(skip in s.lower() for skip in ["drawing", "eo"]):
+                        continue
+                    s_lower = s.lower().replace(" ", "").replace("_", "")
+                    if file_rev and (f"rev.{file_rev}".lower() in s_lower or f"rev{file_rev}".lower() in s_lower):
+                        cover_sheet = wb[s]
+                        break
 
         if cover_sheet:
             for row in cover_sheet.iter_rows(min_row=1, max_row=30, max_col=35, values_only=True):
@@ -305,6 +309,10 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
                     val = str(cell_val or "").strip()
                     val_lower = val.lower()
                     if any(k in val_lower for k in ["part no", "no. part", "no part"]):
+                        if ":" in val:
+                            cand_p = val.split(":", 1)[1].strip()
+                            if cand_p and len(cand_p) >= 5 and any(c.isdigit() for c in cand_p):
+                                part_number = cand_p.upper()
                         for offset in range(1, min(6, len(row) - idx)):
                             p_val = str(row[idx + offset] or "").strip().lstrip(":").strip()
                             if p_val and len(p_val) >= 5 and any(c.isdigit() for c in p_val):
@@ -318,18 +326,30 @@ def extract_metadata(file_path: str) -> Dict[str, str]:
                                     part_number = cand_p
                                 break
                     if any(k in val_lower for k in ["part name", "nama part", "item name"]) and not part_name:
+                        if ":" in val:
+                            n_val = val.split(":", 1)[1].strip()
+                            if n_val and len(n_val) > 2 and not any(n_val.lower().startswith(x) for x in ["customer", "supplier"]):
+                                part_name = n_val
                         for offset in range(1, min(6, len(row) - idx)):
                             n_val = str(row[idx + offset] or "").strip().lstrip(":").strip()
                             if n_val and len(n_val) > 2:
                                 part_name = n_val
                                 break
                     if "model" in val_lower and not model:
+                        if ":" in val:
+                            m_val = val.split(":", 1)[1].strip()
+                            if m_val and len(m_val) >= 2:
+                                model = m_val
                         for offset in range(1, min(6, len(row) - idx)):
                             m_val = str(row[idx + offset] or "").strip().lstrip(":").strip()
                             if m_val and len(m_val) >= 2:
                                 model = m_val
                                 break
                     if any(k in val_lower for k in ["no. dokumen", "no dokumen", "doc. no", "doc no", "document no"]) and doc_number == "Form 1":
+                        if ":" in val:
+                            d_val = val.split(":", 1)[1].strip()
+                            if d_val and len(d_val) >= 3:
+                                doc_number = d_val
                         for offset in range(1, min(6, len(row) - idx)):
                             d_val = str(row[idx + offset] or "").strip().lstrip(":").strip()
                             if d_val and len(d_val) >= 3:
@@ -541,11 +561,8 @@ def extract_reference_images(file_path: str, output_dir: Optional[str] = None, p
                             f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
 
                             # STRICT SKETCH FILTERING:
-                            # 1. Header logo filter: row 1 to 8, col 1 to 12 (Summit logo, customer logo, ISO badges)
-                            if f_r <= 8 and f_c <= 12:
-                                continue
-                            # Top 6 rows anywhere in sheet
-                            if f_r <= 6:
+                            # 1. Header logo filter: top 4 rows and left 3 columns
+                            if f_r <= 4 and f_c <= 3:
                                 continue
                             # 2. Bottom signature / stamp boxes or far right off-sheet columns
                             if f_r > 95 or f_c > 60:
@@ -568,7 +585,7 @@ def extract_reference_images(file_path: str, output_dir: Optional[str] = None, p
                                         if (w, h) in KNOWN_LOGO_DIMENSIONS:
                                             continue
                                         # Tiny datum markers / checkmarks
-                                        if w < 180 or h < 90:
+                                        if w < 100 or h < 50:
                                             continue
                                 except Exception:
                                     continue
@@ -1241,6 +1258,23 @@ def filter_inspection_sheets(sheetnames: List[str], filename: str = "") -> List[
         if filtered:
             return filtered
 
+    # Check for (rev) unnumbered revision sheets (e.g. IQC incoming files)
+    rev_sheets = [s for s in valid_sheets if "(rev)" in s.lower()]
+    if rev_sheets:
+        if len(rev_sheets) > 1 and filename:
+            fn_clean = re.sub(r"[^0-9A-Za-z]", "", filename).upper()
+            matched = [s for s in rev_sheets if re.sub(r"[^0-9A-Za-z]", "", s).upper() in fn_clean]
+            if matched:
+                return matched
+        return rev_sheets
+
+    # If multiple sheets and filename contains a specific part number, prefer that sheet
+    if len(valid_sheets) > 1 and filename:
+        fn_clean = re.sub(r"[^0-9A-Za-z]", "", filename).upper()
+        matched = [s for s in valid_sheets if re.sub(r"[^0-9A-Za-z]", "", s).upper() in fn_clean]
+        if matched:
+            return matched
+
     return valid_sheets
 
 
@@ -1552,6 +1586,80 @@ def parse_ipqc_sheet(ws, sheet_name: str) -> Optional[List[Dict[str, str]]]:
     return points
 
 
+def parse_iqc_incoming_sheet(ws, sheet_name: str = "") -> Optional[List[Dict[str, str]]]:
+    """
+    Dedicated parser for Incoming Material (IQC) checksheets (e.g. coil / raw material checks).
+    Detects table header with NO, INSPECTION, STANDAR/LIMIT, ALAT/TOOLS.
+    Extracts inspection points (Material Spec, Thickness, Length, Width, Appearance, Judgements).
+    """
+    hdr_row = None
+    c_no, c_item, c_std, c_tool = 1, 2, 3, 4
+
+    for r in range(1, min(ws.max_row + 1, 25)):
+        row_vals = [str(ws.cell(r, c).value or "").strip().upper() for c in range(1, 15)]
+        has_no = any(v in ["NO", "NO.", "NO / ITEM"] for v in row_vals)
+        has_insp = any("INSPECTION" in v for v in row_vals)
+        has_std = any("STANDAR" in v or "LIMIT" in v for v in row_vals)
+        if (has_no or has_insp) and has_std:
+            hdr_row = r
+            for c in range(1, 15):
+                val = str(ws.cell(r, c).value or "").strip().upper()
+                if val in ["NO", "NO."]:
+                    c_no = c
+                elif "INSPECTION" in val and not "RESULT" in val:
+                    c_item = c
+                elif "STANDAR" in val or "LIMIT" in val:
+                    c_std = c
+                elif "ALAT" in val or "TOOL" in val:
+                    c_tool = c
+            break
+
+    if not hdr_row:
+        return None
+
+    points = []
+    balloon_counter = 1
+    last_item = ""
+    for r in range(hdr_row + 1, min(ws.max_row + 1, hdr_row + 35)):
+        v_no = str(ws.cell(r, c_no).value or "").strip()
+        v_item = str(ws.cell(r, c_item).value or "").strip()
+        v_std = str(ws.cell(r, c_std).value or "").strip()
+        v_tool = str(ws.cell(r, c_tool).value or "").strip()
+
+        # Skip empty rows or inspection result subheaders (Date, Qty, Judg, numbers 1-5)
+        if not v_item and not v_std:
+            continue
+        if any(skip in v_item.upper() for skip in ["DATE", "QTY", "JUDG", "JUDGEMENT"]):
+            continue
+        if v_item.isdigit() and len(v_item) <= 2:
+            continue
+
+        if not v_item and v_no and not v_no.isdigit():
+            v_item = v_no
+            v_no = ""
+
+        # If v_item is empty but we have v_std, inherit from last_item (e.g. Conformity merged cells)
+        if not v_item and last_item:
+            v_item = last_item
+        elif v_item:
+            last_item = v_item
+
+        item_no_str = v_no if v_no else str(balloon_counter)
+        if v_no and v_no.isdigit():
+            balloon_counter = int(v_no) + 1
+        else:
+            balloon_counter += 1
+
+        points.append({
+            "item_no": item_no_str,
+            "inspection_item": " ".join(v_item.split()),
+            "standard": " ".join(v_std.split()),
+            "method": " ".join(v_tool.split()) if v_tool else "Visual",
+            "master_data": ""
+        })
+    return points if points else None
+
+
 def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
     """
     Extract inspection points dynamically for ANY checksheet document (Excel or PDF)
@@ -1561,6 +1669,7 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
     - MMKI Final Checksheet layout (HAL 1..4, Col 18: NO, Col 20: ITEM, Col 26: STD, Col 30: Method)
     - MMKI Multi-page IR reports (PAGE 6..11)
     - MMKI IPQC Checksheets (Appearance & Dimension multi-page sheets)
+    - Incoming Material (IQC) checksheets
     - Custom sheets with NO / ITEM / STANDARD headers
     """
     abs_p = os.path.abspath(file_path)
@@ -1600,6 +1709,12 @@ def extract_inspection_points(file_path: str) -> List[Dict[str, str]]:
             ipqc_points = parse_ipqc_sheet(ws, sheet_name)
             if ipqc_points is not None:
                 all_items.extend(ipqc_points)
+                continue
+
+            # Specialized layout parser for Incoming Inspection (IQC Material) checksheets
+            iqc_points = parse_iqc_incoming_sheet(ws, sheet_name)
+            if iqc_points is not None:
+                all_items.extend(iqc_points)
                 continue
 
             header_row = None

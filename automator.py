@@ -741,14 +741,14 @@ async def fill_checksheet_form(
                     setVal(itemNoInp, item.item_no || (index + 1));
 
                     const itemInp = tr.querySelector('input[name*="[inspection_item]"]');
-                    setVal(itemInp, item.inspection_item || '');
+                    setVal(itemInp, item.inspection_item || ('Point ' + (index + 1)));
 
                     const stdInp = tr.querySelector('input[name*="[standard]"]');
-                    setVal(stdInp, item.standard || '');
+                    setVal(stdInp, item.standard || '-');
 
                     const methodInp = tr.querySelector('input[name*="[method]"], input[name*="[instrument_tools]"]') ||
                                       (tr.cells && tr.cells[5] ? tr.cells[5].querySelector('input') : null);
-                    setVal(methodInp, item.method || '');
+                    setVal(methodInp, item.method || 'Visual');
 
                     const masterInp = tr.querySelector('input[name*="[master_data]"]') ||
                                       (tr.cells && tr.cells[6] ? tr.cells[6].querySelector('input') : null);
@@ -791,10 +791,32 @@ async def fill_checksheet_form(
         if submit_button:
             await submit_button.click()
             await page.wait_for_load_state("networkidle")
-            print(f"[+] Submitted! New URL: {page.url}")
+            
+            # Verify if redirected or still on create
+            if "/create" in page.url:
+                print(f"[!] Warning: Page still on {page.url}. Checking for validation errors...")
+                errors = await page.evaluate("""() => {
+                    const errs = [];
+                    document.querySelectorAll('.invalid-feedback, .alert-danger, :invalid').forEach(el => {
+                        errs.push(el.innerText || el.validationMessage || el.name || 'validation_error');
+                    });
+                    return errs;
+                }""")
+                if errors:
+                    print(f"[X] Validation errors prevented submission: {errors}")
+                    await page.screenshot(path="checksheet_submitted_error.png", full_page=True)
+                    raise RuntimeError(f"Submission failed due to validation errors: {errors}")
+                else:
+                    # Wait up to 10s for possible navigation
+                    try:
+                        await page.wait_for_url(lambda u: "/create" not in u, timeout=8000)
+                    except Exception:
+                        pass
+            
+            print(f"[+] Final submission URL: {page.url}")
             await page.screenshot(path="checksheet_submitted.png", full_page=True)
             return {
-                "status": "submitted",
+                "status": "submitted" if "/create" not in page.url else "failed",
                 "mode": mode_used,
                 "button_text": button_text,
                 "final_url": page.url,

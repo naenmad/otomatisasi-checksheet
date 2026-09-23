@@ -12,6 +12,12 @@ TODO.md
 ~$*.xlsx
 ~$*.xls
 
+# Temporary Scratch & Analysis
+scratch/
+cs_incoming_analysis.json
+*.json
+!data/factoryhub_catalog.json
+
 # Checksheet Documents (Keep folder structure, ignore contents)
 documents/*
 !documents/.gitkeep
