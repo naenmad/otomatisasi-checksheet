@@ -3,128 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Summit FactoryHub — Otomasi Checksheet Kolaboratif</title>
+  <title>Summit FactoryHub: Otomasi Checksheet Kolaboratif</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    body { font-family: 'Outfit', sans-serif; }
-    .mono { font-family: 'JetBrains+Mono', monospace; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    :focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col">
+<body class="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col selection:bg-indigo-600 selection:text-white">
   <div id="app" class="flex-1 flex flex-col">
 
     <!-- Top Navigation Header -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+    <header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        <div class="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-100">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
           </svg>
         </div>
         <div>
-          <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-            Summit FactoryHub Checksheet
-          </h1>
-          <p class="text-xs text-slate-400 font-medium flex items-center gap-2">
-            <span>Sistem Otomasi Kolaboratif Tim</span>
-            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-emerald-400">Online</span>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-bold text-zinc-100 tracking-tight">
+              Summit FactoryHub: Quality Checksheet
+            </h1>
+            <span class="px-2 py-0.5 text-[11px] font-medium bg-zinc-800 text-zinc-300 rounded border border-zinc-700">
+              Tim: Zul, Iqbal, Rama, Yogi
+            </span>
+          </div>
+          <p class="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Cloud Database: <strong>Supabase PostgreSQL</strong></span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <a :href="'/api/export/excel?assigned_to=' + activeTeam" download class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Download Excel
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2.5">
+        <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
+           class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors focus:ring-2 focus:ring-zinc-400">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Unduh Rekap Excel
         </a>
-        <button @click="syncGoogleSheet" :disabled="isSyncing" class="px-3.5 py-2 bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/80 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50">
-          <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <svg v-else class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          {{ isSyncing ? 'Menyinkronkan...' : 'Sync Google Sheet' }}
+
+        <button @click="syncGoogleSheet" :disabled="isSyncing"
+                class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 focus:ring-2 focus:ring-zinc-400">
+          <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <svg v-else class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>{{ isSyncing ? 'Menyinkronkan...' : 'Sinkron Google Sheet' }}</span>
         </button>
-        <button @click="showUploadModal = true" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Upload Checksheet
+
+        <button @click="showUploadModal = true"
+                class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors focus:ring-2 focus:ring-indigo-400">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span>Upload Checksheet</span>
         </button>
       </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
 
-      <!-- Summary KPI Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-400 font-medium">Total Checksheet</p>
-            <p class="text-2xl font-bold text-white mt-1">{{ checksheets.length }}</p>
-          </div>
-          <div class="p-3 bg-slate-800/80 rounded-lg text-indigo-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
-        </div>
+      <!-- Interactive Metric Filters -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <!-- Card Total -->
+        <button @click="statusFilter = 'ALL'"
+                :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                class="p-4 rounded-xl border text-left transition-all">
+          <p class="text-xs text-zinc-400 font-medium">Total Checksheet</p>
+          <p class="text-2xl font-bold text-zinc-100 font-mono mt-1">{{ checksheets.length }}</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Seluruh part terdaftar</p>
+        </button>
 
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-400 font-medium">Checksheet Done</p>
-            <p class="text-2xl font-bold text-emerald-400 mt-1">{{ countStatus('Checksheet Done') }}</p>
+        <!-- Card Done -->
+        <button @click="statusFilter = 'Checksheet Done'"
+                :class="statusFilter === 'Checksheet Done' ? 'border-emerald-500 bg-zinc-800/80 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                class="p-4 rounded-xl border text-left transition-all">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-zinc-400 font-medium">Checksheet Done</p>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
-          <div class="p-3 bg-emerald-950/40 border border-emerald-800/40 rounded-lg text-emerald-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-          </div>
-        </div>
+          <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
+        </button>
 
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-400 font-medium">Belum Di Input</p>
-            <p class="text-2xl font-bold text-amber-400 mt-1">{{ countStatus('Belum Di Input') }}</p>
+        <!-- Card Belum Di Input -->
+        <button @click="statusFilter = 'Belum Di Input'"
+                :class="statusFilter === 'Belum Di Input' ? 'border-amber-500 bg-zinc-800/80 ring-1 ring-amber-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                class="p-4 rounded-xl border text-left transition-all">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-zinc-400 font-medium">Belum Di Input</p>
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
           </div>
-          <div class="p-3 bg-amber-950/40 border border-amber-800/40 rounded-lg text-amber-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-        </div>
+          <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Di Input') }}</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Siap disubmit ke portal</p>
+        </button>
 
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-400 font-medium">Tidak Ada Part</p>
-            <p class="text-2xl font-bold text-rose-400 mt-1">{{ countStatus('Tidak Ada Part') }}</p>
+        <!-- Card Tidak Ada Part -->
+        <button @click="statusFilter = 'Tidak Ada Part'"
+                :class="statusFilter === 'Tidak Ada Part' ? 'border-rose-500 bg-zinc-800/80 ring-1 ring-rose-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                class="p-4 rounded-xl border text-left transition-all">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
           </div>
-          <div class="p-3 bg-rose-950/40 border border-rose-800/40 rounded-lg text-rose-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </div>
-        </div>
+          <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Belum ada di Master Portal</p>
+        </button>
       </div>
 
-      <!-- Filter Tabs & Search Controls -->
-      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-4">
-        <!-- Team Tabs -->
-        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+      <!-- Controls & Filter Toolbar -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Team Assignee Filter Tabs -->
+        <div class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
           <button v-for="member in ['Semua', 'Zul', 'Iqbal', 'Rama', 'Yogi']" :key="member"
                   @click="activeTeam = member"
-                  :class="activeTeam === member ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
-                  class="px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all">
+                  :class="activeTeam === member ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
+                  class="px-3 py-1 rounded-md text-xs transition-colors focus:ring-1 focus:ring-zinc-400">
             {{ member }}
+            <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(member) }})</span>
           </button>
         </div>
 
-        <!-- Search & Status Filter -->
-        <div class="flex items-center gap-3 flex-1 max-w-md ml-auto">
+        <!-- Search Input & Status Selector -->
+        <div class="flex items-center gap-2.5 flex-1 max-w-lg ml-auto">
           <div class="relative w-full">
-            <input v-model="searchQuery" type="text" placeholder="Cari Part Number / Nama Part..."
-                   class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
-            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input v-model="searchQuery" type="text"
+                   placeholder="Cari part number, nama part, atau model..."
+                   class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors">
+            <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2.5 top-2 text-zinc-500 hover:text-zinc-300 text-xs">
+              ✕
+            </button>
           </div>
-          <select v-model="statusFilter" class="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+
+          <select v-model="statusFilter" class="bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 rounded-lg px-2.5 py-1.5 focus:border-zinc-600 focus:outline-none">
             <option value="ALL">Semua Status</option>
             <option value="Checksheet Done">Checksheet Done</option>
             <option value="Belum Di Input">Belum Di Input</option>
@@ -133,64 +159,105 @@
         </div>
       </div>
 
-      <!-- Main Checksheet Table -->
-      <div class="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+      <!-- Main Data Table Container -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
+            <thead class="bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
               <tr>
                 <th class="py-3 px-3 w-10 text-center">
-                  <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+                  <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
+                         class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer"
+                         aria-label="Pilih Semua Checksheet">
                 </th>
-                <th class="py-3 px-4 w-12 text-center">No</th>
-                <th class="py-3 px-4 w-28">Penanggung Jawab</th>
+                <th class="py-3 px-3 w-12 text-center">No</th>
+                <th class="py-3 px-3 w-28">Penanggung Jawab</th>
                 <th class="py-3 px-4">Part Number</th>
-                <th class="py-3 px-4">Part Name</th>
-                <th class="py-3 px-4 w-20">Model</th>
-                <th class="py-3 px-4 w-24">Customer</th>
-                <th class="py-3 px-4 w-32">Status</th>
+                <th class="py-3 px-4">Nama Part</th>
+                <th class="py-3 px-3 w-20">Model</th>
+                <th class="py-3 px-3 w-24">Customer</th>
+                <th class="py-3 px-3 w-36">Status</th>
                 <th class="py-3 px-4">Keterangan</th>
-                <th class="py-3 px-4 w-28 text-center">Aksi</th>
+                <th class="py-3 px-3 w-24 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60">
+
+            <!-- Loading Skeleton State -->
+            <tbody v-if="isLoading" class="divide-y divide-zinc-800/60">
+              <tr v-for="n in 6" :key="n" class="animate-pulse">
+                <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
+                <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
+                <td class="p-3"><div class="w-16 h-5 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-36 h-4 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-48 h-4 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-12 h-4 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-16 h-4 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-24 h-5 bg-zinc-800 rounded"></div></td>
+                <td class="p-3"><div class="w-32 h-4 bg-zinc-800 rounded"></div></td>
+                <td class="p-3 text-center"><div class="w-14 h-6 bg-zinc-800 rounded mx-auto"></div></td>
+              </tr>
+            </tbody>
+
+            <!-- Table Rows -->
+            <tbody v-else class="divide-y divide-zinc-800/60">
               <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
-                  class="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  class="hover:bg-zinc-800/40 transition-colors group cursor-pointer"
                   @click="toggleSelect(cs.id)">
                 <td class="py-3 px-3 text-center" @click.stop>
-                  <input type="checkbox" :value="cs.id" v-model="selectedIds" class="rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+                  <input type="checkbox" :value="cs.id" v-model="selectedIds"
+                         class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer"
+                         :aria-label="'Pilih part ' + cs.part_number">
                 </td>
-                <td class="py-3 px-4 text-center font-mono text-slate-400">{{ idx + 1 }}</td>
-                <td class="py-3 px-4">
-                  <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+                <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ idx + 1 }}</td>
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
                     {{ cs.assigned_to }}
                   </span>
                 </td>
-                <td class="py-3 px-4 font-mono font-bold text-white">{{ cs.part_number }}</td>
-                <td class="py-3 px-4 font-medium text-slate-200">{{ cs.part_name || '-' }}</td>
-                <td class="py-3 px-4 text-slate-300">{{ cs.model || '-' }}</td>
-                <td class="py-3 px-4 text-slate-400">{{ cs.customer || '-' }}</td>
-                <td class="py-3 px-4">
-                  <span v-if="cs.status === 'Checksheet Done'" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 flex items-center gap-1.5 w-fit">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Done
+                <td class="py-3 px-4 font-mono font-bold text-zinc-100">{{ cs.part_number }}</td>
+                <td class="py-3 px-4 font-medium text-zinc-200">{{ cs.part_name || '-' }}</td>
+                <td class="py-3 px-3 text-zinc-300 font-mono">{{ cs.model || '-' }}</td>
+                <td class="py-3 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
+                <td class="py-3 px-3">
+                  <!-- Semantic High Contrast Badges -->
+                  <span v-if="cs.status === 'Checksheet Done'"
+                        class="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Done</span>
                   </span>
-                  <span v-else-if="cs.status === 'Belum Di Input'" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-400 border border-amber-800/60 flex items-center gap-1.5 w-fit">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Ready
+                  <span v-else-if="cs.status === 'Belum Di Input'"
+                        class="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <span>Ready</span>
                   </span>
-                  <span v-else class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-950/80 text-rose-400 border border-rose-800/60 flex items-center gap-1.5 w-fit">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> No Part
+                  <span v-else
+                        class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                    <span>No Part</span>
                   </span>
                 </td>
-                <td class="py-3 px-4 text-slate-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
-                <td class="py-3 px-4 text-center" @click.stop>
-                  <button @click="openDetail(cs.id)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-semibold border border-slate-700 transition-colors">
+                <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
+                <td class="py-3 px-3 text-center" @click.stop>
+                  <button @click="openDetail(cs.id)"
+                          class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-medium border border-zinc-700 transition-colors focus:ring-1 focus:ring-zinc-400">
                     Review
                   </button>
                 </td>
               </tr>
+
+              <!-- Empty State -->
               <tr v-if="filteredChecksheets.length === 0">
-                <td colspan="10" class="py-12 text-center text-slate-500">
-                  Tidak ada checksheet yang sesuai dengan filter.
+                <td colspan="10" class="py-16 text-center">
+                  <div class="max-w-sm mx-auto flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-zinc-200">Tidak ada checksheet yang sesuai</p>
+                    <p class="text-xs text-zinc-400 mt-1">Coba sesuaikan pencarian atau pilih tab penanggung jawab lainnya.</p>
+                    <button @click="resetFilters" class="mt-4 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700">
+                      Reset Semua Filter
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -199,25 +266,31 @@
       </div>
     </main>
 
-    <!-- Slide-over / Modal Review & Submit -->
-    <div v-if="activeChecksheet" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
-      <div class="bg-slate-900 border-l border-slate-800 w-full max-w-2xl h-full flex flex-col p-6 shadow-2xl overflow-y-auto">
-        
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+    <!-- Slide-over Review & Submit Drawer -->
+    <div v-if="activeChecksheet" class="fixed inset-0 z-50 bg-black/70 flex justify-end" @click.self="closeDetail">
+      <div class="bg-zinc-900 border-l border-zinc-800 w-full max-w-2xl h-full flex flex-col p-6 shadow-xl overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
           <div>
-            <h2 class="text-base font-bold text-white font-mono">{{ activeChecksheet.part_number }}</h2>
-            <p class="text-xs text-slate-400">{{ activeChecksheet.part_name }} • Model: {{ activeChecksheet.model }}</p>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-zinc-100 font-mono">{{ activeChecksheet.part_number }}</h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {{ activeChecksheet.customer }}
+              </span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-0.5">{{ activeChecksheet.part_name }} (Model: {{ activeChecksheet.model }})</p>
           </div>
-          <button @click="activeChecksheet = null; stopLogStream()" class="text-slate-400 hover:text-white p-1">
+          <button @click="closeDetail" class="text-zinc-400 hover:text-zinc-100 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors" title="Tutup (Esc)">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
-        <!-- Assignment & Controls -->
+        <!-- Meta Configuration -->
         <div class="grid grid-cols-2 gap-3 my-4">
           <div>
-            <label class="text-[11px] text-slate-400 font-medium">Penanggung Jawab</label>
-            <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200">
+            <label class="text-xs text-zinc-400 font-medium">Penanggung Jawab</label>
+            <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta"
+                    class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none">
               <option value="Zul">Zul</option>
               <option value="Iqbal">Iqbal</option>
               <option value="Rama">Rama</option>
@@ -225,44 +298,51 @@
             </select>
           </div>
           <div>
-            <label class="text-[11px] text-slate-400 font-medium">Doc Number</label>
-            <input v-model="activeChecksheet.doc_number" @blur="saveChecksheetMeta" type="text" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+            <label class="text-xs text-zinc-400 font-medium">Doc Number</label>
+            <input v-model="activeChecksheet.doc_number" @blur="saveChecksheetMeta" type="text"
+                   class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 font-mono focus:border-zinc-600 focus:outline-none">
           </div>
         </div>
 
-        <!-- Inspection Points Table -->
+        <!-- Inspection Points -->
         <div class="flex-1 my-2">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Titik Inspeksi ({{ activeChecksheet.points.length }} items)
+            <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+              Titik Inspeksi ({{ activeChecksheet.points.length }} Baris)
             </h3>
             <button @click="savePoints" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
               Simpan Perubahan
             </button>
           </div>
-          <div class="border border-slate-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+
+          <div class="border border-zinc-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
             <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-slate-950 text-slate-400 font-semibold sticky top-0">
+              <thead class="bg-zinc-950 text-zinc-400 font-semibold sticky top-0 border-b border-zinc-800">
                 <tr>
-                  <th class="p-2 w-12">No</th>
+                  <th class="p-2 w-12 text-center">No</th>
                   <th class="p-2">Item Inspeksi</th>
                   <th class="p-2">Standar / Toleransi</th>
-                  <th class="p-2 w-24">Metode</th>
+                  <th class="p-2 w-28">Metode</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr v-for="pt in activeChecksheet.points" :key="pt.id" class="hover:bg-slate-800/40">
+              <tbody class="divide-y divide-zinc-800">
+                <tr v-for="pt in activeChecksheet.points" :key="pt.id" class="hover:bg-zinc-800/40">
                   <td class="p-1.5 font-mono text-center">
-                    <input v-model="pt.item_no" class="w-8 bg-transparent text-center border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                    <input v-model="pt.item_no" class="w-8 bg-transparent text-center border-b border-transparent focus:border-zinc-500 focus:outline-none">
                   </td>
                   <td class="p-1.5">
-                    <input v-model="pt.inspection_item" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                    <input v-model="pt.inspection_item" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none">
                   </td>
                   <td class="p-1.5 font-mono">
-                    <input v-model="pt.standard" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                    <input v-model="pt.standard" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none">
                   </td>
                   <td class="p-1.5">
-                    <input v-model="pt.method" class="w-full bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none">
+                    <input v-model="pt.method" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none">
+                  </td>
+                </tr>
+                <tr v-if="activeChecksheet.points.length === 0">
+                  <td colspan="4" class="p-6 text-center text-zinc-500">
+                    Belum ada data titik inspeksi pada checksheet ini.
                   </td>
                 </tr>
               </tbody>
@@ -270,162 +350,117 @@
           </div>
         </div>
 
-        <!-- Automation Terminal Live Log -->
-        <div v-if="liveLogs.length > 0" class="mt-4 bg-slate-950 border border-slate-800 rounded-lg p-3">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
-            <span class="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Playwright Automation
+        <!-- Live Automation Log Stream -->
+        <div v-if="liveLogs.length > 0" class="mt-4 bg-zinc-950 border border-zinc-800 rounded-lg p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800">
+            <span class="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Log Playwright Realtime
             </span>
-            <span class="text-[10px] text-slate-500 font-mono">{{ liveLogs.length }} lines</span>
+            <span class="text-[11px] text-zinc-500 font-mono">{{ liveLogs.length }} lines</span>
           </div>
-          <div class="max-h-40 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1">
+          <div class="max-h-40 overflow-y-auto font-mono text-[11px] text-zinc-300 space-y-1">
             <div v-for="(line, lidx) in liveLogs" :key="lidx">{{ line }}</div>
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3 mt-auto">
+        <!-- Drawer Footer Actions -->
+        <div class="pt-4 border-t border-zinc-800 flex items-center justify-end gap-3 mt-auto">
           <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
-                  class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-colors">
-            Dry Run (Review Form)
+                  class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700 transition-colors disabled:opacity-50">
+            Uji Form (Dry Run)
           </button>
           <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
-                  class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 disabled:opacity-50">
             <svg v-if="isAutomating" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            Auto Submit ke FactoryHub
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Upload Modal -->
-    <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-        <h3 class="text-base font-bold text-white mb-1">Upload Berkas Checksheet</h3>
-        <p class="text-xs text-slate-400 mb-4">Mendukung berkas Excel (.xlsx, .xls) dan PDF. Data tabel & gambar sketsa akan otomatis diekstrak ke database.</p>
-
-        <div class="mb-4">
-          <label class="text-xs text-slate-300 font-medium">Tugaskan ke Penanggung Jawab:</label>
-          <div class="grid grid-cols-4 gap-2 mt-1.5">
-            <button v-for="m in ['Zul', 'Iqbal', 'Rama', 'Yogi']" :key="m"
-                    @click="uploadAssignee = m"
-                    :class="uploadAssignee === m ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-slate-400 border-slate-800'"
-                    class="py-1.5 rounded-lg text-xs font-semibold border transition-all text-center">
-              {{ m }}
-            </button>
-          </div>
-        </div>
-
-        <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-8 text-center bg-slate-950/60 transition-colors cursor-pointer"
-             @click="$refs.fileInput.click()">
-          <input type="file" ref="fileInput" multiple accept=".xlsx,.xls,.pdf" class="hidden" @change="handleFileSelect">
-          <svg class="w-10 h-10 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-          <p class="text-xs text-slate-300 font-semibold">Klik untuk memilih file checksheet</p>
-          <p class="text-[11px] text-slate-500 mt-1">Bisa pilih beberapa file sekaligus (batch upload)</p>
-        </div>
-
-        <div v-if="selectedFiles.length > 0" class="mt-3 text-xs text-indigo-400 font-medium">
-          {{ selectedFiles.length }} file dipilih untuk di-upload.
-        </div>
-
-        <div class="flex items-center justify-end gap-3 mt-6">
-          <button @click="showUploadModal = false; selectedFiles = []" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">
-            Batal
-          </button>
-          <button @click="submitUpload" :disabled="selectedFiles.length === 0 || isUploading"
-                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50">
-            {{ isUploading ? 'Memproses...' : 'Mulai Ekstraksi' }}
+            <span>Submit ke FactoryHub</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- Floating Batch Actions Bar -->
-    <transition enter-active-class="transform transition ease-out duration-200"
-                enter-from-class="translate-y-12 opacity-0"
+    <transition enter-active-class="transform transition ease-out duration-150"
+                enter-from-class="translate-y-8 opacity-0"
                 enter-to-class="translate-y-0 opacity-100"
-                leave-active-class="transform transition ease-in duration-150"
+                leave-active-class="transform transition ease-in duration-100"
                 leave-from-class="translate-y-0 opacity-100"
-                leave-to-class="translate-y-12 opacity-0">
+                leave-to-class="translate-y-8 opacity-0">
       <div v-if="selectedIds.length > 0"
-           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 border border-indigo-500/40 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 text-xs">
-        <div class="flex items-center gap-2 pr-3 border-r border-slate-700">
-          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-          <span class="font-bold text-white font-mono">{{ selectedIds.length }}</span>
-          <span class="text-slate-300">part dipilih</span>
+           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-700 px-5 py-3 rounded-xl shadow-xl flex items-center gap-4 text-xs">
+        <div class="flex items-center gap-2 pr-3 border-r border-zinc-700">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <span class="font-bold text-zinc-100 font-mono">{{ selectedIds.length }}</span>
+          <span class="text-zinc-300">part dipilih</span>
         </div>
 
-        <!-- Tugaskan ke Team -->
+        <!-- Reassign Dropdown / Buttons -->
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-400 text-[11px]">Tugaskan ke:</span>
+          <span class="text-zinc-400 text-xs">Tugaskan ke:</span>
           <button v-for="m in ['Zul', 'Iqbal', 'Rama', 'Yogi']" :key="m"
                   @click="batchAssign(m)"
-                  class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-semibold border border-slate-700 hover:border-indigo-500 transition-all">
+                  class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-medium border border-zinc-700 transition-colors">
             {{ m }}
           </button>
         </div>
 
-        <div class="h-4 w-px bg-slate-700"></div>
+        <div class="h-4 w-px bg-zinc-700"></div>
 
-        <!-- Batch Submit Button -->
+        <!-- Batch Submit CTA -->
         <button @click="openBatchModal"
-                class="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-lg font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          Batch Submit ke FactoryHub
+                class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold flex items-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>Batch Submit ke FactoryHub</span>
         </button>
 
-        <button @click="selectedIds = []" title="Batal Pilihan" class="text-slate-400 hover:text-slate-200 ml-1 p-1">
+        <button @click="selectedIds = []" title="Batal Pilihan (Esc)" class="text-zinc-400 hover:text-zinc-100 p-1">
           ✕
         </button>
       </div>
     </transition>
 
     <!-- Modal Batch Execution -->
-    <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+    <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" @click.self="closeBatchModal">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
         <!-- Header -->
-        <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
           <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+            <h3 class="text-sm font-bold text-zinc-100">
               Batch Runner FactoryHub ({{ selectedIds.length }} Part)
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Eksekusi submission berurutan secara otomatis dengan log realtime.</p>
+            <p class="text-xs text-zinc-400 mt-0.5">Eksekusi submission berurutan dengan antrian otomatis.</p>
           </div>
-          <button @click="closeBatchModal" :disabled="isBatchRunning" class="text-slate-400 hover:text-white p-1 disabled:opacity-30">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <button @click="closeBatchModal" :disabled="isBatchRunning" class="text-zinc-400 hover:text-zinc-100 p-1 disabled:opacity-30">
+            ✕
           </button>
         </div>
 
-        <!-- Body / Content -->
+        <!-- Content -->
         <div class="p-5 flex-1 overflow-y-auto space-y-4">
-          <!-- Selected items chips -->
+          <!-- Selected Items -->
           <div class="flex flex-wrap gap-2">
-            <span v-for="id in selectedIds" :key="id" class="px-2.5 py-1 rounded bg-slate-800/80 border border-slate-700 text-xs font-mono text-indigo-300">
+            <span v-for="id in selectedIds" :key="id" class="px-2.5 py-1 rounded bg-zinc-800 border border-zinc-700 text-xs font-mono text-zinc-200">
               #{{ id }} {{ getPartNumber(id) }}
             </span>
           </div>
 
-          <!-- Controls -->
-          <div v-if="!isBatchRunning && batchLogs.length === 0" class="p-4 bg-slate-950/50 rounded-xl border border-slate-800/80 flex items-center justify-between">
-            <div class="text-xs text-slate-300">
-              Browser Chrome akan dibuka dan mengisi checksheet satu per satu secara otomatis.
+          <!-- Action Button if not running -->
+          <div v-if="!isBatchRunning && batchLogs.length === 0" class="p-4 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-between">
+            <div class="text-xs text-zinc-300">
+              Browser Chrome akan dibuka dan mengisi checksheet satu per satu secara berurutan.
             </div>
-            <button @click="startBatchAutomation(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-              Jalankan Batch Sekarang
+            <button @click="startBatchAutomation(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors">
+              Mulai Batch Submission
             </button>
           </div>
 
           <!-- Live Log Console -->
           <div v-if="batchLogs.length > 0 || isBatchRunning">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Live Execution Console</span>
-              <span v-if="isBatchRunning" class="text-[11px] text-amber-400 font-mono animate-pulse">Running Playwright...</span>
-              <span v-else class="text-[11px] text-emerald-400 font-mono">Selesai</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Terminal Log Playwright</span>
+              <span v-if="isBatchRunning" class="text-xs text-amber-400 font-mono">Sedang Berjalan...</span>
+              <span v-else class="text-xs text-emerald-400 font-mono">Selesai</span>
             </div>
-            <div class="bg-black/90 text-emerald-400 font-mono text-[11px] p-3.5 rounded-xl border border-slate-800 h-64 overflow-y-auto space-y-1">
+            <div class="bg-black text-emerald-400 font-mono text-[11px] p-3.5 rounded-lg border border-zinc-800 h-64 overflow-y-auto space-y-1">
               <div v-for="(log, idx) in batchLogs" :key="idx" class="leading-relaxed whitespace-pre-wrap">
                 {{ log }}
               </div>
@@ -434,12 +469,60 @@
         </div>
 
         <!-- Footer -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
-          <div class="text-xs text-slate-500">
-            * Pastikan Chrome sudah login ke FactoryHub sebelum memulai.
-          </div>
-          <button @click="closeBatchModal" :disabled="isBatchRunning" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold disabled:opacity-30">
+        <div class="p-4 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
+          <p class="text-xs text-zinc-500">
+            * Pastikan profil Chrome sudah login ke portal FactoryHub sebelum memulai.
+          </p>
+          <button @click="closeBatchModal" :disabled="isBatchRunning"
+                  class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium disabled:opacity-40">
             Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" @click.self="showUploadModal = false">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-6 shadow-2xl">
+        <h3 class="text-sm font-bold text-zinc-100">Upload Checksheet Baru</h3>
+        <p class="text-xs text-zinc-400 mt-1 mb-4">
+          Unggah dokumen Excel (.xlsx) atau PDF. Sistem otomatis mengekstrak tabel dan gambar.
+        </p>
+
+        <div class="mb-4">
+          <label class="text-xs text-zinc-300 font-medium">Tugaskan ke Penanggung Jawab:</label>
+          <div class="grid grid-cols-4 gap-2 mt-1.5">
+            <button v-for="m in ['Zul', 'Iqbal', 'Rama', 'Yogi']" :key="m"
+                    @click="uploadAssignee = m"
+                    :class="uploadAssignee === m ? 'bg-indigo-600 text-white font-semibold' : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'"
+                    class="py-1.5 rounded-lg text-xs border transition-colors text-center">
+              {{ m }}
+            </button>
+          </div>
+        </div>
+
+        <div class="border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl p-8 text-center bg-zinc-950 transition-colors cursor-pointer"
+             @click="$refs.fileInput.click()">
+          <input type="file" ref="fileInput" multiple accept=".xlsx,.xls,.pdf" class="hidden" @change="handleFileSelect">
+          <svg class="w-8 h-8 text-zinc-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <p class="text-xs text-zinc-200 font-medium">Pilih file checksheet Excel atau PDF</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Dapat memilih beberapa file sekaligus (batch upload)</p>
+        </div>
+
+        <div v-if="selectedFiles.length > 0" class="mt-3 text-xs text-indigo-400 font-mono">
+          {{ selectedFiles.length }} file dipilih untuk diekstrak.
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 mt-6">
+          <button @click="showUploadModal = false; selectedFiles = []"
+                  class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium">
+            Batal
+          </button>
+          <button @click="submitUpload" :disabled="selectedFiles.length === 0 || isUploading"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors">
+            {{ isUploading ? 'Memproses Ekstraksi...' : 'Mulai Ekstraksi' }}
           </button>
         </div>
       </div>
@@ -453,13 +536,10 @@
     createApp({
       setup() {
         const checksheets = ref([]);
+        const isLoading = ref(true);
         const activeTeam = ref('Semua');
         const searchQuery = ref('');
         const statusFilter = ref('ALL');
-        const showUploadModal = ref(false);
-        const uploadAssignee = ref('Zul');
-        const selectedFiles = ref([]);
-        const isUploading = ref(false);
 
         // Selection & Batch Action State
         const selectedIds = ref([]);
@@ -468,19 +548,32 @@
         const isBatchRunning = ref(false);
         let batchEventSource = null;
 
+        // Detail / Review State
         const activeChecksheet = ref(null);
         const liveLogs = ref([]);
         const isAutomating = ref(false);
         let eventSource = null;
 
+        // Upload State
+        const showUploadModal = ref(false);
+        const uploadAssignee = ref('Zul');
+        const selectedFiles = ref([]);
+        const isUploading = ref(false);
+
+        // Sync State
+        const isSyncing = ref(false);
+
         const loadChecksheets = async () => {
+          isLoading.value = true;
           try {
             const res = await fetch('/api/checksheets');
             if (res.ok) {
               checksheets.value = await res.json();
             }
           } catch (e) {
-            console.error('Failed fetching checksheets:', e);
+            console.error('Gagal mengambil data checksheet:', e);
+          } finally {
+            isLoading.value = false;
           }
         };
 
@@ -488,15 +581,29 @@
           return checksheets.value.filter(c => c.status === status).length;
         };
 
+        const countByTeam = (member) => {
+          if (member === 'Semua') return checksheets.value.length;
+          return checksheets.value.filter(c => c.assigned_to === member).length;
+        };
+
         const filteredChecksheets = computed(() => {
           return checksheets.value.filter(c => {
             const matchTeam = activeTeam.value === 'Semua' || c.assigned_to === activeTeam.value;
             const matchStatus = statusFilter.value === 'ALL' || c.status === statusFilter.value;
-            const q = searchQuery.value.toLowerCase();
-            const matchQuery = !q || c.part_number.toLowerCase().includes(q) || (c.part_name && c.part_name.toLowerCase().includes(q));
+            const q = searchQuery.value.toLowerCase().trim();
+            const matchQuery = !q ||
+              c.part_number.toLowerCase().includes(q) ||
+              (c.part_name && c.part_name.toLowerCase().includes(q)) ||
+              (c.model && c.model.toLowerCase().includes(q));
             return matchTeam && matchStatus && matchQuery;
           });
         });
+
+        const resetFilters = () => {
+          searchQuery.value = '';
+          statusFilter.value = 'ALL';
+          activeTeam.value = 'Semua';
+        };
 
         const isAllSelected = computed(() => {
           return filteredChecksheets.value.length > 0 &&
@@ -604,6 +711,11 @@
           }
         };
 
+        const closeDetail = () => {
+          activeChecksheet.value = null;
+          stopLogStream();
+        };
+
         const saveChecksheetMeta = async () => {
           if (!activeChecksheet.value) return;
           await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
@@ -690,7 +802,6 @@
           }
         };
 
-        const isSyncing = ref(false);
         const syncGoogleSheet = async () => {
           if (!confirm(`Sinkronkan data ${activeTeam.value} ke Google Spreadsheet sekarang?`)) return;
           isSyncing.value = true;
@@ -711,15 +822,27 @@
           }
         };
 
+        // Keyboard navigation (R-32 Escape key handling)
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            if (activeChecksheet.value) closeDetail();
+            if (showBatchModal.value && !isBatchRunning.value) closeBatchModal();
+            if (showUploadModal.value && !isUploading.value) showUploadModal.value = false;
+          }
+        });
+
         onMounted(() => {
           loadChecksheets();
         });
 
         return {
           checksheets,
+          isLoading,
           activeTeam,
           searchQuery,
           statusFilter,
+          resetFilters,
+          countByTeam,
           showUploadModal,
           uploadAssignee,
           selectedFiles,
@@ -737,6 +860,7 @@
           closeBatchModal,
           startBatchAutomation,
           activeChecksheet,
+          closeDetail,
           liveLogs,
           isAutomating,
           countStatus,
