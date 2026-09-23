@@ -62,7 +62,7 @@ def match_catalog_status(part_number: str) -> Dict[str, str]:
 async def parse_and_save_checksheet(
     session: AsyncSession,
     file_path: str,
-    assigned_to: str = "Zul",
+    assigned_to: str = "Unassigned",
     custom_doc_no: Optional[str] = None
 ) -> Dict[str, Any]:
     """Parse checksheet file and persist directly into database."""

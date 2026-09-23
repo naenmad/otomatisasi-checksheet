@@ -46,7 +46,7 @@ class Checksheet(Base):
     keterangan = Column(Text, default="")
 
     # Team assignment and concurrency locking
-    assigned_to = Column(String(100), default="Zul", index=True)
+    assigned_to = Column(String(100), default="Unassigned", nullable=True, index=True)
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     locked_by = Column(String(100), nullable=True)
     locked_at = Column(DateTime, nullable=True)

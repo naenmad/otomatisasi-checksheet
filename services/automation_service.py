@@ -69,6 +69,10 @@ async def execute_checksheet_submission(
                 factoryhub_url=final_url,
                 keterangan="Selesai diinput via Web Otomasi"
             )
+            # Auto-sync updated status directly to Google Sheet in background
+            from services.google_sheets_service import trigger_background_sheet_sync
+            trigger_background_sheet_sync()
+            yield f"[i] Sinkronisasi baris ke Google Sheet dipicu secara otomatis.\n"
         elif status == "part_not_registered":
             yield f"[!] Part number belum terdaftar di Master Part FactoryHub.\n"
             await update_checksheet_status(

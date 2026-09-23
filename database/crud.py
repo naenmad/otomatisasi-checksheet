@@ -35,7 +35,7 @@ async def create_checksheet(
     doc_number: str = "Form 1",
     template_type: str = "GENERIC",
     status: str = "DRAFT",
-    assigned_to: str = "Zul",
+    assigned_to: str = "Unassigned",
     keterangan: str = "",
     raw_file_path: str = "",
     points: Optional[List[Dict[str, str]]] = None,
@@ -121,7 +121,15 @@ async def list_checksheets(
     query = select(Checksheet).options(selectinload(Checksheet.inspection_points), selectinload(Checksheet.images))
 
     if assigned_to and assigned_to.upper() != "ALL":
-        query = query.where(Checksheet.assigned_to == assigned_to)
+        if assigned_to.upper() in ("UNASSIGNED", "BELUM DITUGASKAN"):
+            query = query.where(
+                (Checksheet.assigned_to.is_(None)) |
+                (Checksheet.assigned_to == "") |
+                (Checksheet.assigned_to == "Unassigned") |
+                (Checksheet.assigned_to == "Belum Ditugaskan")
+            )
+        else:
+            query = query.where(Checksheet.assigned_to == assigned_to)
     if status and status.upper() != "ALL":
         query = query.where(Checksheet.status == status)
     if search:

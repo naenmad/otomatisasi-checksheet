@@ -88,60 +88,18 @@ async def export_excel(
     )
 
 
+from services.google_sheets_service import sync_all_checksheets_to_sheet, GOOGLE_SHEET_URL
+
+
 @router.post("/sync-google-sheet")
 async def sync_to_google_sheet(
-    assigned_to: str = Query("Zul"),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Sync current checksheets for a team member directly to the Google Spreadsheet.
+    Sync all checksheets with formatted table directly to the Google Spreadsheet.
     """
-    from playwright.async_api import async_playwright
-
-    checksheets = await list_checksheets(session=db, assigned_to=assigned_to, limit=200)
-    if not checksheets:
-        return {"status": "empty", "message": f"Tidak ada data untuk {assigned_to}"}
-
-    tsv_data = "\n".join([
-        f"{cs.part_number}\t{cs.part_name}\t{cs.model}\t{cs.customer}\t{cs.status}\t{cs.keterangan}"
-        for cs in checksheets
-    ])
-
-    user_data_dir = os.path.expanduser("~/.factoryhub_chrome_profile")
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch_persistent_context(
-                user_data_dir=user_data_dir,
-                channel="chrome",
-                headless=True,
-                viewport={"width": 1400, "height": 900}
-            )
-            page = await browser.new_page()
-            await page.goto(SPREADSHEET_URL)
-            await page.wait_for_timeout(3500)
-            await page.keyboard.press("Escape")
-
-            # Paste into D5 for Zul (or appropriate start cell)
-            start_cell = "D5"
-            name_box = page.locator("#t-name-box")
-            await name_box.click()
-            await name_box.fill(start_cell)
-            await page.keyboard.press("Enter")
-            await page.wait_for_timeout(600)
-
-            # Paste via clipboard
-            await browser.pages[0].context.grant_permissions(["clipboard-read", "clipboard-write"])
-            await page.evaluate("(text) => navigator.clipboard.writeText(text)", tsv_data)
-            await page.wait_for_timeout(300)
-            await page.keyboard.press("Meta+v")
-            await page.wait_for_timeout(2500)
-
-            await browser.close()
-            return {
-                "status": "success",
-                "synced_count": len(checksheets),
-                "assigned_to": assigned_to,
-                "sheet_url": SPREADSHEET_URL
-            }
+        res = await sync_all_checksheets_to_sheet()
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal sync ke Google Spreadsheet: {str(e)}")

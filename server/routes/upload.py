@@ -21,13 +21,15 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("")
 async def upload_checksheets(
     files: List[UploadFile] = File(...),
-    assigned_to: str = Form("Zul"),
+    assigned_to: str = Form("Unassigned"),
     custom_doc_no: Optional[str] = Form(None),
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     results = []
     errors = []
+
+    target_assignee = assigned_to.strip() if assigned_to and assigned_to.strip() else "Unassigned"
 
     for file in files:
         if not file.filename.lower().endswith((".xlsx", ".xls", ".pdf")):
@@ -42,7 +44,7 @@ async def upload_checksheets(
             parsed = await parse_and_save_checksheet(
                 session=db,
                 file_path=file_path,
-                assigned_to=assigned_to,
+                assigned_to=target_assignee,
                 custom_doc_no=custom_doc_no
             )
             results.append(parsed)
