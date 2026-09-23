@@ -150,16 +150,24 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
+    status_changed = False
     if payload.part_name is not None: cs.part_name = payload.part_name
     if payload.model is not None: cs.model = payload.model
     if payload.customer is not None: cs.customer = payload.customer
     if payload.doc_number is not None: cs.doc_number = payload.doc_number
-    if payload.status is not None: cs.status = payload.status
+    if payload.status is not None and payload.status != cs.status:
+        cs.status = payload.status
+        status_changed = True
     if payload.assigned_to is not None: cs.assigned_to = payload.assigned_to
     if payload.keterangan is not None: cs.keterangan = payload.keterangan
 
     await db.commit()
     await db.refresh(cs)
+
+    if status_changed:
+        from services.google_sheets_service import trigger_background_sheet_sync
+        trigger_background_sheet_sync()
+
     return {"status": "success", "id": cs.id}
 
 

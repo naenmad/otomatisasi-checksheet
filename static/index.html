@@ -183,7 +183,7 @@
       <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
 
         <!-- Interactive Metric Filters -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <!-- Card Total -->
           <button @click="statusFilter = 'ALL'"
                   :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
@@ -215,6 +215,18 @@
             </div>
             <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Di Input') }}</p>
             <p class="text-[11px] text-zinc-500 mt-1">Siap disubmit ke portal</p>
+          </button>
+
+          <!-- Card Butuh Revisi -->
+          <button @click="statusFilter = 'Butuh Revisi'"
+                  :class="statusFilter === 'Butuh Revisi' ? 'border-purple-500 bg-zinc-800/80 ring-1 ring-purple-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                  class="p-4 rounded-xl border text-left transition-all">
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            </div>
+            <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
+            <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing/data</p>
           </button>
 
           <!-- Card Tidak Ada Part -->
@@ -303,6 +315,7 @@
               <option value="ALL">Semua Status</option>
               <option value="Checksheet Done">Checksheet Done</option>
               <option value="Belum Di Input">Belum Di Input</option>
+              <option value="Butuh Revisi">Butuh Revisi</option>
               <option value="Tidak Ada Part">Tidak Ada Part</option>
             </select>
           </div>
@@ -385,6 +398,11 @@
                       <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                       <span>Ready</span>
                     </span>
+                    <span v-else-if="cs.status === 'Butuh Revisi'"
+                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-950 text-purple-300 border border-purple-800 inline-flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      <span>Butuh Revisi</span>
+                    </span>
                     <span v-else
                           class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
                       <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
@@ -451,7 +469,7 @@
           </div>
 
           <!-- Meta Configuration -->
-          <div class="grid grid-cols-2 gap-3 my-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 mb-3">
             <div>
               <label class="text-xs text-zinc-400 font-medium">Penanggung Jawab</label>
               <!-- DYNAMIC: populated from operatorUsers -->
@@ -463,11 +481,46 @@
               </select>
             </div>
             <div>
+              <label class="text-xs text-zinc-400 font-medium">Status Checksheet</label>
+              <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
+                      :disabled="!isOwnTask(activeChecksheet)"
+                      :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 text-purple-300 font-semibold' : 'text-zinc-200'"
+                      class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs focus:border-zinc-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+                <option value="Belum Di Input">Belum Di Input (Ready)</option>
+                <option value="Butuh Revisi">⚠️ Butuh Revisi</option>
+                <option value="Checksheet Done">Checksheet Done</option>
+                <option value="Tidak Ada Part">Tidak Ada Part</option>
+              </select>
+            </div>
+            <div>
               <label class="text-xs text-zinc-400 font-medium">Doc Number</label>
               <input v-model="activeChecksheet.doc_number" @blur="saveChecksheetMeta" type="text"
                      :disabled="!isOwnTask(activeChecksheet)"
                      class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 font-mono focus:border-zinc-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
             </div>
+          </div>
+
+          <!-- Keterangan / Catatan Revisi Field -->
+          <div class="mb-4 bg-zinc-950/70 border rounded-lg p-2.5"
+               :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-800/80 bg-purple-950/20' : 'border-zinc-800'">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium" :class="activeChecksheet.status === 'Butuh Revisi' ? 'text-purple-300 font-semibold' : 'text-zinc-400'">
+                {{ activeChecksheet.status === 'Butuh Revisi' ? 'Catatan Kebutuhan Revisi (Wajib Diisi):' : 'Keterangan / Catatan Tambahan:' }}
+              </label>
+              <button v-if="isOwnTask(activeChecksheet) && activeChecksheet.status !== 'Butuh Revisi'"
+                      @click="markNeedsRevision"
+                      class="text-[11px] text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1 transition-colors">
+                <span>⚠️ Tandai Butuh Revisi</span>
+              </button>
+            </div>
+            <input v-model="activeChecksheet.keterangan" @blur="saveChecksheetMeta" type="text"
+                   :disabled="!isOwnTask(activeChecksheet)"
+                   :placeholder="activeChecksheet.status === 'Butuh Revisi' ? 'Jelaskan rincian poin/drawing bermasalah (misal: balon no. 4 tidak ada di sketsa)...' : 'Catatan opsional...'"
+                   :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 focus:border-purple-400 text-purple-200 bg-zinc-900' : 'border-zinc-800 text-zinc-200 bg-zinc-900'"
+                   class="w-full border rounded px-3 py-1.5 text-xs focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <p v-if="activeChecksheet.status === 'Butuh Revisi'" class="text-[11px] text-purple-400/90 mt-1.5">
+              💡 Catatan ini otomatis tersimpan ke database dan tersinkronisasi ke Google Spreadsheet tim.
+            </p>
           </div>
 
           <!-- Tab Navigation for Drawer Content -->
@@ -1477,15 +1530,32 @@
 
         const saveChecksheetMeta = async () => {
           if (!activeChecksheet.value) return;
-          await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              assigned_to: activeChecksheet.value.assigned_to,
-              doc_number: activeChecksheet.value.doc_number
-            })
-          });
-          loadChecksheets();
+          try {
+            await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                assigned_to: activeChecksheet.value.assigned_to,
+                doc_number: activeChecksheet.value.doc_number,
+                status: activeChecksheet.value.status,
+                keterangan: activeChecksheet.value.keterangan
+              })
+            });
+            await loadChecksheets();
+          } catch (e) {
+            console.error('Gagal menyimpan metadata:', e);
+          }
+        };
+
+        const markNeedsRevision = async () => {
+          if (!activeChecksheet.value) return;
+          const currentReason = activeChecksheet.value.keterangan || '';
+          const reason = prompt('Masukkan catatan/alasan apa yang perlu direvisi:', currentReason);
+          if (reason !== null) {
+            activeChecksheet.value.status = 'Butuh Revisi';
+            activeChecksheet.value.keterangan = reason;
+            await saveChecksheetMeta();
+          }
         };
 
         const savePoints = async () => {
@@ -1733,6 +1803,7 @@
           filteredChecksheets,
           openDetail,
           saveChecksheetMeta,
+          markNeedsRevision,
           savePoints,
           startAutomation,
           stopLogStream,
