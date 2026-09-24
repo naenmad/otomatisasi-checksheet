@@ -36,11 +36,8 @@ async def export_excel(
     """
     checksheets = await list_checksheets(session=db, assigned_to=assigned_to, limit=1000)
 
-    # Load submission logs for the Log sheet
-    res = await db.execute(
-        select(SubmissionQueue).order_by(SubmissionQueue.started_at.desc()).limit(100)
-    )
-    submission_logs = res.scalars().all()
+    from database.crud import list_activity_logs
+    activity_logs = await list_activity_logs(session=db, limit=200)
 
     wb = openpyxl.Workbook()
 
@@ -240,47 +237,16 @@ async def export_excel(
         f"Export data checksheet dengan total {len(checksheets)} part master"
     ])
 
-    # Submission logs
-    for sub in submission_logs:
-        part_num = sub.checksheet.part_number if sub.checksheet else f"ID #{sub.checksheet_id}"
-        t_time = sub.started_at.strftime("%d/%m/%Y %H:%M:%S") if sub.started_at else "-"
-        detail = sub.error_message if sub.status == "FAILED" else (sub.log_output[:120] if sub.log_output else "Proses otomatisasi FactoryHub selesai")
+    for log in activity_logs:
+        t_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S") if log.created_at else "-"
         log_rows.append([
             len(log_rows) + 1,
             t_time,
-            part_num,
-            sub.operator_name or "Operator",
-            "OTOMASI FACTORYHUB",
-            sub.status or "-",
-            detail
-        ])
-
-    # Active updates from checksheets
-    active_updates = [
-        cs for cs in checksheets
-        if (cs.status in ("Checksheet Done", "Butuh Revisi", "Tidak Ada Part") or (cs.keterangan and cs.keterangan != "-"))
-    ]
-    active_updates.sort(key=lambda x: x.updated_at or datetime.min, reverse=True)
-
-    for cs in active_updates:
-        t_time = cs.updated_at.strftime("%d/%m/%Y %H:%M:%S") if cs.updated_at else "-"
-        action_type = "UPDATE STATUS"
-        if cs.status == "Checksheet Done":
-            action_type = "INPUT SELESAI"
-        elif cs.status == "Butuh Revisi":
-            action_type = "PERMINTAAN REVISI"
-        elif cs.status == "Tidak Ada Part":
-            action_type = "PART TIDAK ADA"
-
-        detail = cs.keterangan if (cs.keterangan and cs.keterangan != "-") else f"Pembaruan status {cs.status} dengan {len(cs.inspection_points) if cs.inspection_points else 0} poin inspeksi"
-        log_rows.append([
-            len(log_rows) + 1,
-            t_time,
-            cs.part_number,
-            cs.assigned_to or "Unassigned",
-            action_type,
-            cs.status,
-            detail
+            log.part_number or "-",
+            log.operator or "Operator",
+            log.action or "-",
+            log.status or "-",
+            log.details or "-"
         ])
 
     for row_idx, r in enumerate(log_rows, 2):

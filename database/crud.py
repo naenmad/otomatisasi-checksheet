@@ -7,7 +7,7 @@ from sqlalchemy import select, update, delete, desc
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User, Checksheet, InspectionPoint, PartImage, SubmissionQueue
+from database.models import User, Checksheet, InspectionPoint, PartImage, SubmissionQueue, ActivityLog
 
 
 def clean_str(s: str) -> str:
@@ -172,3 +172,34 @@ async def update_checksheet_status(
         await session.commit()
         await session.refresh(cs)
     return cs
+
+
+async def log_activity(
+    session: AsyncSession,
+    action: str,
+    part_number: str = "-",
+    operator: str = "System",
+    status: str = "SUCCESS",
+    details: str = "",
+    link: Optional[str] = None
+) -> ActivityLog:
+    """Create a new chronological audit log entry."""
+    entry = ActivityLog(
+        action=action,
+        part_number=part_number or "-",
+        operator=operator or "System",
+        status=status or "SUCCESS",
+        details=details or "",
+        link=link
+    )
+    session.add(entry)
+    await session.commit()
+    await session.refresh(entry)
+    return entry
+
+
+async def list_activity_logs(session: AsyncSession, limit: int = 500) -> List[ActivityLog]:
+    """Retrieve all activity logs sorted from oldest to newest (or newest first)."""
+    stmt = select(ActivityLog).order_by(ActivityLog.id.asc()).limit(limit)
+    res = await session.execute(stmt)
+    return res.scalars().all()

@@ -43,7 +43,9 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 # Known company logo dimensions (PT. Summit Adyawinsa, MMKI, Honda, ISO badges) to strictly exclude
 KNOWN_LOGO_DIMENSIONS = {
-    (530, 200), (396, 158), (240, 119), (149, 52), (154, 53), (162, 56), (144, 72), (629, 245)
+    (530, 200), (396, 158), (323, 126), (245, 65), (240, 119), (180, 50),
+    (154, 53), (149, 52), (162, 56), (144, 72), (120, 120), (115, 60),
+    (90, 90), (64, 64), (629, 245)
 }
 
 
@@ -202,10 +204,14 @@ def get_cached_image_info(img_path: str) -> Dict[str, Any]:
             with Image.open(abs_p) as im:
                 w, h = im.size
                 base_name = os.path.basename(abs_p).lower()
-                if "sketch" in base_name:
-                    is_logo = False
+                if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                    is_logo = True
                 elif (w < 120 and h < 120) or (w > 0 and h > 0 and (w / h > 5 or h / w > 5) and (w < 350 and h < 150)):
                     is_logo = True
+                elif "logo" in base_name:
+                    is_logo = True
+                elif "sketch" in base_name:
+                    is_logo = False
         except Exception:
             pass
 

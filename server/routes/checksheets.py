@@ -112,6 +112,8 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
 def _build_checksheet_images(cs: Checksheet) -> list:
     import os
     import re
+    from extractor import get_cached_image_info
+
     res = []
     for img in cs.images:
         path = img.image_path or ""
@@ -128,6 +130,12 @@ def _build_checksheet_images(cs: Checksheet) -> list:
         # Verify file exists on disk if path is provided
         if path and not os.path.exists(path):
             continue
+
+        # Strictly exclude company logos or header banners
+        if path:
+            img_info = get_cached_image_info(path)
+            if img_info.get("is_logo", False):
+                continue
 
         res.append({
             "id": img.id,
@@ -158,10 +166,14 @@ def _build_checksheet_images(cs: Checksheet) -> list:
                 if os.path.isdir(dir_path):
                     for f in sorted(os.listdir(dir_path)):
                         if f.lower().endswith((".webp", ".png", ".jpg", ".jpeg")):
+                            f_path = os.path.join(dir_path, f)
+                            img_info = get_cached_image_info(f_path)
+                            if img_info.get("is_logo", False):
+                                continue
                             res.append({
                                 "id": f,
                                 "image_url": f"{url_prefix}/{folder}/{f}",
-                                "image_path": os.path.join(dir_path, f),
+                                "image_path": f_path,
                                 "filename": f
                             })
                     if res:
@@ -176,6 +188,9 @@ def _build_checksheet_images(cs: Checksheet) -> list:
                 from parsers.image_extractor import extract_excel_images
                 extracted = extract_excel_images(cs.raw_file_path, part_number=cs.part_number)
                 for ep in extracted:
+                    img_info = get_cached_image_info(ep)
+                    if img_info.get("is_logo", False):
+                        continue
                     sub = ep.split("storage/images", 1)[1].lstrip("/\\") if "storage/images" in ep else os.path.basename(ep)
                     res.append({
                         "id": os.path.basename(ep),
@@ -211,6 +226,15 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     await db.refresh(cs)
 
     if status_changed:
+        from database.crud import log_activity
+        await log_activity(
+            session=db,
+            action="UPDATE STATUS",
+            part_number=cs.part_number,
+            operator=cs.assigned_to or "Operator",
+            status=cs.status,
+            details=f"Status diubah menjadi {cs.status}" + (f" ({cs.keterangan})" if cs.keterangan else "")
+        )
         from services.google_sheets_service import trigger_background_sheet_sync
         trigger_background_sheet_sync()
 
@@ -239,6 +263,17 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
         db.add(ip)
 
     await db.commit()
+
+    from database.crud import log_activity
+    await log_activity(
+        session=db,
+        action="SIMPAN POIN",
+        part_number=cs.part_number,
+        operator=cs.assigned_to or "Operator",
+        status="SUCCESS",
+        details=f"Menyimpan {len(payload.points)} poin inspeksi via Studio"
+    )
+
     return {"status": "success", "updated_points": len(payload.points)}
 
 
@@ -257,11 +292,18 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     )
     await db.execute(stmt)
     await db.commit()
-    return {
-        "status": "success",
-        "updated_count": len(payload.checksheet_ids),
-        "assigned_to": payload.assigned_to
-    }
+
+    from database.crud import log_activity
+    await log_activity(
+        session=db,
+        action="PENUGASAN BATCH",
+        part_number=f"{len(payload.checksheet_ids)} part",
+        operator=payload.assigned_to,
+        status="SUCCESS",
+        details=f"Penugasan {len(payload.checksheet_ids)} part ke {payload.assigned_to}"
+    )
+
+    return {"status": "success", "assigned_count": len(payload.checksheet_ids), "assigned_to": payload.assigned_to}
 
 
 class ImageUploadSchema(BaseModel):

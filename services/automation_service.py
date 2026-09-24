@@ -69,6 +69,17 @@ async def execute_checksheet_submission(
                 factoryhub_url=final_url,
                 keterangan="Selesai diinput via Web Otomasi"
             )
+            # Record clean 1-row activity log
+            from database.crud import log_activity
+            await log_activity(
+                session=session,
+                action="SUBMIT FACTORYHUB",
+                part_number=cs.part_number,
+                operator=cs.assigned_to or "Operator",
+                status="SUCCESS",
+                details=f"Berhasil submit form dengan {len(cs.inspection_points)} poin inspeksi",
+                link=final_url
+            )
             # Auto-sync updated status directly to Google Sheet in background
             from services.google_sheets_service import trigger_background_sheet_sync
             trigger_background_sheet_sync()
@@ -81,8 +92,27 @@ async def execute_checksheet_submission(
                 status="Tidak Ada Part",
                 keterangan="Part belum terdaftar di Master Part FactoryHub"
             )
+            from database.crud import log_activity
+            await log_activity(
+                session=session,
+                action="SUBMIT FACTORYHUB",
+                part_number=cs.part_number,
+                operator=cs.assigned_to or "Operator",
+                status="GAGAL",
+                details="Part number belum terdaftar di Master Part FactoryHub"
+            )
         else:
             yield f"[i] Status otomatisasi selesai: {status}\n"
+            if not submit:
+                from database.crud import log_activity
+                await log_activity(
+                    session=session,
+                    action="DRY RUN",
+                    part_number=cs.part_number,
+                    operator=cs.assigned_to or "Operator",
+                    status="SUCCESS",
+                    details=f"Pratinjau form dan {len(cs.inspection_points)} poin inspeksi selesai (tanpa submit)"
+                )
 
     except Exception as e:
         yield f"[ERROR] Terjadi kesalahan saat otomatisasi: {str(e)}\n"

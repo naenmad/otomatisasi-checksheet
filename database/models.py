@@ -112,3 +112,17 @@ class SubmissionQueue(Base):
 
     # Relationships
     checksheet = relationship("Checksheet", back_populates="submissions")
+
+
+class ActivityLog(Base):
+    """Audit and process log for checksheet actions, submissions, and updates."""
+    __tablename__ = "activity_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    action = Column(String(100), nullable=False)
+    part_number = Column(String(100), nullable=True, default="-")
+    operator = Column(String(100), default="System")
+    status = Column(String(50), default="SUCCESS")
+    details = Column(Text, default="")
+    link = Column(String(255), nullable=True)

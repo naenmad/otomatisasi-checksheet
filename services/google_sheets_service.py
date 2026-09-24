@@ -121,7 +121,7 @@ def build_master_tsv(checksheets: list) -> str:
     return "\n".join(lines)
 
 
-def build_log_tsv(checksheets: list, submission_logs: list) -> str:
+def build_log_tsv(activity_logs: list) -> str:
     """Build cleanly formatted audit and activity history TSV for the Log tab."""
     headers = [
         "No",
@@ -136,61 +136,16 @@ def build_log_tsv(checksheets: list, submission_logs: list) -> str:
     lines = ["\t".join(headers)]
     log_counter = 1
 
-    # 1. Current Sync Event
-    lines.append("\t".join([
-        str(log_counter),
-        datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "SISTEM CHECKSHEET",
-        "SYSTEM",
-        "SINKRONISASI GOOGLE SPREADSHEET",
-        "SUCCESS",
-        f"Sinkronisasi otomatis berhasil diperbarui untuk {len(checksheets)} part master data"
-    ]))
-    log_counter += 1
-
-    # 2. Submission Queue Logs (FactoryHub automation executions)
-    for sub in submission_logs:
-        part_num = sub.checksheet.part_number if sub.checksheet else f"ID #{sub.checksheet_id}"
-        t_time = sub.started_at.strftime("%d/%m/%Y %H:%M:%S") if sub.started_at else "-"
-        detail = sub.error_message if sub.status == "FAILED" else (sub.log_output[:120] if sub.log_output else "Proses otomatisasi FactoryHub selesai")
+    for log in activity_logs:
+        t_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S") if log.created_at else datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         lines.append("\t".join([
             str(log_counter),
             t_time,
-            clean_cell(part_num),
-            clean_cell(sub.operator_name or "Operator"),
-            "OTOMASI FACTORYHUB",
-            clean_cell(sub.status),
-            clean_cell(detail)
-        ]))
-        log_counter += 1
-
-    # 3. Checksheets with active status updates or custom keterangan (activity logs)
-    active_updates = [
-        cs for cs in checksheets
-        if (cs.status in ("Checksheet Done", "Butuh Revisi", "Tidak Ada Part") or (cs.keterangan and cs.keterangan != "-"))
-    ]
-    # Sort by updated_at descending
-    active_updates.sort(key=lambda x: x.updated_at or datetime.min, reverse=True)
-
-    for cs in active_updates:
-        t_time = cs.updated_at.strftime("%d/%m/%Y %H:%M:%S") if cs.updated_at else "-"
-        action_type = "UPDATE STATUS"
-        if cs.status == "Checksheet Done":
-            action_type = "INPUT SELESAI"
-        elif cs.status == "Butuh Revisi":
-            action_type = "PERMINTAAN REVISI"
-        elif cs.status == "Tidak Ada Part":
-            action_type = "PART TIDAK ADA"
-
-        detail = cs.keterangan if (cs.keterangan and cs.keterangan != "-") else f"Pembaruan status {cs.status} dengan {len(cs.inspection_points) if cs.inspection_points else 0} poin inspeksi"
-        lines.append("\t".join([
-            str(log_counter),
-            t_time,
-            clean_cell(cs.part_number),
-            clean_cell(cs.assigned_to or "Unassigned"),
-            action_type,
-            clean_cell(cs.status),
-            clean_cell(detail)
+            clean_cell(log.part_number or "-"),
+            clean_cell(log.operator or "Operator"),
+            clean_cell(log.action or "-"),
+            clean_cell(log.status or "-"),
+            clean_cell(log.details or "-")
         ]))
         log_counter += 1
 
@@ -199,7 +154,7 @@ def build_log_tsv(checksheets: list, submission_logs: list) -> str:
 
 async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict[str, Any]:
     """
-    Fetch all checksheets & submission logs, build TSVs for 3 worksheets:
+    Fetch all checksheets & activity logs, build TSVs for 3 worksheets:
     Overview, Data Master, and Log, and paste directly into Google Spreadsheet.
     """
     from playwright.async_api import async_playwright
@@ -209,14 +164,20 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
 
     # Load data from database
     async with AsyncSessionLocal() as session:
-        from database.crud import list_checksheets
+        from database.crud import list_checksheets, list_activity_logs, log_activity
         checksheets = await list_checksheets(session=session, limit=1000)
 
-        # Load submission logs
-        res = await session.execute(
-            select(SubmissionQueue).order_by(SubmissionQueue.started_at.desc()).limit(100)
+        # Record this sync event in ActivityLog so it appears in the log
+        await log_activity(
+            session=session,
+            action="SYNC GOOGLE SHEET",
+            part_number="ALL PARTS",
+            operator="SYSTEM",
+            status="SUCCESS",
+            details=f"Sinkronisasi 3 sheets berhasil untuk {len(checksheets)} part master data"
         )
-        submission_logs = res.scalars().all()
+
+        activity_logs = await list_activity_logs(session=session, limit=200)
 
     if not checksheets:
         return {"status": "empty", "message": "Tidak ada data checksheet di database."}
@@ -224,7 +185,7 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
     # Generate TSV content for all 3 sheets
     overview_tsv = build_overview_tsv(checksheets)
     master_tsv = build_master_tsv(checksheets)
-    log_tsv = build_log_tsv(checksheets, submission_logs)
+    log_tsv = build_log_tsv(activity_logs)
 
     tab_data_map = [
         ("Data Master", master_tsv),

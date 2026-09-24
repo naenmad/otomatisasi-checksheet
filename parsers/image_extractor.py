@@ -19,6 +19,7 @@ except ImportError:
 KNOWN_LOGO_DIMENSIONS = {
     (115, 60),    # Small logo badge
     (245, 65),    # Summit Adyawinsa header banner
+    (323, 126),   # Summit Adyawinsa large header logo with URS badge
     (180, 50),    # HPM header stamp
     (120, 120),   # Circular ISO certification logo
     (90, 90),     # Small approval box stamp
@@ -100,6 +101,10 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                             if len(data) < 2000:
                                 continue
 
+                            # Header logo filter: top 4 rows and left 4 columns unconditionally
+                            if f_r <= 4 and f_c <= 4:
+                                continue
+
                             # 5. Check image dimensions with PIL
                             is_logo = False
                             if Image:
@@ -110,8 +115,7 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                                             is_logo = True
                                         elif w < 80 or h < 40:
                                             is_logo = True
-                                        # Only consider top-left a logo if dimensions are small like a banner/badge
-                                        elif f_r <= 4 and f_c <= 3 and w <= 200 and h <= 80:
+                                        elif f_r <= 5 and (w < 350 and h < 140):
                                             is_logo = True
                                 except Exception:
                                     pass
