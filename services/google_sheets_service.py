@@ -6,6 +6,7 @@ Formats and synchronizes checksheet records across 3 worksheets:
 3. Log (Histori proses, aktivitas input, pembaruan, dan otomasi)
 """
 import os
+import re
 import asyncio
 from datetime import datetime
 from collections import Counter
@@ -121,8 +122,8 @@ def build_master_tsv(checksheets: list) -> str:
     return "\n".join(lines)
 
 
-def build_log_tsv(activity_logs: list) -> str:
-    """Build cleanly formatted audit and activity history TSV for the Log tab."""
+def build_log_tsv(activity_logs: list, checksheets: list) -> str:
+    """Build cleanly formatted audit and activity history TSV for the Log tab (FactoryHub submissions only)."""
     headers = [
         "No",
         "Waktu (Timestamp)",
@@ -130,23 +131,60 @@ def build_log_tsv(activity_logs: list) -> str:
         "Penanggung Jawab / Operator",
         "Tipe Proses / Aksi",
         "Status",
-        "Keterangan / Catatan Detail"
+        "Keterangan / Catatan Detail",
+        "# Total Poin Inspeksi",
+        "Status Checksheet",
+        "Keterangan / Status FactoryHub",
+        "Link FactoryHub",
+        "Terakhir Diperbarui"
     ]
+
+    cs_map = {}
+    for cs in checksheets:
+        if cs.part_number:
+            clean_p = re.sub(r"[^0-9A-Za-z]", "", cs.part_number).upper()
+            cs_map[clean_p] = cs
 
     lines = ["\t".join(headers)]
     log_counter = 1
 
     for log in activity_logs:
+        # Strictly only include FactoryHub submission events
+        if not (log.action and "SUBMIT" in log.action.upper()):
+            continue
+
+        clean_p = re.sub(r"[^0-9A-Za-z]", "", log.part_number or "").upper()
+        cs = cs_map.get(clean_p)
+
         t_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S") if log.created_at else datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        lines.append("\t".join([
+        updated_time = cs.updated_at.strftime("%d/%m/%Y %H:%M:%S") if (cs and cs.updated_at) else t_time
+
+        pts_count = str(len(cs.inspection_points)) if (cs and cs.inspection_points) else "-"
+        # If points not loaded on cs, try parsing from details
+        if pts_count == "-" and log.details:
+            match = re.search(r"(\d+)\s+poin", log.details)
+            if match:
+                pts_count = match.group(1)
+
+        cs_status = cs.status if cs else "Checksheet Done"
+        cs_ket = cs.keterangan if cs else (log.details or "-")
+        fh_url = log.link or (cs.factoryhub_url if cs else "-") or "-"
+
+        row = [
             str(log_counter),
             t_time,
             clean_cell(log.part_number or "-"),
-            clean_cell(log.operator or "Operator"),
-            clean_cell(log.action or "-"),
-            clean_cell(log.status or "-"),
-            clean_cell(log.details or "-")
-        ]))
+            clean_cell(log.operator or (cs.assigned_to if cs else "Operator")),
+            clean_cell(log.action or "SUBMIT FACTORYHUB"),
+            clean_cell(log.status or "SUCCESS"),
+            clean_cell(log.details or "-"),
+            pts_count,
+            clean_cell(cs_status),
+            clean_cell(cs_ket),
+            clean_cell(fh_url),
+            updated_time
+        ]
+        lines.append("\t".join(row))
         log_counter += 1
 
     return "\n".join(lines)
@@ -164,20 +202,9 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
 
     # Load data from database
     async with AsyncSessionLocal() as session:
-        from database.crud import list_checksheets, list_activity_logs, log_activity
+        from database.crud import list_checksheets, list_activity_logs
         checksheets = await list_checksheets(session=session, limit=1000)
-
-        # Record this sync event in ActivityLog so it appears in the log
-        await log_activity(
-            session=session,
-            action="SYNC GOOGLE SHEET",
-            part_number="ALL PARTS",
-            operator="SYSTEM",
-            status="SUCCESS",
-            details=f"Sinkronisasi 3 sheets berhasil untuk {len(checksheets)} part master data"
-        )
-
-        activity_logs = await list_activity_logs(session=session, limit=200)
+        activity_logs = await list_activity_logs(session=session, limit=500)
 
     if not checksheets:
         return {"status": "empty", "message": "Tidak ada data checksheet di database."}
@@ -185,7 +212,7 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
     # Generate TSV content for all 3 sheets
     overview_tsv = build_overview_tsv(checksheets)
     master_tsv = build_master_tsv(checksheets)
-    log_tsv = build_log_tsv(activity_logs)
+    log_tsv = build_log_tsv(activity_logs, checksheets)
 
     tab_data_map = [
         ("Data Master", master_tsv),
@@ -220,7 +247,16 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
 
                     # Clear formula or focus
                     await page.keyboard.press("Escape")
-                    await page.wait_for_timeout(300)
+                    # For Log tab, clear previous rows so old stale entries are wiped completely
+                    if tab_name == "Log":
+                        name_box = page.locator("#t-name-box")
+                        if await name_box.count() > 0:
+                            await name_box.click()
+                            await name_box.fill("A2:L500")
+                            await page.keyboard.press("Enter")
+                            await page.wait_for_timeout(500)
+                            await page.keyboard.press("Delete")
+                            await page.wait_for_timeout(400)
 
                     # Jump to cell A1 via Name Box
                     name_box = page.locator("#t-name-box")

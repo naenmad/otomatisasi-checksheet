@@ -210,30 +210,8 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     await db.commit()
     await db.refresh(cs)
 
-    from database.crud import log_activity
     from services.google_sheets_service import trigger_background_sheet_sync
-
-    if status_changed:
-        await log_activity(
-            session=db,
-            action="UPDATE STATUS",
-            part_number=cs.part_number,
-            operator=cs.assigned_to or "Operator",
-            status=cs.status,
-            details=f"Status diubah menjadi {cs.status}" + (f" ({cs.keterangan})" if cs.keterangan else "")
-        )
-        trigger_background_sheet_sync()
-
-    if assign_changed:
-        is_claim = old_assigned in ("Unassigned", "Belum Ditugaskan", None, "")
-        await log_activity(
-            session=db,
-            action="AMBIL TASK" if is_claim else "UPDATE PENUGASAN",
-            part_number=cs.part_number,
-            operator=cs.assigned_to or "Operator",
-            status="SUCCESS",
-            details=f"Operator {cs.assigned_to} mengambil task {cs.part_number}" if is_claim else f"Penugasan diubah ke {cs.assigned_to} (dari {old_assigned or 'Belum Ditugaskan'})"
-        )
+    if status_changed or assign_changed:
         trigger_background_sheet_sync()
 
     return {"status": "success", "id": cs.id, "assigned_to": cs.assigned_to}
@@ -255,17 +233,7 @@ async def claim_checksheet_task(checksheet_id: int, payload: ClaimTaskSchema, db
     await db.commit()
     await db.refresh(cs)
 
-    from database.crud import log_activity
     from services.google_sheets_service import trigger_background_sheet_sync
-
-    await log_activity(
-        session=db,
-        action="AMBIL TASK",
-        part_number=cs.part_number,
-        operator=payload.operator_name,
-        status="SUCCESS",
-        details=f"Operator {payload.operator_name} mengambil task {cs.part_number} (sebelumnya: {old_assigned or 'Belum Ditugaskan'})"
-    )
     trigger_background_sheet_sync()
 
     return {
@@ -298,17 +266,6 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
         db.add(ip)
 
     await db.commit()
-
-    from database.crud import log_activity
-    await log_activity(
-        session=db,
-        action="SIMPAN POIN",
-        part_number=cs.part_number,
-        operator=cs.assigned_to or "Operator",
-        status="SUCCESS",
-        details=f"Menyimpan {len(payload.points)} poin inspeksi via Studio"
-    )
-
     return {"status": "success", "updated_points": len(payload.points)}
 
 
@@ -328,17 +285,7 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     await db.execute(stmt)
     await db.commit()
 
-    from database.crud import log_activity
     from services.google_sheets_service import trigger_background_sheet_sync
-
-    await log_activity(
-        session=db,
-        action="AMBIL TASK BATCH" if payload.assigned_to else "PENUGASAN BATCH",
-        part_number=f"{len(payload.checksheet_ids)} part",
-        operator=payload.assigned_to,
-        status="SUCCESS",
-        details=f"Penugasan {len(payload.checksheet_ids)} part ke {payload.assigned_to}"
-    )
     trigger_background_sheet_sync()
 
     return {"status": "success", "assigned_count": len(payload.checksheet_ids), "assigned_to": payload.assigned_to}

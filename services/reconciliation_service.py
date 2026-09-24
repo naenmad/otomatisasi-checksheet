@@ -179,18 +179,9 @@ async def run_factoryhub_reconciliation(
     await session.commit()
     elapsed = round(time.time() - t0, 1)
 
-    # Record clean 1-row activity log
     details_str = (
         f"Audit selesai dalam {elapsed}s. {len(fh_templates)} template aktif di FactoryHub. "
         f"Hasil: {updated_to_done} diperbarui ke Done, {updated_to_revisi} ditandai Butuh Revisi, {updated_urls} URL diperbarui."
-    )
-    await log_activity(
-        session=session,
-        action="AUDIT FACTORYHUB",
-        part_number="SYSTEM",
-        operator="System Audit",
-        status="SUCCESS",
-        details=details_str
     )
 
     # Trigger automatic Google Sheets background sync for 3 sheets (Overview, Data Master, Log)
