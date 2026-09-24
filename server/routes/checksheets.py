@@ -212,6 +212,9 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
     status_changed = False
+    assign_changed = False
+    old_assigned = cs.assigned_to
+
     if payload.part_name is not None: cs.part_name = payload.part_name
     if payload.model is not None: cs.model = payload.model
     if payload.customer is not None: cs.customer = payload.customer
@@ -219,14 +222,18 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     if payload.status is not None and payload.status != cs.status:
         cs.status = payload.status
         status_changed = True
-    if payload.assigned_to is not None: cs.assigned_to = payload.assigned_to
+    if payload.assigned_to is not None and payload.assigned_to != cs.assigned_to:
+        cs.assigned_to = payload.assigned_to
+        assign_changed = True
     if payload.keterangan is not None: cs.keterangan = payload.keterangan
 
     await db.commit()
     await db.refresh(cs)
 
+    from database.crud import log_activity
+    from services.google_sheets_service import trigger_background_sheet_sync
+
     if status_changed:
-        from database.crud import log_activity
         await log_activity(
             session=db,
             action="UPDATE STATUS",
@@ -235,10 +242,58 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
             status=cs.status,
             details=f"Status diubah menjadi {cs.status}" + (f" ({cs.keterangan})" if cs.keterangan else "")
         )
-        from services.google_sheets_service import trigger_background_sheet_sync
         trigger_background_sheet_sync()
 
-    return {"status": "success", "id": cs.id}
+    if assign_changed:
+        is_claim = old_assigned in ("Unassigned", "Belum Ditugaskan", None, "")
+        await log_activity(
+            session=db,
+            action="AMBIL TASK" if is_claim else "UPDATE PENUGASAN",
+            part_number=cs.part_number,
+            operator=cs.assigned_to or "Operator",
+            status="SUCCESS",
+            details=f"Operator {cs.assigned_to} mengambil task {cs.part_number}" if is_claim else f"Penugasan diubah ke {cs.assigned_to} (dari {old_assigned or 'Belum Ditugaskan'})"
+        )
+        trigger_background_sheet_sync()
+
+    return {"status": "success", "id": cs.id, "assigned_to": cs.assigned_to}
+
+
+class ClaimTaskSchema(BaseModel):
+    operator_name: str
+
+
+@router.post("/{checksheet_id}/claim")
+async def claim_checksheet_task(checksheet_id: int, payload: ClaimTaskSchema, db: AsyncSession = Depends(get_db)):
+    """Allow an operator to claim an unassigned checksheet task for themselves."""
+    cs = await get_checksheet_by_id(db, checksheet_id)
+    if not cs:
+        raise HTTPException(status_code=404, detail="Checksheet not found")
+
+    old_assigned = cs.assigned_to
+    cs.assigned_to = payload.operator_name
+    await db.commit()
+    await db.refresh(cs)
+
+    from database.crud import log_activity
+    from services.google_sheets_service import trigger_background_sheet_sync
+
+    await log_activity(
+        session=db,
+        action="AMBIL TASK",
+        part_number=cs.part_number,
+        operator=payload.operator_name,
+        status="SUCCESS",
+        details=f"Operator {payload.operator_name} mengambil task {cs.part_number} (sebelumnya: {old_assigned or 'Belum Ditugaskan'})"
+    )
+    trigger_background_sheet_sync()
+
+    return {
+        "status": "success",
+        "checksheet_id": cs.id,
+        "part_number": cs.part_number,
+        "assigned_to": cs.assigned_to
+    }
 
 
 @router.put("/{checksheet_id}/points")
@@ -294,14 +349,17 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     await db.commit()
 
     from database.crud import log_activity
+    from services.google_sheets_service import trigger_background_sheet_sync
+
     await log_activity(
         session=db,
-        action="PENUGASAN BATCH",
+        action="AMBIL TASK BATCH" if payload.assigned_to else "PENUGASAN BATCH",
         part_number=f"{len(payload.checksheet_ids)} part",
         operator=payload.assigned_to,
         status="SUCCESS",
         details=f"Penugasan {len(payload.checksheet_ids)} part ke {payload.assigned_to}"
     )
+    trigger_background_sheet_sync()
 
     return {"status": "success", "assigned_count": len(payload.checksheet_ids), "assigned_to": payload.assigned_to}
 
