@@ -20,6 +20,12 @@
       outline: 2px solid #6366f1;
       outline-offset: 2px;
     }
+    .excel-cell:focus {
+      background-color: rgba(99, 102, 241, 0.15) !important;
+      outline: 2px solid #6366f1 !important;
+      outline-offset: -2px;
+      z-index: 5;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col selection:bg-indigo-600 selection:text-white">
@@ -748,7 +754,8 @@
                 <tbody v-else class="divide-y divide-zinc-800/60">
                   <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
                       class="hover:bg-zinc-800/40 transition-colors group cursor-pointer"
-                      @click="isOwnTask(cs) && toggleSelect(cs.id)">
+                      :class="{'bg-indigo-950/25 ring-1 ring-inset ring-indigo-500/40': focusedCsIndex === idx}"
+                      @click="focusedCsIndex = idx; isOwnTask(cs) && toggleSelect(cs.id)">
                     <td class="py-3 px-3 text-center" @click.stop>
                       <input type="checkbox" :value="cs.id" v-model="selectedIds"
                              :disabled="!isOwnTask(cs)"
@@ -794,11 +801,21 @@
                     </td>
                     <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
                     <td class="py-3 px-3 text-center" @click.stop>
-                      <button @click="openDetail(cs.id)"
-                              :class="isOwnTask(cs) ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800'"
-                              class="px-2.5 py-1 rounded text-xs font-medium border transition-colors">
-                        {{ isOwnTask(cs) ? 'Review' : 'Lihat' }}
-                      </button>
+                      <div class="flex items-center justify-center gap-1.5">
+                        <button @click="openDetail(cs.id)"
+                                :class="isOwnTask(cs) ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800'"
+                                class="px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer">
+                          {{ isOwnTask(cs) ? 'Review' : 'Lihat' }}
+                        </button>
+                        <button @click="openExcelStudioDirect(cs)"
+                                title="Buka Spreadsheet Mode Excel (E)"
+                                class="px-2 py-1 rounded text-xs font-bold border border-indigo-800/80 bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer shadow-sm">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                          <span class="text-[10px]">Excel</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
@@ -1205,8 +1222,94 @@
               </div>
             </div>
 
-            <!-- Inspection Points Table -->
-            <div class="border border-zinc-800 rounded-xl overflow-hidden">
+            <!-- Action Toolbar: Excel Studio Button & Inline Edit Toggle -->
+            <div class="flex items-center justify-between gap-2 bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl">
+              <button @click="openExcelStudio(activeChecksheet)"
+                      class="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Buka Mode Excel Studio (Split View)</span>
+              </button>
+              <button @click="toggleInlineEdit"
+                      :class="isInlineEditing ? 'bg-amber-600 text-white border-amber-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'"
+                      class="py-2 px-3 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <span>{{ isInlineEditing ? '✕ Selesai' : '✏️ Edit Cepat' }}</span>
+              </button>
+            </div>
+
+            <!-- Inline Editable Mode in Drawer -->
+            <div v-if="isInlineEditing" class="border border-indigo-900/80 rounded-xl overflow-hidden bg-zinc-950 shadow-md">
+              <div class="px-3 py-2 bg-indigo-950/40 border-b border-indigo-900/60 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-indigo-300">Edit Cepat (Navigasi: ↑ ↓ ← →, Enter, Tab)</span>
+                <button @click="addExcelRow" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[10px] font-semibold cursor-pointer">+ Baris</button>
+              </div>
+              <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-zinc-900 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[10px] sticky top-0 z-10">
+                    <tr>
+                      <th class="p-2 w-10 text-center">No</th>
+                      <th class="p-2">Item Inspeksi</th>
+                      <th class="p-2">Standar / Toleransi</th>
+                      <th class="p-2">Alat Ukur</th>
+                      <th class="p-2 w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-800">
+                    <tr v-for="(p, rIdx) in excelPoints" :key="rIdx" class="hover:bg-zinc-900/80">
+                      <td class="p-0 border-r border-zinc-800/60">
+                        <input :id="'drawer-cell-' + rIdx + '-0'"
+                               v-model="p.item_no"
+                               @focus="setActiveCell(rIdx, 0)"
+                               @keydown="handleGridKeydown($event, rIdx, 0, 'drawer')"
+                               @paste="handleExcelPaste($event, rIdx, 0)"
+                               class="w-full p-2 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+                      <td class="p-0 border-r border-zinc-800/60">
+                        <input :id="'drawer-cell-' + rIdx + '-1'"
+                               v-model="p.inspection_item"
+                               placeholder="Nama item..."
+                               @focus="setActiveCell(rIdx, 1)"
+                               @keydown="handleGridKeydown($event, rIdx, 1, 'drawer')"
+                               @paste="handleExcelPaste($event, rIdx, 1)"
+                               class="w-full p-2 bg-transparent text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+                      <td class="p-0 border-r border-zinc-800/60">
+                        <input :id="'drawer-cell-' + rIdx + '-2'"
+                               v-model="p.standard"
+                               placeholder="Standar..."
+                               @focus="setActiveCell(rIdx, 2)"
+                               @keydown="handleGridKeydown($event, rIdx, 2, 'drawer')"
+                               @paste="handleExcelPaste($event, rIdx, 2)"
+                               class="w-full p-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+                      <td class="p-0 border-r border-zinc-800/60">
+                        <input :id="'drawer-cell-' + rIdx + '-3'"
+                               v-model="p.method"
+                               placeholder="Visual / Caliper"
+                               @focus="setActiveCell(rIdx, 3)"
+                               @keydown="handleGridKeydown($event, rIdx, 3, 'drawer')"
+                               @paste="handleExcelPaste($event, rIdx, 3)"
+                               class="w-full p-2 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+                      <td class="p-0 text-center">
+                        <button @click="deleteExcelRow(rIdx)" class="w-full p-2 text-zinc-600 hover:text-rose-400 font-bold">✕</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="p-2.5 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
+                <button @click="addExcelRow" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer">+ Tambah Baris</button>
+                <button @click="saveExcelPoints" :disabled="isSavingPoints"
+                        class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50 shadow cursor-pointer">
+                  {{ isSavingPoints ? 'Menyimpan...' : 'Simpan Titik Ukur' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Read-only Inspection Points Table (when not in inline edit) -->
+            <div v-else class="border border-zinc-800 rounded-xl overflow-hidden">
               <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[10px]">
                   <tr>
@@ -1376,6 +1479,263 @@
         </div>
       </div>
 
+      <!-- EXCEL SPREADSHEET STUDIO MODAL (Full Split Screen) -->
+      <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-[97vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+          
+          <!-- Top Studio Header -->
+          <div class="px-5 py-3 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-4 shrink-0">
+            <!-- Left: Part Info & Title -->
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-sm font-bold text-zinc-100 font-mono tracking-tight">{{ activeChecksheet.part_number }}</h2>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    {{ activeChecksheet.model || 'No Model' }}
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                    {{ activeChecksheet.customer || 'No Customer' }}
+                  </span>
+                </div>
+                <p class="text-xs text-zinc-400 truncate">{{ activeChecksheet.part_name || 'Tanpa Nama Part' }}</p>
+              </div>
+            </div>
+
+            <!-- Center: Keyboard Cheat Sheet -->
+            <div class="hidden lg:flex items-center gap-2 text-[11px] text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 font-mono">
+              <span class="text-indigo-400 font-bold">NAVIGASI:</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">↑</kbd>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">↓</kbd>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">←</kbd>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">→</kbd>
+              <span class="text-zinc-600">|</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Enter / Tab</kbd> Pindah
+              <span class="text-zinc-600">|</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Ctrl+V</kbd> Paste Excel
+              <span class="text-zinc-600">|</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Ctrl+S</kbd> Simpan
+            </div>
+
+            <!-- Right: Actions & Save -->
+            <div class="flex items-center gap-2.5 shrink-0">
+              <div v-if="isPointsDirty" class="flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Belum disimpan</span>
+              </div>
+              <div v-else class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Tersimpan</span>
+              </div>
+
+              <button @click="addExcelRow" 
+                      class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer">
+                <span>+ Baris</span>
+              </button>
+
+              <button @click="saveExcelPoints" :disabled="isSavingPoints"
+                      class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow cursor-pointer">
+                <svg v-if="isSavingPoints" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>{{ isSavingPoints ? 'Menyimpan...' : 'Simpan (Ctrl+S)' }}</span>
+              </button>
+
+              <button @click="closeExcelStudio" 
+                      aria-label="Tutup Excel Studio"
+                      class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer ml-1">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Body: Split Left (Sketch) and Right (Grid) -->
+          <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+            
+            <!-- LEFT PANEL: Sketch Drawing Viewer (42% width) -->
+            <div class="w-full md:w-[42%] border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950 flex flex-col shrink-0">
+              <!-- Sketch Toolbar -->
+              <div class="p-2.5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-zinc-300">Gambar Sketsa CAD / Balon</span>
+                  <span class="text-zinc-500 text-[11px]">({{ (activeChecksheet.images || []).length }} Gambar)</span>
+                </div>
+                <!-- Zoom Controls -->
+                <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5">
+                  <button @click="sketchZoom = Math.max(0.5, sketchZoom - 0.25)" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer">-</button>
+                  <span class="text-[11px] font-mono text-zinc-400 px-1">{{ Math.round(sketchZoom * 100) }}%</span>
+                  <button @click="sketchZoom = Math.min(3.0, sketchZoom + 0.25)" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer">+</button>
+                  <button @click="sketchZoom = 1.0" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded text-[10px] cursor-pointer">Reset</button>
+                </div>
+              </div>
+
+              <!-- Sketch Image Display Area -->
+              <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/40 relative">
+                <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="transition-transform duration-100 origin-center" :style="{ transform: `scale(${sketchZoom})` }">
+                  <img :src="typeof activeChecksheet.images[activeSketchIdx] === 'string' ? activeChecksheet.images[activeSketchIdx] : (activeChecksheet.images[activeSketchIdx].image_url || activeChecksheet.images[activeSketchIdx].image_path)"
+                       :alt="'Sketsa ' + activeChecksheet.part_number"
+                       class="max-w-full max-h-[75vh] object-contain rounded-lg border border-zinc-800/60 shadow-lg select-none">
+                </div>
+                <div v-else class="text-center p-8 text-zinc-500 text-xs">
+                  <p>Tidak ada sketsa gambar untuk checksheet ini.</p>
+                </div>
+              </div>
+
+              <!-- Sketch Thumbnail Selector (if > 1) -->
+              <div v-if="activeChecksheet.images && activeChecksheet.images.length > 1" class="p-2 border-t border-zinc-800/80 bg-zinc-950 flex gap-2 overflow-x-auto">
+                <button v-for="(img, idx) in activeChecksheet.images" :key="idx"
+                        @click="activeSketchIdx = idx"
+                        :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-zinc-800 opacity-60 hover:opacity-100'"
+                        class="h-12 w-20 rounded border bg-zinc-900 overflow-hidden shrink-0 transition-all cursor-pointer">
+                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" class="w-full h-full object-cover">
+                </button>
+              </div>
+            </div>
+
+            <!-- RIGHT PANEL: Interactive Excel Grid (58% width) -->
+            <div class="flex-1 flex flex-col min-w-0 bg-zinc-900/50">
+              
+              <!-- Excel Grid Action Bar -->
+              <div class="px-4 py-2 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-zinc-200">Tabel Titik Ukur & Toleransi</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
+                    {{ excelPoints.length }} Baris
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-zinc-400 text-[11px]">
+                  <span>💡 Klik sel untuk edit, navigasi dengan panah <strong>↑ ↓ ← →</strong></span>
+                </div>
+              </div>
+
+              <!-- Grid Container with custom scroll -->
+              <div class="flex-1 overflow-auto select-none" id="excel-grid-container">
+                <table class="w-full text-left text-xs border-collapse border border-zinc-800">
+                  <thead class="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-700 text-zinc-400 font-semibold uppercase text-[10px] select-none">
+                    <tr>
+                      <th class="py-2.5 px-2 w-12 text-center border-r border-zinc-800 bg-zinc-950"># (No)</th>
+                      <th class="py-2.5 px-3 min-w-[180px] border-r border-zinc-800 bg-zinc-950">Item Inspeksi</th>
+                      <th class="py-2.5 px-3 min-w-[160px] border-r border-zinc-800 bg-zinc-950">Standar / Toleransi</th>
+                      <th class="py-2.5 px-3 min-w-[140px] border-r border-zinc-800 bg-zinc-950">Alat Ukur / Metode</th>
+                      <th class="py-2.5 px-3 min-w-[120px] border-r border-zinc-800 bg-zinc-950">Master Data</th>
+                      <th class="py-2.5 px-2 w-12 text-center bg-zinc-950">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-800">
+                    <tr v-for="(p, rIdx) in excelPoints" :key="rIdx" class="hover:bg-zinc-800/30 transition-colors">
+                      
+                      <!-- Col 0: Item No -->
+                      <td class="p-0 border-r border-zinc-800/80 relative">
+                        <input :id="'cell-' + rIdx + '-0'"
+                               type="text"
+                               v-model="p.item_no"
+                               @focus="setActiveCell(rIdx, 0)"
+                               @keydown="handleGridKeydown($event, rIdx, 0)"
+                               @paste="handleExcelPaste($event, rIdx, 0)"
+                               class="w-full h-full px-2 py-2 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+
+                      <!-- Col 1: Inspection Item -->
+                      <td class="p-0 border-r border-zinc-800/80 relative">
+                        <input :id="'cell-' + rIdx + '-1'"
+                               type="text"
+                               v-model="p.inspection_item"
+                               placeholder="Nama item inspeksi..."
+                               @focus="setActiveCell(rIdx, 1)"
+                               @keydown="handleGridKeydown($event, rIdx, 1)"
+                               @paste="handleExcelPaste($event, rIdx, 1)"
+                               class="w-full h-full px-3 py-2 bg-transparent font-medium text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+
+                      <!-- Col 2: Standard -->
+                      <td class="p-0 border-r border-zinc-800/80 relative">
+                        <input :id="'cell-' + rIdx + '-2'"
+                               type="text"
+                               v-model="p.standard"
+                               placeholder="Contoh: 150 ± 0.5"
+                               @focus="setActiveCell(rIdx, 2)"
+                               @keydown="handleGridKeydown($event, rIdx, 2)"
+                               @paste="handleExcelPaste($event, rIdx, 2)"
+                               class="w-full h-full px-3 py-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+
+                      <!-- Col 3: Method -->
+                      <td class="p-0 border-r border-zinc-800/80 relative">
+                        <input :id="'cell-' + rIdx + '-3'"
+                               type="text"
+                               v-model="p.method"
+                               placeholder="Visual / Caliper"
+                               @focus="setActiveCell(rIdx, 3)"
+                               @keydown="handleGridKeydown($event, rIdx, 3)"
+                               @paste="handleExcelPaste($event, rIdx, 3)"
+                               class="w-full h-full px-3 py-2 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+
+                      <!-- Col 4: Master Data -->
+                      <td class="p-0 border-r border-zinc-800/80 relative">
+                        <input :id="'cell-' + rIdx + '-4'"
+                               type="text"
+                               v-model="p.master_data"
+                               placeholder="Kode data..."
+                               @focus="setActiveCell(rIdx, 4)"
+                               @keydown="handleGridKeydown($event, rIdx, 4)"
+                               @paste="handleExcelPaste($event, rIdx, 4)"
+                               class="w-full h-full px-3 py-2 bg-transparent font-mono text-zinc-400 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      </td>
+
+                      <!-- Action: Delete Row -->
+                      <td class="p-0 text-center">
+                        <button @click="deleteExcelRow(rIdx)" 
+                                title="Hapus baris ini"
+                                class="w-full h-full py-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-950/30 transition-colors font-bold text-xs cursor-pointer">
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr v-if="excelPoints.length === 0">
+                      <td colspan="6" class="p-8 text-center text-zinc-500 text-xs">
+                        Belum ada data titik ukur. Klik tombol di bawah untuk menambah baris.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Bottom Table Controls -->
+              <div class="p-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between text-xs">
+                <button @click="addExcelRow" 
+                        class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                  <span>+ Tambah Baris Baru (atau tekan Enter di baris terakhir)</span>
+                </button>
+                <div class="flex items-center gap-3">
+                  <span class="text-zinc-500 text-[11px] font-mono">Total: {{ excelPoints.length }} baris inspeksi</span>
+                  <button @click="saveExcelPoints" :disabled="isSavingPoints"
+                          class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 shadow cursor-pointer">
+                    {{ isSavingPoints ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <div v-if="toastMessage" class="fixed bottom-5 right-5 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl text-xs font-semibold"
+             :class="toastType === 'success' ? 'bg-zinc-900 border-emerald-500/60 text-emerald-300 shadow-emerald-950/40' : 'bg-zinc-900 border-rose-500/60 text-rose-300 shadow-rose-950/40'">
+          <span v-if="toastType === 'success'" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span v-else class="w-2 h-2 rounded-full bg-rose-400"></span>
+          <span>{{ toastMessage }}</span>
+          <button @click="toastMessage = ''" class="ml-2 text-zinc-400 hover:text-zinc-200 cursor-pointer">✕</button>
+        </div>
+      </transition>
+
       <!-- Floating Batch Bar (Admin) -->
       <div v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
            class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-700 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4">
@@ -1442,6 +1802,21 @@
         const drawerTab = ref('points');
         const previewImage = ref(null);
         const isAutomating = ref(false);
+
+        // Excel Studio & Table Grid State
+        const showExcelStudio = ref(false);
+        const excelPoints = ref([]);
+        const isPointsDirty = ref(false);
+        const isSavingPoints = ref(false);
+        const activeRow = ref(0);
+        const activeCol = ref(0);
+        const excelCols = ['item_no', 'inspection_item', 'standard', 'method', 'master_data'];
+        const sketchZoom = ref(1.0);
+        const activeSketchIdx = ref(0);
+        const isInlineEditing = ref(false);
+        const focusedCsIndex = ref(0);
+        const toastMessage = ref('');
+        const toastType = ref('success');
 
         // Batch Automation
         const showBatchModal = ref(false);
@@ -1729,9 +2104,283 @@
           }
         };
 
+        const showToast = (msg, type = 'success') => {
+          toastMessage.value = msg;
+          toastType.value = type;
+          if (window._toastTimer) clearTimeout(window._toastTimer);
+          window._toastTimer = setTimeout(() => {
+            toastMessage.value = '';
+          }, 3200);
+        };
+
+        const openExcelStudio = async (checksheet) => {
+          if (!checksheet) return;
+          activeChecksheet.value = checksheet;
+          try {
+            const res = await fetch(`/api/checksheets/${checksheet.id}`);
+            if (res.ok) {
+              activeChecksheet.value = await res.json();
+            }
+          } catch (e) {}
+
+          excelPoints.value = (activeChecksheet.value.points || []).map(p => ({ ...p }));
+          if (excelPoints.value.length === 0) {
+            excelPoints.value = [{
+              item_no: '1',
+              inspection_item: '',
+              standard: '-',
+              method: 'Visual',
+              master_data: ''
+            }];
+          }
+          isPointsDirty.value = false;
+          activeSketchIdx.value = 0;
+          sketchZoom.value = 1.0;
+          showExcelStudio.value = true;
+          activeRow.value = 0;
+          activeCol.value = 0;
+          focusCell(0, 0);
+        };
+
+        const openExcelStudioDirect = async (cs) => {
+          await openExcelStudio(cs);
+        };
+
+        const closeExcelStudio = () => {
+          if (isPointsDirty.value) {
+            if (!confirm('Ada perubahan titik ukur yang belum disimpan. Yakin ingin keluar?')) {
+              return;
+            }
+          }
+          showExcelStudio.value = false;
+          isPointsDirty.value = false;
+        };
+
+        const toggleInlineEdit = () => {
+          isInlineEditing.value = !isInlineEditing.value;
+          if (isInlineEditing.value && activeChecksheet.value) {
+            excelPoints.value = (activeChecksheet.value.points || []).map(p => ({ ...p }));
+            if (excelPoints.value.length === 0) {
+              excelPoints.value = [{
+                item_no: '1',
+                inspection_item: '',
+                standard: '-',
+                method: 'Visual',
+                master_data: ''
+              }];
+            }
+            isPointsDirty.value = false;
+            focusCell(0, 0, 'drawer');
+          }
+        };
+
+        const setActiveCell = (row, col) => {
+          activeRow.value = row;
+          activeCol.value = col;
+        };
+
+        const focusCell = (row, col, prefix = 'cell') => {
+          Vue.nextTick(() => {
+            const elId = prefix === 'drawer' ? `drawer-cell-${row}-${col}` : `cell-${row}-${col}`;
+            const el = document.getElementById(elId);
+            if (el) {
+              el.focus();
+              if (typeof el.select === 'function') el.select();
+            }
+          });
+        };
+
+        const addExcelRow = (index = -1) => {
+          const newRow = {
+            item_no: String(excelPoints.value.length + 1),
+            inspection_item: '',
+            standard: '-',
+            method: 'Visual',
+            master_data: ''
+          };
+          if (index >= 0) {
+            excelPoints.value.splice(index + 1, 0, newRow);
+            activeRow.value = index + 1;
+          } else {
+            excelPoints.value.push(newRow);
+            activeRow.value = excelPoints.value.length - 1;
+          }
+          activeCol.value = 0;
+          isPointsDirty.value = true;
+          focusCell(activeRow.value, 0, showExcelStudio.value ? 'cell' : 'drawer');
+        };
+
+        const deleteExcelRow = (index) => {
+          if (excelPoints.value.length <= 1) {
+            excelPoints.value[0] = {
+              item_no: '1',
+              inspection_item: '',
+              standard: '-',
+              method: 'Visual',
+              master_data: ''
+            };
+          } else {
+            excelPoints.value.splice(index, 1);
+          }
+          isPointsDirty.value = true;
+        };
+
+        const handleGridKeydown = (event, rIdx, cIdx, prefix = 'cell') => {
+          const totalRows = excelPoints.value.length;
+          const totalCols = excelCols.length;
+          isPointsDirty.value = true;
+
+          // Ctrl+S or Cmd+S -> Save
+          if ((event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')) {
+            event.preventDefault();
+            saveExcelPoints();
+            return;
+          }
+
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (rIdx > 0) {
+              activeRow.value = rIdx - 1;
+              focusCell(rIdx - 1, cIdx, prefix);
+            }
+          } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (rIdx < totalRows - 1) {
+              activeRow.value = rIdx + 1;
+              focusCell(rIdx + 1, cIdx, prefix);
+            } else {
+              addExcelRow();
+            }
+          } else if (event.key === 'ArrowLeft') {
+            const el = event.target;
+            if (el.selectionStart === 0 && el.selectionEnd === 0 && cIdx > 0) {
+              event.preventDefault();
+              activeCol.value = cIdx - 1;
+              focusCell(rIdx, cIdx - 1, prefix);
+            }
+          } else if (event.key === 'ArrowRight') {
+            const el = event.target;
+            if (el.selectionStart === el.value.length && el.selectionEnd === el.value.length && cIdx < totalCols - 1) {
+              event.preventDefault();
+              activeCol.value = cIdx + 1;
+              focusCell(rIdx, cIdx + 1, prefix);
+            }
+          } else if (event.key === 'Tab') {
+            event.preventDefault();
+            if (event.shiftKey) {
+              if (cIdx > 0) {
+                activeCol.value = cIdx - 1;
+                focusCell(rIdx, cIdx - 1, prefix);
+              } else if (rIdx > 0) {
+                activeRow.value = rIdx - 1;
+                activeCol.value = totalCols - 1;
+                focusCell(rIdx - 1, totalCols - 1, prefix);
+              }
+            } else {
+              if (cIdx < totalCols - 1) {
+                activeCol.value = cIdx + 1;
+                focusCell(rIdx, cIdx + 1, prefix);
+              } else if (rIdx < totalRows - 1) {
+                activeRow.value = rIdx + 1;
+                activeCol.value = 0;
+                focusCell(rIdx + 1, 0, prefix);
+              } else {
+                addExcelRow();
+              }
+            }
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (rIdx < totalRows - 1) {
+              activeRow.value = rIdx + 1;
+              focusCell(rIdx + 1, cIdx, prefix);
+            } else {
+              addExcelRow();
+            }
+          }
+        };
+
+        const handleExcelPaste = (event, startRow, startCol) => {
+          const clip = (event.clipboardData || window.clipboardData)?.getData('text');
+          if (!clip) return;
+
+          if (clip.includes('\t') || clip.includes('\n')) {
+            event.preventDefault();
+            const lines = clip.replace(/\r/g, '').split('\n').filter(line => line.length > 0);
+            const matrix = lines.map(line => line.split('\t'));
+
+            matrix.forEach((rowCells, rOffset) => {
+              const targetRow = startRow + rOffset;
+              while (targetRow >= excelPoints.value.length) {
+                excelPoints.value.push({
+                  item_no: String(excelPoints.value.length + 1),
+                  inspection_item: '',
+                  standard: '-',
+                  method: 'Visual',
+                  master_data: ''
+                });
+              }
+              rowCells.forEach((cellVal, cOffset) => {
+                const targetCol = startCol + cOffset;
+                if (targetCol < excelCols.length) {
+                  const key = excelCols[targetCol];
+                  excelPoints.value[targetRow][key] = cellVal.trim();
+                }
+              });
+            });
+
+            isPointsDirty.value = true;
+            showToast(`Berhasil menempel ${matrix.length} baris dari Excel!`, 'success');
+          }
+        };
+
+        const saveExcelPoints = async () => {
+          if (!activeChecksheet.value) return;
+          isSavingPoints.value = true;
+          try {
+            const payload = {
+              points: excelPoints.value.map((p, idx) => ({
+                item_no: p.item_no || String(idx + 1),
+                inspection_item: p.inspection_item || '',
+                standard: p.standard || '-',
+                method: p.method || 'Visual',
+                master_data: p.master_data || ''
+              }))
+            };
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/points`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+              isPointsDirty.value = false;
+              activeChecksheet.value.points = JSON.parse(JSON.stringify(excelPoints.value));
+              const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
+              if (found) {
+                found.points = JSON.parse(JSON.stringify(excelPoints.value));
+              }
+              showToast('Titik ukur inspeksi berhasil disimpan & disinkronkan!', 'success');
+            } else {
+              const err = await res.json();
+              showToast(err.detail || 'Gagal menyimpan titik inspeksi.', 'error');
+            }
+          } catch (e) {
+            showToast('Terjadi kesalahan jaringan saat menyimpan.', 'error');
+          } finally {
+            isSavingPoints.value = false;
+          }
+        };
+
         const closeDetail = () => {
+          if (isPointsDirty.value) {
+            if (!confirm('Ada perubahan titik ukur yang belum disimpan. Yakin ingin keluar?')) {
+              return;
+            }
+          }
           activeChecksheet.value = null;
           previewImage.value = null;
+          isInlineEditing.value = false;
+          isPointsDirty.value = false;
         };
 
         const markNeedsRevision = async () => {
@@ -1928,11 +2577,48 @@
         // Keyboard handler
         window.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
-            if (previewImage.value) previewImage.value = null;
+            if (showExcelStudio.value) closeExcelStudio();
+            else if (previewImage.value) previewImage.value = null;
             else if (activeChecksheet.value) closeDetail();
             else if (showBatchModal.value && !isBatchRunning.value) closeBatchModal();
             else if (showUploadModal.value && !isUploading.value) showUploadModal.value = false;
             else if (showUsersModal.value) showUsersModal.value = false;
+            return;
+          }
+
+          // Ctrl+S / Cmd+S save shortcut
+          if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+            if (showExcelStudio.value || isInlineEditing.value) {
+              e.preventDefault();
+              saveExcelPoints();
+              return;
+            }
+          }
+
+          // Main Table Row Navigation when on checksheets page and no modal is open
+          const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+          const isInputActive = tag === 'input' || tag === 'textarea' || tag === 'select';
+          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || showBatchModal.value || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value;
+
+          if (activePage.value === 'checksheets' && !isModalOpen && !isInputActive) {
+            const list = filteredChecksheets.value;
+            if (!list || list.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              focusedCsIndex.value = Math.min(list.length - 1, focusedCsIndex.value + 1);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              focusedCsIndex.value = Math.max(0, focusedCsIndex.value - 1);
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              const targetCs = list[focusedCsIndex.value];
+              if (targetCs) openDetail(targetCs.id);
+            } else if (e.key === 'e' || e.key === 'E') {
+              e.preventDefault();
+              const targetCs = list[focusedCsIndex.value];
+              if (targetCs) openExcelStudioDirect(targetCs);
+            }
           }
         });
 
@@ -2016,7 +2702,31 @@
           executePartSearch,
           triggerCatalogSync,
           copyMissingParts,
-          openChecksheetFromChecker
+          openChecksheetFromChecker,
+          showExcelStudio,
+          excelPoints,
+          isPointsDirty,
+          isSavingPoints,
+          activeRow,
+          activeCol,
+          sketchZoom,
+          activeSketchIdx,
+          isInlineEditing,
+          focusedCsIndex,
+          toastMessage,
+          toastType,
+          showToast,
+          openExcelStudio,
+          openExcelStudioDirect,
+          closeExcelStudio,
+          toggleInlineEdit,
+          setActiveCell,
+          focusCell,
+          addExcelRow,
+          deleteExcelRow,
+          handleGridKeydown,
+          handleExcelPaste,
+          saveExcelPoints
         };
       }
     }).mount('#app');

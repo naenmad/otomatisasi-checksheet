@@ -186,6 +186,7 @@ def _build_checksheet_images(cs: Checksheet) -> list:
 
 
 @router.put("/{checksheet_id}")
+@router.patch("/{checksheet_id}")
 async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema, db: AsyncSession = Depends(get_db)):
     cs = await get_checksheet_by_id(db, checksheet_id)
     if not cs:
