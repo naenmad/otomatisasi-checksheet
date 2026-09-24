@@ -1235,11 +1235,11 @@
           <div v-show="drawerTab === 'images'" class="flex-1 overflow-y-auto py-4">
             <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="grid grid-cols-2 gap-3">
               <div v-for="(img, idx) in activeChecksheet.images" :key="idx"
-                   @click="previewImage = img"
+                   @click="previewImage = (typeof img === 'string' ? img : (img.image_url || img.image_path))"
                    class="group relative bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden cursor-pointer hover:border-zinc-600 transition-all">
-                <img :src="img" :alt="'Sketsa ' + activeChecksheet.part_number" class="w-full h-44 object-contain bg-zinc-950 p-2">
+                <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" :alt="'Sketsa ' + activeChecksheet.part_number" class="w-full h-44 object-contain bg-zinc-950 p-2">
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span class="px-2.5 py-1 bg-zinc-900 text-white rounded text-xs font-semibold">Perbesar</span>
+                  <span class="px-2.5 py-1 bg-zinc-900/90 text-white rounded text-xs font-semibold shadow border border-zinc-700">Perbesar</span>
                 </div>
               </div>
             </div>
@@ -1269,10 +1269,10 @@
       </div>
 
       <!-- Lightbox Zoom Modal -->
-      <div v-if="previewImage" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" @click="previewImage = null">
+      <div v-if="previewImage" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" @click="previewImage = null">
         <div class="relative max-w-4xl max-h-[90vh]" @click.stop>
-          <img :src="previewImage" alt="Preview Gambar" class="max-w-full max-h-[85vh] object-contain rounded-xl">
-          <button @click="previewImage = null" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center text-sm font-bold">
+          <img :src="typeof previewImage === 'string' ? previewImage : (previewImage.image_url || previewImage.image_path)" alt="Preview Gambar" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-zinc-800 bg-zinc-950">
+          <button @click="previewImage = null" aria-label="Tutup preview gambar" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white flex items-center justify-center text-sm font-bold shadow-lg transition-colors cursor-pointer">
             ✕
           </button>
         </div>

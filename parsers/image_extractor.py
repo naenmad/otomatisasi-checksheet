@@ -91,39 +91,58 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                             f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
                             f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
 
-                            # STRICT SKETCH FILTERING:
-                            # 1. Header logo filter: top 4 rows and left 3 columns
-                            if f_r <= 4 and f_c <= 3:
-                                continue
-                            # 2. Bottom signature / stamp boxes or far right off-sheet columns
-                            if f_r > 95 or f_c > 60:
-                                continue
-
                             # 3. File type check (exclude vector stamp formats like EMF/WMF)
                             if not media_file.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
                                 continue
 
                             # 4. Check file size
                             data = z.read(media_file)
-                            if len(data) < 3000:
+                            if len(data) < 2000:
                                 continue
 
                             # 5. Check image dimensions with PIL
+                            is_logo = False
                             if Image:
                                 try:
                                     with Image.open(io.BytesIO(data)) as im:
                                         w, h = im.size
                                         if (w, h) in KNOWN_LOGO_DIMENSIONS:
-                                            continue
-                                        # Tiny datum markers / checkmarks
-                                        if w < 100 or h < 50:
-                                            continue
+                                            is_logo = True
+                                        elif w < 80 or h < 40:
+                                            is_logo = True
+                                        # Only consider top-left a logo if dimensions are small like a banner/badge
+                                        elif f_r <= 4 and f_c <= 3 and w <= 200 and h <= 80:
+                                            is_logo = True
                                 except Exception:
-                                    continue
+                                    pass
+
+                            if is_logo:
+                                continue
 
                             if media_file not in seen_media:
                                 seen_media.add(media_file)
                                 anchored_sketches.append(media_file)
+
+            # Fallback: if no anchored sketches identified, look directly at xl/media/
+            if not anchored_sketches:
+                for n in z.namelist():
+                    if "media/" in n and n.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                        data = z.read(n)
+                        if len(data) < 2500:
+                            continue
+                        if Image:
+                            try:
+                                with Image.open(io.BytesIO(data)) as im:
+                                    w, h = im.size
+                                    if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                                        continue
+                                    if w < 100 or h < 50:
+                                        continue
+                            except Exception:
+                                pass
+                        if n not in seen_media:
+                            seen_media.add(n)
+                            anchored_sketches.append(n)
 
             # Clean existing files in output_dir
             for old_f in os.listdir(output_dir):

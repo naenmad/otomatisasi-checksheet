@@ -1,10 +1,10 @@
 {
-  "synced_at": "2026-09-23T13:03:09.078340",
-  "elapsed_seconds": 30.7,
+  "synced_at": "2026-09-24T08:31:30.047734",
+  "elapsed_seconds": 11.6,
   "stats": {
-    "total_parts": 2080,
-    "total_regular": 2077,
-    "total_project": 3,
+    "total_parts": 2066,
+    "total_regular": 2120,
+    "total_project": 72,
     "total_templates": 263
   },
   "parts": [
@@ -19604,7 +19604,7 @@
     {
       "part_number": "DEBUG-PART",
       "clean_number": "DEBUGPART",
-      "part_name": "",
+      "part_name": "DEBUG-PART -",
       "category": "REGULAR",
       "value": "DEBUG-PART",
       "has_template": false,
@@ -19685,7 +19685,7 @@
     {
       "part_number": "IRM-P156002260",
       "clean_number": "IRMP156002260",
-      "part_name": "PANEL REAR PILLAR INR RH",
+      "part_name": "PANEL; REAR PILLAR INNER RH",
       "category": "REGULAR",
       "value": "IRM-P156002260",
       "has_template": false,
@@ -20819,284 +20819,29 @@
     {
       "part_number": "65562-TBK-K00R-H1",
       "clean_number": "65562TBKK00RH1",
-      "part_name": "T86",
+      "part_name": "65562-TBK-K00R-H1 (T86)",
       "category": "NEW PROJECT",
       "value": "70",
-      "data_num": "65562-TBK-K00R-H1",
       "has_template": false,
       "template_info": null
     },
     {
       "part_number": "80182E070P",
       "clean_number": "80182E070P",
-      "part_name": "5P45",
+      "part_name": "80182E070P (5P45)",
       "category": "NEW PROJECT",
       "value": "40",
-      "data_num": "80182E070P",
       "has_template": false,
       "template_info": null
     },
     {
       "part_number": "G/1903/GP",
       "clean_number": "G1903GP",
-      "part_name": "MMKI",
+      "part_name": "G/1903/GP (MMKI)",
       "category": "NEW PROJECT",
       "value": "71",
-      "data_num": "G/1903/GP",
       "has_template": false,
       "template_info": null
-    },
-    {
-      "part_number": "51138C00P Monthly",
-      "clean_number": "51138C00PMONTHLY",
-      "part_name": "-",
-      "category": "REGULAR",
-      "value": "51138C00P Monthly",
-      "has_template": true,
-      "template_info": {
-        "part_number": "51138C00P Monthly",
-        "type": "ACCURACY",
-        "part_name": "-",
-        "items_count": "24 Items",
-        "doc_number": "N/A\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/17/edit",
-        "clean_number": "51138C00PMONTHLY"
-      }
-    },
-    {
-      "part_number": "58650-68P10",
-      "clean_number": "5865068P10",
-      "part_name": "CROSSMEMBER COMP,DASH UPPER, R",
-      "category": "REGULAR",
-      "value": "58650-68P10",
-      "has_template": true,
-      "template_info": {
-        "part_number": "58650-68P10",
-        "type": "ACCURACY",
-        "part_name": "CROSSMEMBER COMP,DASH UPPER, R",
-        "items_count": "55 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/129/edit",
-        "clean_number": "5865068P10"
-      }
-    },
-    {
-      "part_number": "58750-52R00",
-      "clean_number": "5875052R00",
-      "part_name": "CROSSMEMBER COMP,DASH UPPER,L",
-      "category": "REGULAR",
-      "value": "58750-52R00",
-      "has_template": true,
-      "template_info": {
-        "part_number": "58750-52R00",
-        "type": "ACCURACY",
-        "part_name": "CROSSMEMBER COMP,DASH UPPER,L",
-        "items_count": "53 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/131/edit",
-        "clean_number": "5875052R00"
-      }
-    },
-    {
-      "part_number": "58750-68P00",
-      "clean_number": "5875068P00",
-      "part_name": "CROSSMEMBER COMP,DASH UPPER,L",
-      "category": "REGULAR",
-      "value": "58750-68P00",
-      "has_template": true,
-      "template_info": {
-        "part_number": "58750-68P00",
-        "type": "ACCURACY",
-        "part_name": "CROSSMEMBER COMP,DASH UPPER,L",
-        "items_count": "47 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "APPROVED",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/130/edit",
-        "clean_number": "5875068P00"
-      }
-    },
-    {
-      "part_number": "58831-52S00-SP",
-      "clean_number": "5883152S00SP",
-      "part_name": "REINF, PEDAL BRACKET (Single Part)",
-      "category": "REGULAR",
-      "value": "58831-52S00-SP",
-      "has_template": true,
-      "template_info": {
-        "part_number": "58831-52S00-SP",
-        "type": "ACCURACY",
-        "part_name": "REINF, PEDAL BRACKET (Single Part)",
-        "items_count": "143 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/106/edit",
-        "clean_number": "5883152S00SP"
-      }
-    },
-    {
-      "part_number": "58831-52S10-SP",
-      "clean_number": "5883152S10SP",
-      "part_name": "REINF, PEDAL BRACKET",
-      "category": "REGULAR",
-      "value": "58831-52S10-SP",
-      "has_template": true,
-      "template_info": {
-        "part_number": "58831-52S10-SP",
-        "type": "ACCURACY",
-        "part_name": "REINF, PEDAL BRACKET",
-        "items_count": "110 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/110/edit",
-        "clean_number": "5883152S10SP"
-      }
-    },
-    {
-      "part_number": "62120-3M0A-J003",
-      "clean_number": "621203M0AJ003",
-      "part_name": "RAIL COMP, ROOF FRONT",
-      "category": "REGULAR",
-      "value": "62120-3M0A-J003",
-      "has_template": true,
-      "template_info": {
-        "part_number": "62120-3M0A-J003",
-        "type": "ACCURACY",
-        "part_name": "RAIL COMP, ROOF FRONT",
-        "items_count": "131 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "APPROVED",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/158/edit",
-        "clean_number": "621203M0AJ003"
-      }
-    },
-    {
-      "part_number": "62130-3M0A-J002",
-      "clean_number": "621303M0AJ002",
-      "part_name": "RAIL COMP, ROOF FRONT",
-      "category": "REGULAR",
-      "value": "62130-3M0A-J002",
-      "has_template": true,
-      "template_info": {
-        "part_number": "62130-3M0A-J002",
-        "type": "ACCURACY",
-        "part_name": "RAIL COMP, ROOF FRONT",
-        "items_count": "153 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/159/edit",
-        "clean_number": "621303M0AJ002"
-      }
-    },
-    {
-      "part_number": "62150-3N1A-T002",
-      "clean_number": "621503N1AT002",
-      "part_name": "ARCH D, COMP ROOF",
-      "category": "REGULAR",
-      "value": "62150-3N1A-T002",
-      "has_template": true,
-      "template_info": {
-        "part_number": "62150-3N1A-T002",
-        "type": "ACCURACY",
-        "part_name": "ARCH D, COMP ROOF",
-        "items_count": "76 Items",
-        "doc_number": "Form 1\nREV: 01",
-        "status": "APPROVED",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/160/edit",
-        "clean_number": "621503N1AT002"
-      }
-    },
-    {
-      "part_number": "63141-52S00-SP",
-      "clean_number": "6314152S00SP",
-      "part_name": "REINF, REAR PILLAR LWR, R",
-      "category": "REGULAR",
-      "value": "63141-52S00-SP",
-      "has_template": true,
-      "template_info": {
-        "part_number": "63141-52S00-SP",
-        "type": "ACCURACY",
-        "part_name": "REINF, REAR PILLAR LWR, R",
-        "items_count": "75 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/111/edit",
-        "clean_number": "6314152S00SP"
-      }
-    },
-    {
-      "part_number": "63641-52S00-SP",
-      "clean_number": "6364152S00SP",
-      "part_name": "REINF, REAR PILLAR LWR, L",
-      "category": "REGULAR",
-      "value": "63641-52S00-SP",
-      "has_template": true,
-      "template_info": {
-        "part_number": "63641-52S00-SP",
-        "type": "ACCURACY",
-        "part_name": "REINF, REAR PILLAR LWR, L",
-        "items_count": "75 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/112/edit",
-        "clean_number": "6364152S00SP"
-      }
-    },
-    {
-      "part_number": "63641-52S10-SP",
-      "clean_number": "6364152S10SP",
-      "part_name": "REINF, REAR PILLAR LWR, L",
-      "category": "REGULAR",
-      "value": "63641-52S10-SP",
-      "has_template": true,
-      "template_info": {
-        "part_number": "63641-52S10-SP",
-        "type": "ACCURACY",
-        "part_name": "REINF, REAR PILLAR LWR, L",
-        "items_count": "75 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/113/edit",
-        "clean_number": "6364152S10SP"
-      }
-    },
-    {
-      "part_number": "65140-T86A-K004-H1",
-      "clean_number": "65140T86AK004H1",
-      "part_name": "SILL COMP R, FR INSIDE",
-      "category": "REGULAR",
-      "value": "65140-T86A-K004-H1",
-      "has_template": true,
-      "template_info": {
-        "part_number": "65140-T86A-K004-H1",
-        "type": "ACCURACY",
-        "part_name": "SILL COMP R, FR INSIDE",
-        "items_count": "169 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/162/edit",
-        "clean_number": "65140T86AK004H1"
-      }
-    },
-    {
-      "part_number": "65562-T86-K000-H1 - Monthly",
-      "clean_number": "65562T86K000H1MONTHLY",
-      "part_name": "-",
-      "category": "REGULAR",
-      "value": "65562-T86-K000-H1 - Monthly",
-      "has_template": true,
-      "template_info": {
-        "part_number": "65562-T86-K000-H1 - Monthly",
-        "type": "ACCURACY",
-        "part_name": "-",
-        "items_count": "38 Items",
-        "doc_number": "N/A\nREV: 00",
-        "status": "PENDING APPROVAL",
-        "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/16/edit",
-        "clean_number": "65562T86K000H1MONTHLY"
-      }
     }
   ],
   "templates": [
