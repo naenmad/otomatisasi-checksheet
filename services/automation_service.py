@@ -44,17 +44,28 @@ async def execute_checksheet_submission(
     # Reference images
     image_paths = [img.image_path for img in cs.images if img.image_path]
 
+    meta_payload = {
+        "part_number": cs.part_number,
+        "part_name": cs.part_name or "",
+        "model": cs.model or "-",
+        "customer": cs.customer or "PT. HPM",
+        "doc_number": cs.doc_number or "Form 1",
+    }
+
     yield f"[*] Menyiapkan browser {browser_channel.upper()} (profil user)...\n"
+    yield f"[*] Menghubungkan data Part {cs.part_number} langsung dari server database...\n"
 
     try:
-        # Run automation
+        # Run automation directly from Supabase database (tanpa ketergantungan file folder lokal)
         result = await run_automation(
-            part_or_excel=cs.raw_file_path or cs.part_number,
+            part_or_excel=cs.part_number,
             headless=headless,
             submit=submit,
             doc_number=cs.doc_number,
             browser_channel=browser_channel,
-            override_items=points_payload
+            override_items=points_payload,
+            override_metadata=meta_payload,
+            override_images=image_paths
         )
 
         final_url = result.get("final_url", "")

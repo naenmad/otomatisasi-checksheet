@@ -73,6 +73,16 @@ async def login_factoryhub(page: Page, nik: str = DEFAULT_NIK, password: str = D
     print(f"[+] Login complete. Current URL: {page.url}")
 
 
+def standardize_part_number(s: str) -> str:
+    """Normalize and clean part numbers from rogue spaces, messy hyphens, and casing."""
+    if not s:
+        return ""
+    val = str(s).strip().upper()
+    val = re.sub(r"\s*-\s*", "-", val)
+    val = re.sub(r"\s+", " ", val)
+    return val
+
+
 async def find_existing_template(page: Page, part_no: str) -> Optional[Dict[str, str]]:
     """
     Search for existing checksheet master template by Part Number on FactoryHub.
@@ -368,38 +378,76 @@ async def fill_checksheet_form(
     custom_doc_no: Optional[str] = None,
     manual_images_dir: Optional[str] = None,
     scan_images: Optional[bool] = None,
-    override_items: Optional[List[Dict[str, str]]] = None
+    override_items: Optional[List[Dict[str, str]]] = None,
+    override_metadata: Optional[Dict[str, Any]] = None,
+    override_images: Optional[List[str]] = None
 ) -> Dict[str, Any]:
-    """Extract data from Excel/PDF and fill checksheet master creation/editing form."""
-    print(f"\n[*] Resolving part document: {part_or_excel}")
-    doc_pkg = resolve_part_document(
-        part_or_path=part_or_excel,
-        scan_images=scan_images,
-        manual_images_dir=manual_images_dir
+    """Extract data from Excel/PDF or Supabase and fill checksheet master creation/editing form."""
+    norm_part = standardize_part_number(
+        (override_metadata.get("part_number") if override_metadata else None) or part_or_excel
     )
-    doc_path = doc_pkg["file_path"]
-    file_type = doc_pkg["file_type"]
-    images = doc_pkg["images"]
-    meta = doc_pkg["metadata"]
-    scan_mode_str = "Scan Dokumen" if doc_pkg["scan_images"] else "Folder Images"
 
-    if custom_doc_no:
-        meta["doc_number"] = custom_doc_no
-
-    print(f"[+] Part Document Resolved:")
-    print(f"    - Part Number: {meta['part_number']}")
-    print(f"    - Document   : {os.path.basename(doc_path)} ({file_type.upper()})")
-    print(f"    - Doc Number : {meta['doc_number']}")
-    print(f"    - Part Name  : {meta['part_name']}")
-    print(f"    - Images     : {len(images)} file(s)")
-
-    if override_items is not None:
-        items = override_items
-        print(f"[+] Menggunakan {len(items)} inspection point(s) dari direct input (server scrape/override).")
+    if override_metadata:
+        print(f"\n[*] Menggunakan data langsung dari server Supabase untuk Part: {norm_part}")
+        doc_path = part_or_excel or ""
+        file_type = "xlsx"
+        images = [img for img in (override_images or []) if img and os.path.exists(img)]
+        meta = {
+            "part_number": norm_part,
+            "part_name": override_metadata.get("part_name", ""),
+            "model": override_metadata.get("model", "-"),
+            "customer": override_metadata.get("customer", "PT. HPM"),
+            "doc_number": custom_doc_no or override_metadata.get("doc_number", "Form 1"),
+            "checksheet_category": override_metadata.get("checksheet_category", "Accuracy")
+        }
+        scan_mode_str = "Supabase Database"
+        items = override_items if override_items is not None else []
+        print(f"[+] Data Part Berhasil Diambil dari Database:")
+        print(f"    - Part Number: {meta['part_number']}")
+        print(f"    - Part Name  : {meta['part_name']}")
+        print(f"    - Doc Number : {meta['doc_number']}")
+        print(f"    - Items      : {len(items)} inspection point(s)")
     else:
-        print(f"[*] Extracting inspection points from {file_type.upper()}...")
-        items = extract_inspection_points(doc_path)
-        print(f"[+] Found {len(items)} inspection point(s).")
+        print(f"\n[*] Resolving part document: {part_or_excel}")
+        try:
+            doc_pkg = resolve_part_document(
+                part_or_path=part_or_excel,
+                scan_images=scan_images,
+                manual_images_dir=manual_images_dir
+            )
+            doc_path = doc_pkg["file_path"]
+            file_type = doc_pkg["file_type"]
+            images = doc_pkg["images"]
+            meta = doc_pkg["metadata"]
+            meta["part_number"] = standardize_part_number(meta.get("part_number", ""))
+            scan_mode_str = "Scan Dokumen" if doc_pkg["scan_images"] else "Folder Images"
+            if custom_doc_no:
+                meta["doc_number"] = custom_doc_no
+            if override_items is not None:
+                items = override_items
+            else:
+                items = extract_inspection_points(doc_path)
+            print(f"[+] Part Document Resolved:")
+            print(f"    - Part Number: {meta['part_number']}")
+            print(f"    - Document   : {os.path.basename(doc_path)} ({file_type.upper()})")
+            print(f"    - Doc Number : {meta['doc_number']}")
+            print(f"    - Part Name  : {meta['part_name']}")
+            print(f"    - Images     : {len(images)} file(s)")
+        except FileNotFoundError as fnf_err:
+            print(f"[!] Info: File lokal di documents/ tidak ditemukan ({fnf_err}). Menggunakan data langsung dari server Supabase.")
+            doc_path = part_or_excel or ""
+            file_type = "xlsx"
+            images = [img for img in (override_images or []) if img and os.path.exists(img)]
+            meta = {
+                "part_number": norm_part,
+                "part_name": "",
+                "model": "-",
+                "customer": "PT. HPM",
+                "doc_number": custom_doc_no or "Form 1",
+                "checksheet_category": "Accuracy"
+            }
+            scan_mode_str = "Supabase Database (Fallback)"
+            items = override_items if override_items is not None else []
 
     part_no = meta["part_number"]
     existing_template = await find_existing_template(page, part_no)
@@ -856,7 +904,9 @@ async def run_automation(
     manual_images_dir: Optional[str] = None,
     scan_images: Optional[bool] = None,
     browser_channel: Optional[str] = None,
-    override_items: Optional[List[Dict[str, str]]] = None
+    override_items: Optional[List[Dict[str, str]]] = None,
+    override_metadata: Optional[Dict[str, Any]] = None,
+    override_images: Optional[List[str]] = None
 ):
     """Main runner for checksheet automation with Playwright."""
     async with async_playwright() as p:
@@ -970,7 +1020,9 @@ async def run_automation(
                 custom_doc_no=doc_number,
                 manual_images_dir=manual_images_dir,
                 scan_images=scan_images,
-                override_items=override_items
+                override_items=override_items,
+                override_metadata=override_metadata,
+                override_images=override_images
             )
 
             if result.get("status") == "part_not_registered":

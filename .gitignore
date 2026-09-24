@@ -24,7 +24,7 @@ cs_incoming_analysis.json
 *.sqlite3
 
 # Checksheet Documents (Keep folder structure, ignore large binaries)
-documents/*
+# documents/*
 !documents/.gitkeep
 
 
