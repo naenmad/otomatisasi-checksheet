@@ -1,0 +1,69 @@
+*PANDUAN SETUP & MENJALANKAN SISTEM OTOMATISASI CHECKSHEET*
+*(PT. Summit Adyawinsa Indonesia)*
+
+Halo tim, berikut langkah mudah untuk install dan menjalankan project ini di komputer masing-masing (bisa di *macOS, Windows, maupun Linux*).
+
+---
+
+*1. PRASYARAT (PASTIKAN SUDAH TERINSTALL)*
+Pastikan di laptop sudah ada:
+- *Git* (Bagi pengguna Windows disarankan pakai *Git Bash*)
+- *Python* (versi 3.10 atau lebih baru)
+- *Node.js* (versi 18 atau lebih baru)
+
+---
+
+*2. CLONE REPOSITORY*
+Buka Terminal / Git Bash, lalu jalankan:
+```
+git clone https://github.com/naenmad/otomatisasi-checksheet.git
+cd otomatisasi-checksheet
+```
+
+---
+
+*3. INSTALL SEMUA KEBUTUHAN (1 KLIK)*
+Cukup jalankan script installer otomatis. Script ini akan otomatis mendeteksi OS, membuat virtual environment Python, install semua library pip, install dependensi npm, dan install browser engine Playwright:
+
+*Pengguna macOS & Linux:*
+```
+chmod +x setup.sh
+./setup.sh
+```
+
+*Pengguna Windows:*
+Buka *Git Bash*, lalu jalankan:
+```
+./setup.sh
+```
+*(Tunggu beberapa menit sampai muncul pesan instalasi sukses)*
+
+---
+
+*4. JALANKAN PROJECT*
+Setelah instalasi selesai, cukup ketik:
+```
+npm run dev
+```
+
+Server otomatis aktif di:
+👉 *http://localhost:8000*
+
+Buka link tersebut di Google Chrome atau Microsoft Edge.
+
+---
+
+*5. AKUN LOGIN OPERATOR & ADMIN*
+Gunakan akun yang sudah disediakan:
+- *Admin:* `admin` / `admin123`
+- *Operator Zul:* `zul` / `operator123`
+- *Operator Dimas:* `dimas` / `operator123`
+- *Operator Rian:* `rian` / `operator123`
+
+---
+
+*TIPS PENGGUNAAN:*
+- Untuk mematikan server di terminal, tekan *Ctrl + C*.
+- Bila ada penambahan file atau update kode dari GitHub, cukup jalankan `git pull` lalu `npm run dev` kembali.
+
+Jika ada kendala saat instalasi atau butuh bantuan, langsung kabari di grup ya! Terima kasih.

@@ -42,6 +42,7 @@ logs/*
 *.txt
 !requirements.txt
 !parts.txt.example
+!PANDUAN_SETUP_WA.txt
 search_results.csv
 
 # Media & Temporary Browser Artifacts
