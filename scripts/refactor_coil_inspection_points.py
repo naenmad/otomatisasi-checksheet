@@ -97,11 +97,18 @@ async def refactor_all_coil_points():
                 delete(InspectionPoint).where(InspectionPoint.checksheet_id == cs_id)
             )
 
-            # Insert re-sequenced points
+            # Insert points
             for idx, p_def in enumerate(new_point_defs, 1):
+                item_name = p_def["inspection_item"]
+                # Visual appearance split items retain number 5
+                if item_name in ["No Rust", "No Scratch", "No Wave", "Packing"]:
+                    current_no = "5"
+                else:
+                    current_no = str(idx)
+
                 new_ip = InspectionPoint(
                     checksheet_id=cs_id,
-                    item_no=str(idx),
+                    item_no=current_no,
                     inspection_item=p_def["inspection_item"],
                     standard=p_def["standard"],
                     method=p_def["method"],
