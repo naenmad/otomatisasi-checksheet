@@ -17,6 +17,8 @@ scratch/
 cs_incoming_analysis.json
 *.json
 !data/factoryhub_catalog.json
+!package.json
+!package-lock.json
 *.db
 *.sqlite
 *.sqlite3

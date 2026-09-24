@@ -1,0 +1,33 @@
+{
+  "name": "otomatisasi-checksheet",
+  "version": "1.0.0",
+  "description": "FactoryHub Checksheet Master Automation and Collaborative Web Dashboard for PT. Summit Adyawinsa Indonesia",
+  "private": true,
+  "main": "run_server.py",
+  "scripts": {
+    "start": "python run_server.py",
+    "dev": "python run_server.py",
+    "server": "python run_server.py",
+    "share": "./share.sh",
+    "gui": "./gui.sh",
+    "extract": "python extractor.py",
+    "search": "python search.py",
+    "search:sync": "python search.py --sync",
+    "compress": "./compress_images.sh",
+    "seed": "python services/seed_auth.py",
+    "sync:sheet": "python -c 'import asyncio; from services.google_sheets_service import sync_all_checksheets_to_sheet; asyncio.run(sync_all_checksheets_to_sheet())'",
+    "install:py": "pip install -r requirements.txt && playwright install chromium",
+    "setup": "python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && playwright install chromium"
+  },
+  "keywords": [
+    "factoryhub",
+    "checksheet",
+    "automation",
+    "playwright",
+    "fastapi",
+    "qc",
+    "summit-adyawinsa"
+  ],
+  "author": "Summit QC Team",
+  "license": "MIT"
+}
