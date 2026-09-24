@@ -41,8 +41,16 @@ async def execute_checksheet_submission(
         for p in cs.inspection_points
     ]
 
-    # Reference images
-    image_paths = [img.image_path for img in cs.images if img.image_path]
+    import os
+    # Reference images strictly from Supabase database PartImage records
+    image_paths = []
+    for img in cs.images:
+        p = img.image_path
+        if p:
+            if not os.path.isabs(p):
+                p = os.path.abspath(p)
+            if os.path.isfile(p):
+                image_paths.append(p)
 
     meta_payload = {
         "part_number": cs.part_number,
@@ -53,10 +61,10 @@ async def execute_checksheet_submission(
     }
 
     yield f"[*] Menyiapkan browser {browser_channel.upper()} (profil user)...\n"
-    yield f"[*] Menghubungkan data Part {cs.part_number} langsung dari server database...\n"
+    yield f"[*] Data sumber: 100% Supabase Database (Points: {len(points_payload)}, Sketsa: {len(image_paths)}, Zero doc parsing)\n"
 
     try:
-        # Run automation directly from Supabase database (tanpa ketergantungan file folder lokal)
+        # Run automation directly from Supabase database (tanpa parsing file excel/pdf lokal)
         result = await run_automation(
             part_or_excel=cs.part_number,
             headless=headless,

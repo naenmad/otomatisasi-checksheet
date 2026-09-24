@@ -144,7 +144,7 @@ def _build_checksheet_images(cs: Checksheet) -> list:
             "filename": os.path.basename(path)
         })
 
-    # Fallback: scan disk folders if not linked in DB
+    # Fallback: scan existing server storage folders if not yet linked in DB
     if not res:
         from database.crud import clean_str
         clean_p = clean_str(cs.part_number)
@@ -180,26 +180,6 @@ def _build_checksheet_images(cs: Checksheet) -> list:
                         break
             if res:
                 break
-
-    # Dynamic on-the-fly extraction if raw file exists and has images
-    if not res and cs.raw_file_path and os.path.exists(cs.raw_file_path):
-        if cs.raw_file_path.lower().endswith(".xlsx"):
-            try:
-                from parsers.image_extractor import extract_excel_images
-                extracted = extract_excel_images(cs.raw_file_path, part_number=cs.part_number)
-                for ep in extracted:
-                    img_info = get_cached_image_info(ep)
-                    if img_info.get("is_logo", False):
-                        continue
-                    sub = ep.split("storage/images", 1)[1].lstrip("/\\") if "storage/images" in ep else os.path.basename(ep)
-                    res.append({
-                        "id": os.path.basename(ep),
-                        "image_url": f"/media/images/{sub}",
-                        "image_path": ep,
-                        "filename": os.path.basename(ep)
-                    })
-            except Exception as e:
-                print(f"[Warning] On-the-fly image extraction failed for {cs.part_number}: {e}")
 
     return res
 
@@ -527,3 +507,36 @@ async def delete_checksheet_image(
 
     updated_images = _build_checksheet_images(cs)
     return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
+
+
+@router.post("/sync-images")
+async def sync_images_endpoint(db: AsyncSession = Depends(get_db)):
+    """
+    Ingests and synchronizes all part sketch images to the Supabase database (part_images table).
+    Ensures zero parsing of documents during submission/dry-run.
+    """
+    from services.image_ingestion_service import sync_all_part_images_to_db
+    try:
+        res = await sync_all_part_images_to_db(db)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image ingestion failed: {str(e)}")
+
+
+@router.post("/reconcile")
+async def reconcile_status_endpoint(
+    channel: str = Query("chrome", description="Browser channel (chrome, msedge)"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Performs full two-way audit between FactoryHub checksheet master and Supabase database.
+    Updates completed checksheets, marks missing ones as 'Butuh Revisi',
+    logs clean audit history, and auto-syncs Google Sheets.
+    """
+    from services.reconciliation_service import run_factoryhub_reconciliation
+    try:
+        res = await run_factoryhub_reconciliation(session=db, headless=True, browser_channel=channel)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reconciliation audit failed: {str(e)}")
+

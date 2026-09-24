@@ -317,6 +317,15 @@
               </a>
             </div>
 
+            <!-- FactoryHub Audit & Reconciliation -->
+            <button @click="runAuditFactoryHub" :disabled="isAuditing"
+                    class="px-3 py-1.5 bg-blue-950/80 hover:bg-blue-900/90 text-blue-200 border border-blue-800/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    title="Audit dan rekonsiliasi status dua arah antara FactoryHub dan Database Supabase">
+              <svg v-if="isAuditing" class="animate-spin w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <svg v-else class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span class="hidden sm:inline">{{ isAuditing ? 'Auditing...' : 'Audit FactoryHub' }}</span>
+            </button>
+
             <!-- Export Excel -->
             <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
                class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors">
@@ -1211,6 +1220,42 @@
                 <p class="text-xs font-mono text-zinc-200">/Users/mac/Documents/Summit_Checksheet_Archive</p>
                 <p class="text-[11px] text-zinc-500">Tersimpan aman di folder Documents Mac</p>
               </div>
+
+              <!-- Live FactoryHub Audit Card -->
+              <div class="p-4 bg-zinc-950 border border-blue-900/50 rounded-xl space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="space-y-0.5">
+                    <span class="text-xs text-blue-400 font-semibold flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                      Audit Dua Arah FactoryHub
+                    </span>
+                    <p class="text-[11px] text-zinc-400">Pindai 30 halaman template master FactoryHub & sinkron status ke Supabase & Google Sheet</p>
+                  </div>
+                  <button @click="runAuditFactoryHub" :disabled="isAuditing"
+                          class="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                    <svg v-if="isAuditing" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>{{ isAuditing ? 'Memindai...' : 'Jalankan Audit' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Database Image Ingestion Card -->
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="space-y-0.5">
+                    <span class="text-xs text-zinc-300 font-semibold flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      Database Gambar Sketsa
+                    </span>
+                    <p class="text-[11px] text-zinc-400">Sinkronkan semua gambar sketsa ke Supabase (part_images) untuk submission bebas parsing</p>
+                  </div>
+                  <button @click="runSyncImages" :disabled="isIngestingImages"
+                          class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                    <svg v-if="isIngestingImages" class="animate-spin w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>{{ isIngestingImages ? 'Sinkronisasi...' : 'Sinkron Gambar' }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -1897,6 +1942,8 @@
         const selectedFiles = ref([]);
         const isUploading = ref(false);
         const isSyncing = ref(false);
+        const isAuditing = ref(false);
+        const isIngestingImages = ref(false);
 
         // Drawer & Lightbox
         const activeChecksheet = ref(null);
@@ -3028,6 +3075,46 @@
           }
         };
 
+        const runAuditFactoryHub = async () => {
+          if (!confirm("Jalankan audit & rekonsiliasi dua arah dengan FactoryHub? Sistem akan memeriksa 30 halaman template master, menyinkronkan template yang aktif, mendeteksi template yang terhapus, dan otomatis menyelaraskan status ke Google Sheet.")) {
+            return;
+          }
+          isAuditing.value = true;
+          try {
+            showToast("Memulai audit live 30 halaman FactoryHub (Playwright background)...", "info");
+            const res = await fetch('/api/checksheets/reconcile', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              showToast(`Audit Selesai! ${data.total_fh_templates} template diperiksa. ${data.updated_to_done} Done, ${data.updated_to_revisi} Butuh Revisi.`, 'success');
+              await loadChecksheets();
+            } else {
+              showToast('Audit gagal: ' + (data.detail || 'Terjadi kesalahan'), 'error');
+            }
+          } catch (e) {
+            showToast('Gagal menghubungi server audit.', 'error');
+          } finally {
+            isAuditing.value = false;
+          }
+        };
+
+        const runSyncImages = async () => {
+          isIngestingImages.value = true;
+          try {
+            const res = await fetch('/api/checksheets/sync-images', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              showToast(`Sinkron Gambar Selesai! ${data.newly_linked_images} sketsa baru tersimpan ke Supabase. Total ${data.total_part_images_in_db} sketsa terdaftar.`, 'success');
+              await loadChecksheets();
+            } else {
+              showToast('Sinkron gambar gagal: ' + (data.detail || 'Terjadi kesalahan'), 'error');
+            }
+          } catch (e) {
+            showToast('Gagal memproses gambar ke database.', 'error');
+          } finally {
+            isIngestingImages.value = false;
+          }
+        };
+
         const openBatchModal = () => {
           activeAutomationTarget.value = null;
           isDryRunMode.value = false;
@@ -3377,6 +3464,10 @@
           batchAssign,
           isSyncing,
           syncGoogleSheet,
+          isAuditing,
+          runAuditFactoryHub,
+          isIngestingImages,
+          runSyncImages,
           showBatchModal,
           batchLogs,
           isBatchRunning,
