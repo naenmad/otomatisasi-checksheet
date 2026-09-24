@@ -1257,7 +1257,7 @@
                   </thead>
                   <tbody class="divide-y divide-zinc-800">
                     <tr v-for="(p, rIdx) in excelPoints" :key="rIdx" class="hover:bg-zinc-900/80">
-                      <td class="p-0 border-r border-zinc-800/60">
+                      <td class="p-0 border-r border-zinc-800/60 align-middle">
                         <input :id="'drawer-cell-' + rIdx + '-0'"
                                v-model="p.item_no"
                                @focus="setActiveCell(rIdx, 0)"
@@ -1265,35 +1265,50 @@
                                @paste="handleExcelPaste($event, rIdx, 0)"
                                class="w-full p-2 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
                       </td>
-                      <td class="p-0 border-r border-zinc-800/60">
-                        <input :id="'drawer-cell-' + rIdx + '-1'"
-                               v-model="p.inspection_item"
-                               placeholder="Nama item..."
-                               @focus="setActiveCell(rIdx, 1)"
-                               @keydown="handleGridKeydown($event, rIdx, 1, 'drawer')"
-                               @paste="handleExcelPaste($event, rIdx, 1)"
-                               class="w-full p-2 bg-transparent text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <td class="p-0 border-r border-zinc-800/60 align-middle">
+                        <textarea :id="'drawer-cell-' + rIdx + '-1'"
+                                  v-model="p.inspection_item"
+                                  placeholder="Nama item..."
+                                  rows="2"
+                                  @focus="setActiveCell(rIdx, 1)"
+                                  @keydown="handleGridKeydown($event, rIdx, 1, 'drawer')"
+                                  @paste="handleExcelPaste($event, rIdx, 1)"
+                                  class="w-full p-2 bg-transparent text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
-                      <td class="p-0 border-r border-zinc-800/60">
-                        <input :id="'drawer-cell-' + rIdx + '-2'"
-                               v-model="p.standard"
-                               placeholder="Standar..."
-                               @focus="setActiveCell(rIdx, 2)"
-                               @keydown="handleGridKeydown($event, rIdx, 2, 'drawer')"
-                               @paste="handleExcelPaste($event, rIdx, 2)"
-                               class="w-full p-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <td class="p-0 border-r border-zinc-800/60 align-middle">
+                        <textarea :id="'drawer-cell-' + rIdx + '-2'"
+                                  v-model="p.standard"
+                                  placeholder="Standar..."
+                                  rows="2"
+                                  @focus="setActiveCell(rIdx, 2)"
+                                  @keydown="handleGridKeydown($event, rIdx, 2, 'drawer')"
+                                  @paste="handleExcelPaste($event, rIdx, 2)"
+                                  class="w-full p-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
-                      <td class="p-0 border-r border-zinc-800/60">
-                        <input :id="'drawer-cell-' + rIdx + '-3'"
-                               v-model="p.method"
-                               placeholder="Visual / Caliper"
-                               @focus="setActiveCell(rIdx, 3)"
-                               @keydown="handleGridKeydown($event, rIdx, 3, 'drawer')"
-                               @paste="handleExcelPaste($event, rIdx, 3)"
-                               class="w-full p-2 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <td class="p-0 border-r border-zinc-800/60 align-middle">
+                        <div class="relative flex items-center">
+                          <input :id="'drawer-cell-' + rIdx + '-3'"
+                                 type="text"
+                                 list="standard-tools-list"
+                                 v-model="p.method"
+                                 placeholder="Visual / Caliper"
+                                 @blur="normalizeRowTool(rIdx)"
+                                 @focus="setActiveCell(rIdx, 3)"
+                                 @keydown="handleGridKeydown($event, rIdx, 3, 'drawer')"
+                                 @paste="handleExcelPaste($event, rIdx, 3)"
+                                 class="w-full p-2 pr-7 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
+                          <select @change="p.method = $event.target.value; isPointsDirty = true; $event.target.value=''"
+                                  class="absolute right-1 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 bg-zinc-800 text-zinc-300 border border-zinc-700 rounded px-1 py-0.5 text-[9px] cursor-pointer">
+                            <option value="" disabled selected>▾</option>
+                            <option v-for="t in standardToolsList" :key="t" :value="t">{{ t }}</option>
+                          </select>
+                        </div>
                       </td>
-                      <td class="p-0 text-center">
-                        <button @click="deleteExcelRow(rIdx)" class="w-full p-2 text-zinc-600 hover:text-rose-400 font-bold">✕</button>
+                      <td class="p-0 text-center align-middle">
+                        <div class="flex items-center justify-center gap-0.5 px-1">
+                          <button @click="insertExcelRowAfter(rIdx)" title="Sisipkan baris baru di bawah" class="p-1 text-zinc-400 hover:text-indigo-300 font-bold text-xs cursor-pointer">+</button>
+                          <button @click="deleteExcelRow(rIdx)" title="Hapus baris ini" class="p-1 text-zinc-600 hover:text-rose-400 font-bold text-xs cursor-pointer">✕</button>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -1323,7 +1338,7 @@
                   <tr v-for="(pt, idx) in activeChecksheet.points" :key="idx">
                     <td class="p-2.5 text-center font-mono text-zinc-500">{{ pt.item_no || idx + 1 }}</td>
                     <td class="p-2.5 font-medium text-zinc-200">{{ pt.inspection_item }}</td>
-                    <td class="p-2.5 font-mono text-zinc-300">{{ pt.standard || '-' }}</td>
+                    <td class="p-2.5 font-mono text-zinc-300 whitespace-pre-wrap break-words max-w-[220px]">{{ pt.standard || '-' }}</td>
                     <td class="p-2.5 text-zinc-400">{{ pt.method || 'Visual' }}</td>
                   </tr>
                   <tr v-if="!activeChecksheet.points || activeChecksheet.points.length === 0">
@@ -1598,15 +1613,21 @@
             <div class="flex-1 flex flex-col min-w-0 bg-zinc-900/50">
               
               <!-- Excel Grid Action Bar -->
-              <div class="px-4 py-2 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between gap-3 text-xs">
+              <div class="px-4 py-2 border-b border-zinc-800 bg-zinc-900 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-zinc-200">Tabel Titik Ukur & Toleransi</span>
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
                     {{ excelPoints.length }} Baris
                   </span>
+                  <button @click="autoStandardizeAllTools"
+                          type="button"
+                          title="Ubah otomatis sebutan non-standar (misal Mata → Visual, Standar gg → Standard Gauge, CALIPER → Caliper)"
+                          class="ml-2 px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-800 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <span>⚡ Standarkan Alat Ukur</span>
+                  </button>
                 </div>
                 <div class="flex items-center gap-2 text-zinc-400 text-[11px]">
-                  <span>💡 Klik sel untuk edit, navigasi dengan panah <strong>↑ ↓ ← →</strong></span>
+                  <span>💡 Geser icon <strong>⠿</strong> untuk urutan | Teks panjang otomatis turun ke bawah</span>
                 </div>
               </div>
 
@@ -1615,66 +1636,96 @@
                 <table class="w-full text-left text-xs border-collapse border border-zinc-800">
                   <thead class="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-700 text-zinc-400 font-semibold uppercase text-[10px] select-none">
                     <tr>
-                      <th class="py-2.5 px-2 w-12 text-center border-r border-zinc-800 bg-zinc-950"># (No)</th>
+                      <th class="py-2.5 px-2 w-14 text-center border-r border-zinc-800 bg-zinc-950"># (No)</th>
                       <th class="py-2.5 px-3 min-w-[180px] border-r border-zinc-800 bg-zinc-950">Item Inspeksi</th>
-                      <th class="py-2.5 px-3 min-w-[160px] border-r border-zinc-800 bg-zinc-950">Standar / Toleransi</th>
-                      <th class="py-2.5 px-3 min-w-[140px] border-r border-zinc-800 bg-zinc-950">Alat Ukur / Metode</th>
+                      <th class="py-2.5 px-3 min-w-[220px] border-r border-zinc-800 bg-zinc-950">Standar / Toleransi</th>
+                      <th class="py-2.5 px-3 min-w-[170px] border-r border-zinc-800 bg-zinc-950">Alat Ukur / Metode</th>
                       <th class="py-2.5 px-3 min-w-[120px] border-r border-zinc-800 bg-zinc-950">Master Data</th>
-                      <th class="py-2.5 px-2 w-12 text-center bg-zinc-950">Aksi</th>
+                      <th class="py-2.5 px-2 w-20 text-center bg-zinc-950">Aksi</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-zinc-800">
-                    <tr v-for="(p, rIdx) in excelPoints" :key="rIdx" class="hover:bg-zinc-800/30 transition-colors">
+                    <tr v-for="(p, rIdx) in excelPoints" :key="p.id || rIdx"
+                        @dragover.prevent="handleRowDragOver($event, rIdx)"
+                        @dragleave="handleRowDragLeave($event, rIdx)"
+                        @drop="handleRowDrop($event, rIdx)"
+                        :class="[
+                          dragOverIndex === rIdx ? 'border-t-2 border-indigo-400 bg-indigo-950/40 shadow-inner' : '',
+                          draggedRowIndex === rIdx ? 'opacity-40 bg-zinc-800' : 'hover:bg-zinc-800/30'
+                        ]"
+                        class="transition-colors group border-b border-zinc-800/60">
                       
-                      <!-- Col 0: Item No -->
-                      <td class="p-0 border-r border-zinc-800/80 relative">
-                        <input :id="'cell-' + rIdx + '-0'"
-                               type="text"
-                               v-model="p.item_no"
-                               @focus="setActiveCell(rIdx, 0)"
-                               @keydown="handleGridKeydown($event, rIdx, 0)"
-                               @paste="handleExcelPaste($event, rIdx, 0)"
-                               class="w-full h-full px-2 py-2 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <!-- Col 0: Drag Handle & Item No -->
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle bg-zinc-950/40">
+                        <div class="flex items-center h-full min-h-[44px]">
+                          <div draggable="true"
+                               @dragstart="handleRowDragStart($event, rIdx)"
+                               @dragend="handleRowDragEnd"
+                               title="Klik & geser untuk mengubah urutan baris"
+                               class="px-1.5 py-3 cursor-grab active:cursor-grabbing text-zinc-600 group-hover:text-indigo-400 hover:text-indigo-300 transition-colors select-none flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-12a2 2 0 10.001 4.001A2 2 0 0013 2zm0 6a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z"/>
+                            </svg>
+                          </div>
+                          <input :id="'cell-' + rIdx + '-0'"
+                                 type="text"
+                                 v-model="p.item_no"
+                                 @focus="setActiveCell(rIdx, 0)"
+                                 @keydown="handleGridKeydown($event, rIdx, 0)"
+                                 @paste="handleExcelPaste($event, rIdx, 0)"
+                                 class="w-full h-full px-1 py-2.5 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                        </div>
                       </td>
 
-                      <!-- Col 1: Inspection Item -->
-                      <td class="p-0 border-r border-zinc-800/80 relative">
-                        <input :id="'cell-' + rIdx + '-1'"
-                               type="text"
-                               v-model="p.inspection_item"
-                               placeholder="Nama item inspeksi..."
-                               @focus="setActiveCell(rIdx, 1)"
-                               @keydown="handleGridKeydown($event, rIdx, 1)"
-                               @paste="handleExcelPaste($event, rIdx, 1)"
-                               class="w-full h-full px-3 py-2 bg-transparent font-medium text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <!-- Col 1: Inspection Item (Multiline Auto-wrapping) -->
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                        <textarea :id="'cell-' + rIdx + '-1'"
+                                  v-model="p.inspection_item"
+                                  placeholder="Nama item inspeksi..."
+                                  rows="2"
+                                  @focus="setActiveCell(rIdx, 1)"
+                                  @keydown="handleGridKeydown($event, rIdx, 1)"
+                                  @paste="handleExcelPaste($event, rIdx, 1)"
+                                  class="w-full h-full px-3 py-2.5 bg-transparent font-medium text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
 
-                      <!-- Col 2: Standard -->
-                      <td class="p-0 border-r border-zinc-800/80 relative">
-                        <input :id="'cell-' + rIdx + '-2'"
-                               type="text"
-                               v-model="p.standard"
-                               placeholder="Contoh: 150 ± 0.5"
-                               @focus="setActiveCell(rIdx, 2)"
-                               @keydown="handleGridKeydown($event, rIdx, 2)"
-                               @paste="handleExcelPaste($event, rIdx, 2)"
-                               class="w-full h-full px-3 py-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <!-- Col 2: Standard / Toleransi (Multiline Auto-wrapping) -->
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                        <textarea :id="'cell-' + rIdx + '-2'"
+                                  v-model="p.standard"
+                                  placeholder="Contoh: 150 ± 0.5 atau No Rust"
+                                  rows="2"
+                                  @focus="setActiveCell(rIdx, 2)"
+                                  @keydown="handleGridKeydown($event, rIdx, 2)"
+                                  @paste="handleExcelPaste($event, rIdx, 2)"
+                                  class="w-full h-full px-3 py-2.5 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
 
-                      <!-- Col 3: Method -->
-                      <td class="p-0 border-r border-zinc-800/80 relative">
-                        <input :id="'cell-' + rIdx + '-3'"
-                               type="text"
-                               v-model="p.method"
-                               placeholder="Visual / Caliper"
-                               @focus="setActiveCell(rIdx, 3)"
-                               @keydown="handleGridKeydown($event, rIdx, 3)"
-                               @paste="handleExcelPaste($event, rIdx, 3)"
-                               class="w-full h-full px-3 py-2 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                      <!-- Col 3: Method / Alat Ukur (Combobox with dropdown & auto-normalization) -->
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                        <div class="relative flex items-center h-full min-h-[44px]">
+                          <input :id="'cell-' + rIdx + '-3'"
+                                 type="text"
+                                 list="standard-tools-list"
+                                 v-model="p.method"
+                                 placeholder="Pilih atau ketik..."
+                                 @blur="normalizeRowTool(rIdx)"
+                                 @focus="setActiveCell(rIdx, 3)"
+                                 @keydown="handleGridKeydown($event, rIdx, 3)"
+                                 @paste="handleExcelPaste($event, rIdx, 3)"
+                                 class="w-full h-full px-3 py-2.5 pr-8 bg-transparent text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                          <!-- Quick Dropdown Picker -->
+                          <select @change="p.method = $event.target.value; isPointsDirty = true; $event.target.value=''"
+                                  title="Pilih alat ukur standar"
+                                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 bg-zinc-800 text-zinc-300 border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] cursor-pointer">
+                            <option value="" disabled selected>▾</option>
+                            <option v-for="t in standardToolsList" :key="t" :value="t">{{ t }}</option>
+                          </select>
+                        </div>
                       </td>
 
                       <!-- Col 4: Master Data -->
-                      <td class="p-0 border-r border-zinc-800/80 relative">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
                         <input :id="'cell-' + rIdx + '-4'"
                                type="text"
                                v-model="p.master_data"
@@ -1682,16 +1733,23 @@
                                @focus="setActiveCell(rIdx, 4)"
                                @keydown="handleGridKeydown($event, rIdx, 4)"
                                @paste="handleExcelPaste($event, rIdx, 4)"
-                               class="w-full h-full px-3 py-2 bg-transparent font-mono text-zinc-400 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                               class="w-full h-full px-3 py-2.5 bg-transparent font-mono text-zinc-400 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
                       </td>
 
-                      <!-- Action: Delete Row -->
-                      <td class="p-0 text-center">
-                        <button @click="deleteExcelRow(rIdx)" 
-                                title="Hapus baris ini"
-                                class="w-full h-full py-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-950/30 transition-colors font-bold text-xs cursor-pointer">
-                          ✕
-                        </button>
+                      <!-- Action: Insert Row Below & Delete Row -->
+                      <td class="p-0 text-center align-middle">
+                        <div class="flex items-center justify-center gap-1 px-1">
+                          <button @click="insertExcelRowAfter(rIdx)"
+                                  title="Sisipkan baris baru tepat di bawah ini"
+                                  class="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-indigo-300 hover:bg-indigo-950/50 transition-colors font-bold text-xs cursor-pointer">
+                            +
+                          </button>
+                          <button @click="deleteExcelRow(rIdx)" 
+                                  title="Hapus baris ini"
+                                  class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-rose-400 hover:bg-rose-950/50 transition-colors font-bold text-xs cursor-pointer">
+                            ✕
+                          </button>
+                        </div>
                       </td>
                     </tr>
 
@@ -1706,10 +1764,16 @@
 
               <!-- Bottom Table Controls -->
               <div class="p-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between text-xs">
-                <button @click="addExcelRow" 
-                        class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
-                  <span>+ Tambah Baris Baru (atau tekan Enter di baris terakhir)</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <button @click="addExcelRow" 
+                          class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm">
+                    <span>+ Tambah Baris</span>
+                  </button>
+                  <button @click="addMultipleExcelRows(5)" 
+                          class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-lg text-xs font-medium transition-colors cursor-pointer">
+                    <span>+ 5 Baris</span>
+                  </button>
+                </div>
                 <div class="flex items-center gap-3">
                   <span class="text-zinc-500 text-[11px] font-mono">Total: {{ excelPoints.length }} baris inspeksi</span>
                   <button @click="saveExcelPoints" :disabled="isSavingPoints"
@@ -1724,6 +1788,11 @@
 
         </div>
       </div>
+
+      <!-- Standard Tools Datalist for Autocomplete -->
+      <datalist id="standard-tools-list">
+        <option v-for="t in standardToolsList" :key="t" :value="t">{{ t }}</option>
+      </datalist>
 
       <!-- Toast Notification -->
       <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -1811,6 +1880,66 @@
         const activeRow = ref(0);
         const activeCol = ref(0);
         const excelCols = ['item_no', 'inspection_item', 'standard', 'method', 'master_data'];
+        const draggedRowIndex = ref(null);
+        const dragOverIndex = ref(null);
+        const standardToolsList = [
+          'Visual',
+          'Caliper',
+          'Micrometer',
+          'Micrometer / Caliper',
+          'Roll Meter',
+          'Standar Gauge',
+          'Coating Thickness Tester',
+          'Data Label',
+          'Millsheet',
+          'Pin Gauge',
+          'Height Gauge',
+          'Dial Gauge',
+          'Profile Projector'
+        ];
+        const STANDARD_TOOL_MAP = {
+          'mata': 'Visual',
+          'mata/visual': 'Visual',
+          'visual/mata': 'Visual',
+          'visual': 'Visual',
+          'caliper': 'Caliper',
+          'sigmat': 'Caliper',
+          'jangka sorong': 'Caliper',
+          'micrometer': 'Micrometer',
+          'mikrometer': 'Micrometer',
+          'micrometer/caliper': 'Micrometer / Caliper',
+          'micrometer/ caliper': 'Micrometer / Caliper',
+          'micrometer / caliper': 'Micrometer / Caliper',
+          'caliper/micrometer': 'Micrometer / Caliper',
+          'caliper/micometer': 'Micrometer / Caliper',
+          'roll meter': 'Roll Meter',
+          'rollmeter': 'Roll Meter',
+          'meteran': 'Roll Meter',
+          'millsheet': 'Millsheet',
+          'mill sheet': 'Millsheet',
+          'mill cert': 'Millsheet',
+          'mill certificate': 'Millsheet',
+          'standar gg': 'Standar Gauge',
+          'standar gauge': 'Standar Gauge',
+          'standard gg': 'Standar Gauge',
+          'standard gauge': 'Standar Gauge',
+          'std gg': 'Standar Gauge',
+          'std gauge': 'Standar Gauge',
+          'coating thick/ tester': 'Coating Thickness Tester',
+          'coating thick tester': 'Coating Thickness Tester',
+          'coating thickness': 'Coating Thickness Tester',
+          'coating tester': 'Coating Thickness Tester',
+          'data label': 'Data Label',
+          'tag label': 'Data Label',
+          'label material': 'Data Label',
+          'pin gauge': 'Pin Gauge',
+          'pin gg': 'Pin Gauge',
+          'height gauge': 'Height Gauge',
+          'height gg': 'Height Gauge',
+          'dial gauge': 'Dial Gauge',
+          'dial gg': 'Dial Gauge',
+          'profile projector': 'Profile Projector'
+        };
         const sketchZoom = ref(1.0);
         const activeSketchIdx = ref(0);
         const isInlineEditing = ref(false);
@@ -2113,6 +2242,124 @@
           }, 3200);
         };
 
+        const normalizeToolName = (toolStr) => {
+          if (!toolStr) return 'Visual';
+          const trimmed = toolStr.trim();
+          const cleaned = trimmed.toLowerCase().replace(/\s+/g, ' ');
+          return STANDARD_TOOL_MAP[cleaned] || trimmed;
+        };
+
+        const normalizeRowTool = (rIdx) => {
+          if (!excelPoints.value[rIdx]) return;
+          const current = excelPoints.value[rIdx].method;
+          if (!current) return;
+          const normalized = normalizeToolName(current);
+          if (normalized !== current) {
+            excelPoints.value[rIdx].method = normalized;
+            isPointsDirty.value = true;
+          }
+        };
+
+        const autoStandardizeAllTools = () => {
+          let count = 0;
+          excelPoints.value.forEach(p => {
+            if (p.method) {
+              const normalized = normalizeToolName(p.method);
+              if (normalized !== p.method) {
+                p.method = normalized;
+                count++;
+              }
+            }
+          });
+          if (count > 0) {
+            isPointsDirty.value = true;
+            showToast(`${count} nama alat ukur berhasil distandarkan!`, 'success');
+          } else {
+            showToast('Semua alat ukur sudah sesuai format standar.', 'success');
+          }
+        };
+
+        const renumberExcelPoints = () => {
+          excelPoints.value.forEach((p, idx) => {
+            p.item_no = String(idx + 1);
+          });
+        };
+
+        const handleRowDragStart = (event, rIdx) => {
+          draggedRowIndex.value = rIdx;
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(rIdx));
+          }
+        };
+
+        const handleRowDragOver = (event, rIdx) => {
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+          }
+          if (draggedRowIndex.value !== null && draggedRowIndex.value !== rIdx) {
+            dragOverIndex.value = rIdx;
+          }
+        };
+
+        const handleRowDragLeave = (event, rIdx) => {
+          if (dragOverIndex.value === rIdx) {
+            dragOverIndex.value = null;
+          }
+        };
+
+        const handleRowDrop = (event, targetIdx) => {
+          event.preventDefault();
+          const sourceIdx = draggedRowIndex.value;
+          if (sourceIdx !== null && sourceIdx !== targetIdx && sourceIdx >= 0 && targetIdx >= 0) {
+            const movedItem = excelPoints.value.splice(sourceIdx, 1)[0];
+            excelPoints.value.splice(targetIdx, 0, movedItem);
+            renumberExcelPoints();
+            isPointsDirty.value = true;
+            showToast(`Urutan baris dipindahkan ke #${targetIdx + 1}`, 'success');
+          }
+          draggedRowIndex.value = null;
+          dragOverIndex.value = null;
+        };
+
+        const handleRowDragEnd = () => {
+          draggedRowIndex.value = null;
+          dragOverIndex.value = null;
+        };
+
+        const insertExcelRowAfter = (rIdx) => {
+          const newRow = {
+            item_no: String(rIdx + 2),
+            inspection_item: '',
+            standard: '-',
+            method: 'Visual',
+            master_data: ''
+          };
+          excelPoints.value.splice(rIdx + 1, 0, newRow);
+          renumberExcelPoints();
+          isPointsDirty.value = true;
+          activeRow.value = rIdx + 1;
+          activeCol.value = 1;
+          focusCell(rIdx + 1, 1, showExcelStudio.value ? 'cell' : 'drawer');
+          showToast(`Baris disisipkan pada posisi #${rIdx + 2}`, 'success');
+        };
+
+        const addMultipleExcelRows = (count = 5) => {
+          const startLen = excelPoints.value.length;
+          for (let i = 0; i < count; i++) {
+            excelPoints.value.push({
+              item_no: String(startLen + i + 1),
+              inspection_item: '',
+              standard: '-',
+              method: 'Visual',
+              master_data: ''
+            });
+          }
+          isPointsDirty.value = true;
+          showToast(`Berhasil menambah ${count} baris inspeksi`, 'success');
+        };
+
         const openExcelStudio = async (checksheet) => {
           if (!checksheet) return;
           activeChecksheet.value = checksheet;
@@ -2123,7 +2370,10 @@
             }
           } catch (e) {}
 
-          excelPoints.value = (activeChecksheet.value.points || []).map(p => ({ ...p }));
+          excelPoints.value = (activeChecksheet.value.points || []).map(p => ({
+            ...p,
+            method: normalizeToolName(p.method || 'Visual')
+          }));
           if (excelPoints.value.length === 0) {
             excelPoints.value = [{
               item_no: '1',
@@ -2159,7 +2409,10 @@
         const toggleInlineEdit = () => {
           isInlineEditing.value = !isInlineEditing.value;
           if (isInlineEditing.value && activeChecksheet.value) {
-            excelPoints.value = (activeChecksheet.value.points || []).map(p => ({ ...p }));
+            excelPoints.value = (activeChecksheet.value.points || []).map(p => ({
+              ...p,
+              method: normalizeToolName(p.method || 'Visual')
+            }));
             if (excelPoints.value.length === 0) {
               excelPoints.value = [{
                 item_no: '1',
@@ -2200,14 +2453,15 @@
           };
           if (index >= 0) {
             excelPoints.value.splice(index + 1, 0, newRow);
+            renumberExcelPoints();
             activeRow.value = index + 1;
           } else {
             excelPoints.value.push(newRow);
             activeRow.value = excelPoints.value.length - 1;
           }
-          activeCol.value = 0;
+          activeCol.value = 1;
           isPointsDirty.value = true;
-          focusCell(activeRow.value, 0, showExcelStudio.value ? 'cell' : 'drawer');
+          focusCell(activeRow.value, 1, showExcelStudio.value ? 'cell' : 'drawer');
         };
 
         const deleteExcelRow = (index) => {
@@ -2221,6 +2475,7 @@
             };
           } else {
             excelPoints.value.splice(index, 1);
+            renumberExcelPoints();
           }
           isPointsDirty.value = true;
         };
@@ -2289,6 +2544,10 @@
               }
             }
           } else if (event.key === 'Enter') {
+            if (event.shiftKey || event.altKey) {
+              // Allow newline in textarea cells
+              return;
+            }
             event.preventDefault();
             if (rIdx < totalRows - 1) {
               activeRow.value = rIdx + 1;
@@ -2724,9 +2983,23 @@
           focusCell,
           addExcelRow,
           deleteExcelRow,
+          insertExcelRowAfter,
+          addMultipleExcelRows,
           handleGridKeydown,
           handleExcelPaste,
-          saveExcelPoints
+          saveExcelPoints,
+          draggedRowIndex,
+          dragOverIndex,
+          standardToolsList,
+          handleRowDragStart,
+          handleRowDragOver,
+          handleRowDragLeave,
+          handleRowDrop,
+          handleRowDragEnd,
+          normalizeToolName,
+          normalizeRowTool,
+          autoStandardizeAllTools,
+          renumberExcelPoints
         };
       }
     }).mount('#app');
