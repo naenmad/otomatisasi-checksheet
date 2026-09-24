@@ -851,7 +851,8 @@ async def run_automation(
     doc_number: Optional[str] = None,
     manual_images_dir: Optional[str] = None,
     scan_images: Optional[bool] = None,
-    browser_channel: Optional[str] = None
+    browser_channel: Optional[str] = None,
+    override_items: Optional[List[Dict[str, str]]] = None
 ):
     """Main runner for checksheet automation with Playwright."""
     async with async_playwright() as p:
@@ -964,7 +965,8 @@ async def run_automation(
                 submit=submit,
                 custom_doc_no=doc_number,
                 manual_images_dir=manual_images_dir,
-                scan_images=scan_images
+                scan_images=scan_images,
+                override_items=override_items
             )
 
             if result.get("status") == "part_not_registered":
