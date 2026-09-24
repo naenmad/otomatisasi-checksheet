@@ -1,6 +1,12 @@
 """
 Main FastAPI server entrypoint.
 """
+import sys
+import asyncio
+
+# Playwright subprocess on Windows requires ProactorEventLoop
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -80,4 +86,7 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
+    is_windows = sys.platform == "win32"
+    default_reload = "false" if is_windows else "true"
+    reload_enabled = os.getenv("RELOAD", default_reload).lower() in ("true", "1")
+    uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=reload_enabled)

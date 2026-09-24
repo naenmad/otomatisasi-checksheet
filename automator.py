@@ -34,6 +34,10 @@ import logger
 # Load configurations from .env
 load_dotenv()
 
+# Ensure Windows uses ProactorEventLoop so Playwright subprocesses do not raise NotImplementedError
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 FACTORYHUB_BASE_URL = os.getenv("FACTORYHUB_BASE_URL", "https://factoryhub.summitadyawinsa.co.id")
 LOGIN_URL = f"{FACTORYHUB_BASE_URL}/login"
 CREATE_URL = f"{FACTORYHUB_BASE_URL}/quality/checksheet-master/create"
