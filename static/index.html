@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Summit FactoryHub: Quality Checksheet</title>
+  <title>Summit FactoryHub: Quality Checksheet Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col selection:bg-indigo-600 selection:text-white">
-  <div id="app" class="flex-1 flex flex-col">
+  <div id="app" class="flex-1 flex flex-col min-h-screen">
 
     <!-- 1. LOGIN SCREEN (Shown when not authenticated) -->
     <div v-if="!currentUser" class="flex-1 flex items-center justify-center p-6 bg-zinc-950">
@@ -90,355 +90,1015 @@
       </div>
     </div>
 
-    <!-- 2. MAIN APPLICATION WORKSPACE (Shown when authenticated) -->
-    <div v-else class="flex-1 flex flex-col">
+    <!-- 2. MAIN APPLICATION WORKSPACE WITH SIDEBAR -->
+    <div v-else class="flex-1 flex min-h-screen">
 
-      <!-- Top Navigation Header -->
-      <header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-100">
-            <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-            </svg>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-sm font-bold text-zinc-100 tracking-tight">
-                Summit FactoryHub: Quality Checksheet
-              </h1>
-              <span class="px-2 py-0.5 text-[11px] font-semibold rounded border"
-                    :class="currentUser.role === 'admin' ? 'bg-indigo-950 text-indigo-300 border-indigo-800' : 'bg-zinc-800 text-zinc-300 border-zinc-700'">
-                {{ currentUser.role.toUpperCase() }}
-              </span>
+      <!-- Mobile Sidebar Backdrop -->
+      <div v-if="isMobileSidebarOpen"
+           class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+           @click="isMobileSidebarOpen = false"></div>
+
+      <!-- SIDEBAR -->
+      <aside :class="[
+               'fixed lg:sticky top-0 z-40 h-screen bg-zinc-900 border-r border-zinc-800 flex flex-col transition-all duration-200 shrink-0',
+               isSidebarCollapsed ? 'w-16' : 'w-64',
+               isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+             ]">
+        <!-- Brand Header -->
+        <div class="h-14 border-b border-zinc-800 px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-indigo-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+              </svg>
             </div>
-            <p class="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
-              <span>Masuk sebagai: <strong>{{ currentUser.name }}</strong> ({{ currentUser.username }})</span>
-              <span class="text-zinc-600">•</span>
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span class="text-zinc-400">Cloud Supabase Aktif</span>
-            </p>
+            <div v-if="!isSidebarCollapsed" class="truncate">
+              <span class="text-xs font-bold text-zinc-100 block truncate">Summit FactoryHub</span>
+              <span class="text-[10px] text-zinc-400 block truncate">Quality Suite</span>
+            </div>
           </div>
+          <!-- Desktop Collapse Button -->
+          <button @click="isSidebarCollapsed = !isSidebarCollapsed"
+                  class="hidden lg:flex w-6 h-6 items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 text-xs transition-colors"
+                  :title="isSidebarCollapsed ? 'Perluas Sidebar' : 'Ciutkan Sidebar'">
+            <svg class="w-4 h-4 transition-transform" :class="isSidebarCollapsed ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+            </svg>
+          </button>
+          <!-- Mobile Close Button -->
+          <button @click="isMobileSidebarOpen = false"
+                  class="lg:hidden w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-200">
+            ✕
+          </button>
         </div>
 
-        <!-- Action Buttons & User Menu -->
-        <div class="flex items-center gap-2.5">
-          <!-- Cek Master Part Button (Available to Everyone) -->
-          <button @click="openPartChecker"
-                  class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
-            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <!-- Navigation Links -->
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+          <!-- 1. Dashboard -->
+          <button @click="navigate('dashboard')"
+                  :class="activePage === 'dashboard' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'dashboard' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Dashboard</span>
+          </button>
+
+          <!-- 2. Checksheet Workspace -->
+          <button @click="navigate('checksheets')"
+                  :class="activePage === 'checksheets' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'checksheets' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Daftar Checksheet</span>
+            <span v-if="!isSidebarCollapsed && checksheets.length" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+              {{ checksheets.length }}
+            </span>
+          </button>
+
+          <!-- 3. Cek Master Part -->
+          <button @click="navigate('master_part')"
+                  :class="activePage === 'master_part' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'master_part' ? 'text-amber-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <span>Cek Master Part</span>
-            <span v-if="catalogStats.total_parts" class="px-1.5 py-0.2 text-[10px] font-mono bg-zinc-900 text-zinc-400 rounded border border-zinc-700">
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Cek Master Part</span>
+            <span v-if="!isSidebarCollapsed && catalogStats.total_parts" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-amber-300 border border-zinc-700">
               {{ catalogStats.total_parts.toLocaleString() }}
             </span>
           </button>
 
-          <!-- Admin: Manage Users Button -->
-          <button v-if="currentUser.role === 'admin'" @click="showUsersModal = true"
-                  class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
-            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            Kelola Anggota Tim
+          <!-- 4. Antrean Otomasi -->
+          <button @click="navigate('automation')"
+                  :class="activePage === 'automation' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'automation' ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Antrean Otomasi</span>
+            <span v-if="!isSidebarCollapsed && isBatchRunning" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           </button>
 
-          <!-- Export Excel -->
-          <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
-             class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors">
-            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Unduh Excel
-          </a>
+          <!-- 5. Tim & Anggota -->
+          <button @click="navigate('team')"
+                  :class="activePage === 'team' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'team' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Anggota Tim</span>
+            <span v-if="!isSidebarCollapsed && users.length" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+              {{ users.length }}
+            </span>
+          </button>
 
-          <!-- Google Sheet Sync & Direct Link -->
-          <div class="flex items-center gap-1">
-            <button @click="syncGoogleSheet" :disabled="isSyncing"
-                    class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                    title="Sinkronkan seluruh data checksheet ke Google Spreadsheet">
-              <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <svg v-else class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              <span>{{ isSyncing ? 'Menyinkronkan...' : 'Sync Sheet' }}</span>
-            </button>
-            <a href="https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing" target="_blank"
-               class="px-2 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium transition-colors"
-               title="Buka Google Spreadsheet di tab baru">
-              ↗
-            </a>
+          <!-- 6. Integrasi & Setelan -->
+          <button @click="navigate('settings')"
+                  :class="activePage === 'settings' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0" :class="activePage === 'settings' ? 'text-zinc-200' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1">Integrasi & Setelan</span>
+          </button>
+        </nav>
+
+        <!-- Sidebar Footer & User Profile -->
+        <div class="p-3 border-t border-zinc-800 bg-zinc-950/60">
+          <div v-if="!isSidebarCollapsed" class="flex items-center gap-3 mb-2.5 px-1">
+            <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-indigo-300 shrink-0">
+              {{ currentUser.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="truncate flex-1">
+              <p class="text-xs font-semibold text-zinc-100 truncate">{{ currentUser.name }}</p>
+              <p class="text-[10px] text-zinc-400 font-mono truncate">{{ currentUser.nik || currentUser.username }}</p>
+            </div>
+            <span class="px-1.5 py-0.5 text-[9px] font-bold rounded border uppercase shrink-0"
+                  :class="currentUser.role === 'admin' ? 'bg-indigo-950 text-indigo-300 border-indigo-800' : 'bg-zinc-800 text-zinc-300 border-zinc-700'">
+              {{ currentUser.role }}
+            </span>
           </div>
 
-          <!-- Upload Checksheet (Admin Only) -->
-          <button v-if="currentUser.role === 'admin'" @click="showUploadModal = true"
-                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            <span>Upload Checksheet</span>
-          </button>
-
-          <!-- Logout Button -->
-          <button @click="logout" title="Keluar dari akun"
-                  class="px-3 py-1.5 bg-zinc-800 hover:bg-rose-950 hover:text-rose-300 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium transition-colors">
-            Keluar
-          </button>
-        </div>
-      </header>
-
-      <!-- Main Workspace -->
-      <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
-
-        <!-- Interactive Metric Filters -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <!-- Card Total -->
-          <button @click="statusFilter = 'ALL'"
-                  :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                  class="p-4 rounded-xl border text-left transition-all">
-            <p class="text-xs text-zinc-400 font-medium">Total Checksheet</p>
-            <p class="text-2xl font-bold text-zinc-100 font-mono mt-1">{{ checksheets.length }}</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Seluruh part terdaftar</p>
-          </button>
-
-          <!-- Card Done -->
-          <button @click="statusFilter = 'Checksheet Done'"
-                  :class="statusFilter === 'Checksheet Done' ? 'border-emerald-500 bg-zinc-800/80 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                  class="p-4 rounded-xl border text-left transition-all">
-            <div class="flex items-center justify-between">
-              <p class="text-xs text-zinc-400 font-medium">Checksheet Done</p>
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            </div>
-            <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
-          </button>
-
-          <!-- Card Belum Di Input -->
-          <button @click="statusFilter = 'Belum Di Input'"
-                  :class="statusFilter === 'Belum Di Input' ? 'border-amber-500 bg-zinc-800/80 ring-1 ring-amber-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                  class="p-4 rounded-xl border text-left transition-all">
-            <div class="flex items-center justify-between">
-              <p class="text-xs text-zinc-400 font-medium">Belum Di Input</p>
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            </div>
-            <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Di Input') }}</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Siap disubmit ke portal</p>
-          </button>
-
-          <!-- Card Butuh Revisi -->
-          <button @click="statusFilter = 'Butuh Revisi'"
-                  :class="statusFilter === 'Butuh Revisi' ? 'border-purple-500 bg-zinc-800/80 ring-1 ring-purple-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                  class="p-4 rounded-xl border text-left transition-all">
-            <div class="flex items-center justify-between">
-              <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
-              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-            </div>
-            <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing/data</p>
-          </button>
-
-          <!-- Card Tidak Ada Part -->
-          <button @click="statusFilter = 'Tidak Ada Part'"
-                  :class="statusFilter === 'Tidak Ada Part' ? 'border-rose-500 bg-zinc-800/80 ring-1 ring-rose-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                  class="p-4 rounded-xl border text-left transition-all">
-            <div class="flex items-center justify-between">
-              <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
-              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-            </div>
-            <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Belum ada di Master Portal</p>
-          </button>
-        </div>
-
-        <!-- Controls & Filter Toolbar -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
-          <!-- ADMIN TABS: Semua + Belum Ditugaskan + Zul + Iqbal + Rama + Yogi -->
-          <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-2xl">
-            <button @click="activeTeam = 'Semua'"
-                    :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                    class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
-              Semua Part
-              <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
-            </button>
-            <button @click="activeTeam = 'Unassigned'"
-                    :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
-                    class="px-3 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
-              <span>Belum Ditugaskan</span>
-              <span class="ml-1 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
-                ({{ countUnassigned() }})
-              </span>
-            </button>
-            <button v-for="u in operatorUsers" :key="u.id"
-                    @click="activeTeam = u.name"
-                    :class="activeTeam === u.name ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                    class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
-              {{ u.name }}
-              <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(u.name) }})</span>
-            </button>
-          </div>
-
-          <!-- OPERATOR TABS: Task Sendiri vs Task Lainnya -->
-          <div v-else class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
-            <!-- Tab 1: Task Sendiri -->
-            <button @click="activeTeam = currentUser.name"
-                    :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                    class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-              <span>Task Sendiri ({{ currentUser.name }})</span>
-              <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                    :class="activeTeam === currentUser.name ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
-                {{ countByTeam(currentUser.name) }}
-              </span>
-            </button>
-
-            <!-- Tab 2: Task Lainnya -->
-            <button @click="activeTeam = 'LAINNYA'"
-                    :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                    class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              <span>Task Lainnya</span>
-              <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                    :class="activeTeam === 'LAINNYA' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
-                {{ countOtherTasks() }}
-              </span>
-            </button>
-          </div>
-
-          <!-- Search Input & Status Selector -->
-          <div class="flex items-center gap-2.5 flex-1 max-w-lg ml-auto">
-            <div class="relative w-full">
-              <input v-model="searchQuery" type="text"
-                     placeholder="Cari part number, nama part, atau model..."
-                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors">
-              <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <div class="flex items-center gap-1.5">
+            <button @click="logout"
+                    class="flex-1 py-1.5 px-2 bg-zinc-900 hover:bg-rose-950 hover:text-rose-300 text-zinc-400 border border-zinc-800 hover:border-rose-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
-              <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2.5 top-2 text-zinc-500 hover:text-zinc-300 text-xs">
-                ✕
+              <span v-if="!isSidebarCollapsed">Keluar</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN APP CONTENT AREA -->
+      <div class="flex-1 flex flex-col min-w-0 bg-zinc-950">
+
+        <!-- Top Navigation Header -->
+        <header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <!-- Mobile Toggle -->
+            <button @click="isMobileSidebarOpen = true"
+                    class="lg:hidden p-2 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+
+            <!-- Breadcrumbs -->
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-zinc-400">Summit FactoryHub</span>
+                <span class="text-zinc-600">/</span>
+                <h1 class="text-sm font-bold text-zinc-100 capitalize">
+                  {{ pageTitle }}
+                </h1>
+              </div>
+              <p class="text-[11px] text-zinc-500 mt-0.5 hidden sm:block">
+                {{ pageSubtitle }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Global Action Buttons -->
+          <div class="flex items-center gap-2">
+            <!-- Google Sheet Sync -->
+            <div class="flex items-center gap-1">
+              <button @click="syncGoogleSheet" :disabled="isSyncing"
+                      class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                      title="Sinkronkan seluruh data ke Google Sheet">
+                <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <svg v-else class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span class="hidden sm:inline">{{ isSyncing ? 'Menyinkronkan...' : 'Sync Sheet' }}</span>
+              </button>
+              <a href="https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing" target="_blank"
+                 class="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium transition-colors"
+                 title="Buka Google Spreadsheet">
+                ↗
+              </a>
+            </div>
+
+            <!-- Export Excel -->
+            <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
+               class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span class="hidden md:inline">Unduh Excel</span>
+            </a>
+
+            <!-- Admin Upload Checksheet -->
+            <button v-if="currentUser.role === 'admin'" @click="showUploadModal = true"
+                    class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <span>Upload Part</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- PAGE 1: 📊 DASHBOARD -->
+        <main v-show="activePage === 'dashboard'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+          <!-- Welcome Banner -->
+          <div class="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-indigo-950 text-indigo-300 border border-indigo-800 uppercase">
+                  {{ currentUser.role }} QC
+                </span>
+                <span class="text-xs text-zinc-400">• PT. Summit Adyawinsa Indonesia</span>
+              </div>
+              <h2 class="text-xl font-bold text-zinc-100 mt-2">
+                Selamat bertugas, {{ currentUser.name }}!
+              </h2>
+              <p class="text-xs text-zinc-400 mt-1 max-w-2xl">
+                Sistem saat ini mengelola <strong>{{ checksheets.length }} part checksheet CS INCOMING</strong> yang siap ditinjau dan disubmit ke portal FactoryHub.
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button @click="navigate('checksheets')"
+                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
+                <span>Buka Daftar Tugas</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+              <button @click="navigate('master_part')"
+                      class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2">
+                <span>Cari Master Part</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Metric Cards (Interactive click filters) -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <!-- Total Checksheets -->
+            <button @click="goToChecksheetsWithStatus('ALL')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-zinc-700 text-left transition-all group">
+              <p class="text-xs text-zinc-400 font-medium">Total Checksheet</p>
+              <p class="text-2xl font-bold text-zinc-100 font-mono mt-1 group-hover:text-indigo-400 transition-colors">{{ checksheets.length }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Seluruh part terdaftar</p>
+            </button>
+
+            <!-- Done -->
+            <button @click="goToChecksheetsWithStatus('Checksheet Done')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-emerald-800 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Checksheet Done</p>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
+            </button>
+
+            <!-- Belum Di Input -->
+            <button @click="goToChecksheetsWithStatus('Belum Di Input')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-amber-800 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Belum Di Input</p>
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Di Input') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Siap disubmit ke portal</p>
+            </button>
+
+            <!-- Butuh Revisi -->
+            <button @click="goToChecksheetsWithStatus('Butuh Revisi')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-purple-800 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing</p>
+            </button>
+
+            <!-- Tidak Ada Part -->
+            <button @click="goToChecksheetsWithStatus('Tidak Ada Part')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-rose-800 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
+            </button>
+          </div>
+
+          <!-- Middle Section: Customer Progress & Team Workload -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Customer Breakdown Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm font-bold text-zinc-100">Progres per Customer</h3>
+                  <p class="text-xs text-zinc-400">Status part checksheet berdasarkan customer utama</p>
+                </div>
+                <span class="text-xs font-mono text-zinc-400 bg-zinc-950 px-2.5 py-1 rounded border border-zinc-800">
+                  3 Customer
+                </span>
+              </div>
+
+              <div class="space-y-4">
+                <div v-for="cust in customerStats" :key="cust.name"
+                     class="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-lg hover:border-zinc-700 transition-colors">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="font-bold text-zinc-200">{{ cust.name }}</span>
+                    <span class="font-mono text-zinc-400">{{ cust.done }} / {{ cust.total }} Done ({{ cust.percent }}%)</span>
+                  </div>
+                  <!-- Progress bar -->
+                  <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: cust.percent + '%' }"></div>
+                    <div class="bg-amber-500 h-full transition-all duration-300" :style="{ width: cust.readyPercent + '%' }"></div>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] text-zinc-500 mt-2">
+                    <span>Siap Input: {{ cust.ready }} Part</span>
+                    <span>Belum di Web: {{ cust.noPart }} Part</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Team Workload Distribution Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm font-bold text-zinc-100">Distribusi Penugasan Tim</h3>
+                  <p class="text-xs text-zinc-400">Alokasi tugas checksheet ke masing-masing anggota</p>
+                </div>
+                <button v-if="currentUser.role === 'admin'" @click="navigate('team')"
+                        class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">
+                  Kelola Tim →
+                </button>
+              </div>
+
+              <div class="space-y-3">
+                <!-- Unassigned highlight -->
+                <div class="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <div>
+                      <p class="text-xs font-bold text-amber-200">Belum Ditugaskan (Unassigned)</p>
+                      <p class="text-[10px] text-amber-400/80">Part baru di-import yang siap dibagikan</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-base font-bold font-mono text-amber-300">{{ countUnassigned() }}</span>
+                    <button v-if="currentUser.role === 'admin'"
+                            @click="goToChecksheetsWithTeam('Unassigned')"
+                            class="px-2.5 py-1 bg-amber-900/60 hover:bg-amber-800 text-amber-100 rounded text-xs font-semibold border border-amber-700 transition-colors">
+                      Bagikan
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Operators list -->
+                <div v-for="u in operatorUsers" :key="u.id"
+                     class="p-2.5 bg-zinc-950/60 border border-zinc-800/80 rounded-lg flex items-center justify-between hover:border-zinc-700 transition-colors">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-zinc-300">
+                      {{ u.name.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-xs font-semibold text-zinc-200">{{ u.name }}</p>
+                      <p class="text-[10px] text-zinc-500 font-mono">{{ u.nik || u.username }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs font-mono text-zinc-300 font-bold">{{ countByTeam(u.name) }} Part</span>
+                    <button @click="goToChecksheetsWithTeam(u.name)"
+                            class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[11px] border border-zinc-700">
+                      Lihat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Recent Checksheets Quick Table -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-zinc-100">Checksheet Siap Dikerjakan</h3>
+                <p class="text-xs text-zinc-400">Daftar part incoming teratas yang dapat langsung direview dan disubmit</p>
+              </div>
+              <button @click="navigate('checksheets')" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">
+                Lihat Semua ({{ checksheets.length }}) →
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-zinc-950/60 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[11px]">
+                  <tr>
+                    <th class="py-2.5 px-4">Part Number</th>
+                    <th class="py-2.5 px-4">Nama Part</th>
+                    <th class="py-2.5 px-3">Model</th>
+                    <th class="py-2.5 px-3">Customer</th>
+                    <th class="py-2.5 px-3">Status</th>
+                    <th class="py-2.5 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/60">
+                  <tr v-for="cs in recentChecksheets" :key="cs.id" class="hover:bg-zinc-800/30 transition-colors">
+                    <td class="py-2.5 px-4 font-mono font-bold text-zinc-100">{{ cs.part_number }}</td>
+                    <td class="py-2.5 px-4 text-zinc-300">{{ cs.part_name || '-' }}</td>
+                    <td class="py-2.5 px-3 text-zinc-400 font-mono">{{ cs.model || '-' }}</td>
+                    <td class="py-2.5 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
+                    <td class="py-2.5 px-3">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
+                            :class="cs.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                    cs.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                    cs.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                                    'bg-rose-950 text-rose-300 border-rose-800'">
+                        {{ cs.status }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                      <button @click="openDetail(cs.id)"
+                              class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded text-xs font-medium transition-colors">
+                        Review
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+
+        <!-- PAGE 2: 📋 CHECKSHEETS OPERATIONAL WORKSPACE -->
+        <main v-show="activePage === 'checksheets'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
+          <!-- Interactive Metric Filters -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <button @click="statusFilter = 'ALL'"
+                    :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <p class="text-xs text-zinc-400 font-medium">Total Checksheet</p>
+              <p class="text-2xl font-bold text-zinc-100 font-mono mt-1">{{ checksheets.length }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Seluruh part terdaftar</p>
+            </button>
+
+            <button @click="statusFilter = 'Checksheet Done'"
+                    :class="statusFilter === 'Checksheet Done' ? 'border-emerald-500 bg-zinc-800/80 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Checksheet Done</p>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
+            </button>
+
+            <button @click="statusFilter = 'Belum Di Input'"
+                    :class="statusFilter === 'Belum Di Input' ? 'border-amber-500 bg-zinc-800/80 ring-1 ring-amber-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Belum Di Input</p>
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Di Input') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Siap disubmit ke portal</p>
+            </button>
+
+            <button @click="statusFilter = 'Butuh Revisi'"
+                    :class="statusFilter === 'Butuh Revisi' ? 'border-purple-500 bg-zinc-800/80 ring-1 ring-purple-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing</p>
+            </button>
+
+            <button @click="statusFilter = 'Tidak Ada Part'"
+                    :class="statusFilter === 'Tidak Ada Part' ? 'border-rose-500 bg-zinc-800/80 ring-1 ring-rose-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
+            </button>
+          </div>
+
+          <!-- Controls & Filter Toolbar -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- ADMIN TABS -->
+            <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-2xl">
+              <button @click="activeTeam = 'Semua'"
+                      :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
+                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
+                Semua Part
+                <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
+              </button>
+              <button @click="activeTeam = 'Unassigned'"
+                      :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
+                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
+                <span>Belum Ditugaskan</span>
+                <span class="ml-1 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
+                  ({{ countUnassigned() }})
+                </span>
+              </button>
+              <button v-for="u in operatorUsers" :key="u.id"
+                      @click="activeTeam = u.name"
+                      :class="activeTeam === u.name ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
+                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
+                {{ u.name }}
+                <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(u.name) }})</span>
               </button>
             </div>
 
-            <select v-model="statusFilter" class="bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 rounded-lg px-2.5 py-1.5 focus:border-zinc-600 focus:outline-none">
-              <option value="ALL">Semua Status</option>
-              <option value="Checksheet Done">Checksheet Done</option>
-              <option value="Belum Di Input">Belum Di Input</option>
-              <option value="Butuh Revisi">Butuh Revisi</option>
-              <option value="Tidak Ada Part">Tidak Ada Part</option>
-            </select>
+            <!-- OPERATOR TABS -->
+            <div v-else class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+              <button @click="activeTeam = currentUser.name"
+                      :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                      class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span>Task Sendiri ({{ currentUser.name }})</span>
+                <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
+                      :class="activeTeam === currentUser.name ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countByTeam(currentUser.name) }}
+                </span>
+              </button>
+              <button @click="activeTeam = 'LAINNYA'"
+                      :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                      class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <span>Task Lainnya</span>
+                <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
+                      :class="activeTeam === 'LAINNYA' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countOtherTasks() }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Search Input & Status Selector -->
+            <div class="flex items-center gap-2.5 flex-1 max-w-lg ml-auto">
+              <div class="relative w-full">
+                <input v-model="searchQuery" type="text"
+                       placeholder="Cari part number, nama part, atau model..."
+                       class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors">
+                <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2.5 top-2 text-zinc-500 hover:text-zinc-300 text-xs">
+                  ✕
+                </button>
+              </div>
+
+              <select v-model="statusFilter" class="bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 rounded-lg px-2.5 py-1.5 focus:border-zinc-600 focus:outline-none">
+                <option value="ALL">Semua Status</option>
+                <option value="Checksheet Done">Checksheet Done</option>
+                <option value="Belum Di Input">Belum Di Input</option>
+                <option value="Butuh Revisi">Butuh Revisi</option>
+                <option value="Tidak Ada Part">Tidak Ada Part</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <!-- Main Data Table Container -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
-                <tr>
-                  <th class="py-3 px-3 w-10 text-center">
-                    <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
-                           :disabled="currentUser.role === 'operator' && activeTeam === 'LAINNYA'"
-                           class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                           aria-label="Pilih Semua Checksheet">
-                  </th>
-                  <th class="py-3 px-3 w-12 text-center">No</th>
-                  <th class="py-3 px-3 w-32">Penanggung Jawab</th>
-                  <th class="py-3 px-4">Part Number</th>
-                  <th class="py-3 px-4">Nama Part</th>
-                  <th class="py-3 px-3 w-20">Model</th>
-                  <th class="py-3 px-3 w-24">Customer</th>
-                  <th class="py-3 px-3 w-36">Status</th>
-                  <th class="py-3 px-4">Keterangan</th>
-                  <th class="py-3 px-3 w-24 text-center">Aksi</th>
-                </tr>
-              </thead>
+          <!-- Main Data Table Container -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
+                  <tr>
+                    <th class="py-3 px-3 w-10 text-center">
+                      <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
+                             :disabled="currentUser.role === 'operator' && activeTeam === 'LAINNYA'"
+                             class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                             aria-label="Pilih Semua Checksheet">
+                    </th>
+                    <th class="py-3 px-3 w-12 text-center">No</th>
+                    <th class="py-3 px-3 w-32">Penanggung Jawab</th>
+                    <th class="py-3 px-4">Part Number</th>
+                    <th class="py-3 px-4">Nama Part</th>
+                    <th class="py-3 px-3 w-20">Model</th>
+                    <th class="py-3 px-3 w-24">Customer</th>
+                    <th class="py-3 px-3 w-36">Status</th>
+                    <th class="py-3 px-4">Keterangan</th>
+                    <th class="py-3 px-3 w-24 text-center">Aksi</th>
+                  </tr>
+                </thead>
 
-              <!-- Loading Skeleton State -->
-              <tbody v-if="isLoading" class="divide-y divide-zinc-800/60">
-                <tr v-for="n in 6" :key="n" class="animate-pulse">
-                  <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
-                  <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
-                  <td class="p-3"><div class="w-16 h-5 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-36 h-4 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-48 h-4 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-12 h-4 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-16 h-4 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-24 h-5 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3"><div class="w-32 h-4 bg-zinc-800 rounded"></div></td>
-                  <td class="p-3 text-center"><div class="w-14 h-6 bg-zinc-800 rounded mx-auto"></div></td>
-                </tr>
-              </tbody>
+                <!-- Loading Skeleton State -->
+                <tbody v-if="isLoading" class="divide-y divide-zinc-800/60">
+                  <tr v-for="n in 8" :key="n" class="animate-pulse">
+                    <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
+                    <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
+                    <td class="p-3"><div class="w-16 h-5 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-36 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-48 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-12 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-16 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-24 h-5 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3"><div class="w-32 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3 text-center"><div class="w-14 h-6 bg-zinc-800 rounded mx-auto"></div></td>
+                  </tr>
+                </tbody>
 
-              <!-- Table Rows -->
-              <tbody v-else class="divide-y divide-zinc-800/60">
-                <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
-                    class="hover:bg-zinc-800/40 transition-colors group cursor-pointer"
-                    @click="isOwnTask(cs) && toggleSelect(cs.id)">
-                  <td class="py-3 px-3 text-center" @click.stop>
-                    <input type="checkbox" :value="cs.id" v-model="selectedIds"
-                           :disabled="!isOwnTask(cs)"
-                           class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                           :aria-label="'Pilih part ' + cs.part_number">
-                  </td>
-                  <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ idx + 1 }}</td>
-                  <td class="py-3 px-3">
-                    <span v-if="isUnassigned(cs)" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                      <span>Belum Ditugaskan</span>
-                    </span>
-                    <span v-else class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
-                      {{ cs.assigned_to }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-4 font-mono font-bold text-zinc-100">{{ cs.part_number }}</td>
-                  <td class="py-3 px-4 font-medium text-zinc-200">{{ cs.part_name || '-' }}</td>
-                  <td class="py-3 px-3 text-zinc-300 font-mono">{{ cs.model || '-' }}</td>
-                  <td class="py-3 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
-                  <td class="py-3 px-3">
-                    <!-- Semantic High Contrast Badges -->
-                    <span v-if="cs.status === 'Checksheet Done'"
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                      <span>Done</span>
-                    </span>
-                    <span v-else-if="cs.status === 'Belum Di Input'"
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                      <span>Ready</span>
-                    </span>
-                    <span v-else-if="cs.status === 'Butuh Revisi'"
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-950 text-purple-300 border border-purple-800 inline-flex items-center gap-1.5">
-                      <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                      <span>Butuh Revisi</span>
-                    </span>
-                    <span v-else
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
-                      <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                      <span>No Part</span>
-                    </span>
-                  </td>
-                  <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
-                  <td class="py-3 px-3 text-center" @click.stop>
-                    <button @click="openDetail(cs.id)"
-                            :class="isOwnTask(cs) ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800'"
-                            class="px-2.5 py-1 rounded text-xs font-medium border transition-colors">
-                      {{ isOwnTask(cs) ? 'Review' : 'Lihat' }}
-                    </button>
-                  </td>
-                </tr>
-
-                <!-- Empty State -->
-                <tr v-if="filteredChecksheets.length === 0">
-                  <td colspan="10" class="py-16 text-center">
-                    <div class="max-w-sm mx-auto flex flex-col items-center">
-                      <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                      </div>
-                      <p class="text-sm font-semibold text-zinc-200">Tidak ada checksheet yang sesuai</p>
-                      <p class="text-xs text-zinc-400 mt-1">Coba sesuaikan pencarian atau pilih tab penanggung jawab lainnya.</p>
-                      <button @click="resetFilters" class="mt-4 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700">
-                        Reset Semua Filter
+                <!-- Table Rows -->
+                <tbody v-else class="divide-y divide-zinc-800/60">
+                  <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
+                      class="hover:bg-zinc-800/40 transition-colors group cursor-pointer"
+                      @click="isOwnTask(cs) && toggleSelect(cs.id)">
+                    <td class="py-3 px-3 text-center" @click.stop>
+                      <input type="checkbox" :value="cs.id" v-model="selectedIds"
+                             :disabled="!isOwnTask(cs)"
+                             class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                             :aria-label="'Pilih part ' + cs.part_number">
+                    </td>
+                    <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ idx + 1 }}</td>
+                    <td class="py-3 px-3">
+                      <span v-if="isUnassigned(cs)" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <span>Belum Ditugaskan</span>
+                      </span>
+                      <span v-else class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
+                        {{ cs.assigned_to }}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 font-mono font-bold text-zinc-100">{{ cs.part_number }}</td>
+                    <td class="py-3 px-4 font-medium text-zinc-200">{{ cs.part_name || '-' }}</td>
+                    <td class="py-3 px-3 text-zinc-300 font-mono">{{ cs.model || '-' }}</td>
+                    <td class="py-3 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
+                    <td class="py-3 px-3">
+                      <!-- High Contrast Badges -->
+                      <span v-if="cs.status === 'Checksheet Done'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Done</span>
+                      </span>
+                      <span v-else-if="cs.status === 'Belum Di Input'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <span>Ready</span>
+                      </span>
+                      <span v-else-if="cs.status === 'Butuh Revisi'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-950 text-purple-300 border border-purple-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                        <span>Butuh Revisi</span>
+                      </span>
+                      <span v-else
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                        <span>No Part</span>
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
+                    <td class="py-3 px-3 text-center" @click.stop>
+                      <button @click="openDetail(cs.id)"
+                              :class="isOwnTask(cs) ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800'"
+                              class="px-2.5 py-1 rounded text-xs font-medium border transition-colors">
+                        {{ isOwnTask(cs) ? 'Review' : 'Lihat' }}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    </td>
+                  </tr>
+
+                  <!-- Empty State -->
+                  <tr v-if="filteredChecksheets.length === 0">
+                    <td colspan="10" class="py-16 text-center">
+                      <div class="max-w-sm mx-auto flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3">
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                        </div>
+                        <p class="text-sm font-semibold text-zinc-200">Tidak ada checksheet yang sesuai</p>
+                        <p class="text-xs text-zinc-400 mt-1">Coba sesuaikan pencarian atau pilih tab penanggung jawab lainnya.</p>
+                        <button @click="resetFilters" class="mt-4 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700">
+                          Reset Semua Filter
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+
+        <!-- PAGE 3: 🔍 CEK MASTER PART (FULL PAGE) -->
+        <main v-show="activePage === 'master_part'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
+              <div>
+                <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <span>Pencarian Master Part FactoryHub</span>
+                  <span v-if="catalogStats.total_parts" class="px-2 py-0.5 text-xs font-mono bg-zinc-800 text-amber-300 rounded border border-zinc-700">
+                    {{ catalogStats.total_parts.toLocaleString() }} Terdaftar
+                  </span>
+                </h2>
+                <p class="text-xs text-zinc-400 mt-1">
+                  Tempel daftar nomor part (dari Excel atau chat) untuk mencocokkan status template dan ketersediaannya di portal.
+                </p>
+              </div>
+
+              <!-- Live Sync from Portal Button -->
+              <div class="flex items-center gap-2 shrink-0">
+                <button @click="triggerCatalogSync" :disabled="isSyncingCatalog"
+                        class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors disabled:opacity-50">
+                  <svg v-if="isSyncingCatalog" class="animate-spin w-4 h-4 text-amber-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <svg v-else class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span>{{ isSyncingCatalog ? 'Syncing...' : 'Sync dari FactoryHub' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="mt-5 space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <label class="font-medium text-zinc-300">Masukkan Part Number (satu per baris atau dipisah koma):</label>
+                <div class="flex items-center gap-2">
+                  <button @click="partInputSample" class="text-indigo-400 hover:text-indigo-300 text-[11px] underline">
+                    Muat Contoh Part
+                  </button>
+                  <span class="text-zinc-600">•</span>
+                  <button @click="partSearchInput = ''; partSearchResults = null" class="text-zinc-500 hover:text-zinc-300 text-[11px]">
+                    Bersihkan
+                  </button>
+                </div>
+              </div>
+
+              <textarea v-model="partSearchInput" rows="5"
+                        placeholder="Contoh:&#10;62121-TG4-T000-H1&#10;5253AU23&#10;88315-73RA0&#10;65191_TRD"
+                        class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:outline-none"></textarea>
+
+              <div class="flex items-center justify-between">
+                <p class="text-[11px] text-zinc-500">Mendukung pencarian fuzzy dan toleran terhadap strip/spasi.</p>
+                <button @click="executePartSearch" :disabled="!partSearchInput.trim() || isSearchingParts"
+                        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-40 flex items-center gap-2">
+                  <svg v-if="isSearchingParts" class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <span>{{ isSearchingParts ? 'Mengecek Master...' : 'Periksa Sekarang' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Results Display -->
+            <div v-if="partSearchResults" class="mt-8 border-t border-zinc-800 pt-6 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                <div class="flex items-center gap-6">
+                  <div>
+                    <span class="text-xs text-zinc-400">Total Dicari</span>
+                    <p class="text-xl font-bold font-mono text-zinc-100">{{ partSearchResults.total_searched }}</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-emerald-400">Terdaftar</span>
+                    <p class="text-xl font-bold font-mono text-emerald-400">{{ partSearchResults.found_in_master }}</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-rose-400">Belum Terdaftar</span>
+                    <p class="text-xl font-bold font-mono text-rose-400">{{ partSearchResults.missing_in_master }}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button @click="copyMissingParts" :disabled="partSearchResults.missing_in_master === 0"
+                          class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <span>Salin Part Belum Terdaftar</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Result Table -->
+              <div class="border border-zinc-800 rounded-xl overflow-hidden">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[11px]">
+                    <tr>
+                      <th class="py-2.5 px-4 w-12 text-center">No</th>
+                      <th class="py-2.5 px-4">Part Number Dicari</th>
+                      <th class="py-2.5 px-4">Hasil Cocok di Portal</th>
+                      <th class="py-2.5 px-4">Nama Part Resmi</th>
+                      <th class="py-2.5 px-3">Status Master</th>
+                      <th class="py-2.5 px-3">Status Database</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-800/60 bg-zinc-900/50">
+                    <tr v-for="(res, idx) in partSearchResults.results" :key="idx" class="hover:bg-zinc-800/40">
+                      <td class="py-2.5 px-4 text-center font-mono text-zinc-500">{{ idx + 1 }}</td>
+                      <td class="py-2.5 px-4 font-mono font-bold text-zinc-100">{{ res.part_number }}</td>
+                      <td class="py-2.5 px-4 font-mono" :class="res.matched_part ? 'text-indigo-300' : 'text-zinc-500'">
+                        {{ res.matched_part || '-' }}
+                      </td>
+                      <td class="py-2.5 px-4 text-zinc-300">{{ res.part_name || '-' }}</td>
+                      <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold border"
+                              :class="res.status_master === 'TERDAFTAR' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                      res.status_master === 'KODE_REVISI_BARU' ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                      'bg-rose-950 text-rose-300 border-rose-800'">
+                          {{ res.status_master }}
+                        </span>
+                      </td>
+                      <td class="py-2.5 px-3">
+                        <span v-if="res.db_checksheet" class="text-xs text-zinc-300 flex items-center gap-1.5">
+                          <button @click="openChecksheetFromChecker(res.db_checksheet.id)"
+                                  class="text-indigo-400 hover:text-indigo-300 underline font-mono">
+                            #{{ res.db_checksheet.id }} ({{ res.db_checksheet.status }})
+                          </button>
+                        </span>
+                        <span v-else class="text-zinc-500">-</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- PAGE 4: 🚀 ANTREAN OTOMASI -->
+        <main v-show="activePage === 'automation'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
+              <div>
+                <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <span>Antrean Otomasi FactoryHub Playwright</span>
+                  <span class="w-2 h-2 rounded-full" :class="isBatchRunning ? 'bg-emerald-400 animate-ping' : 'bg-emerald-500'"></span>
+                </h2>
+                <p class="text-xs text-zinc-400 mt-1">
+                  Pantau eksekusi submit background worker, status browser headless, dan log verifikasi.
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button @click="openBatchModal"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                  <span>Buka Kontrol Batch</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Automation Engine Health Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
+                <span class="text-xs text-zinc-400">Playwright Worker</span>
+                <p class="text-base font-bold text-emerald-400 mt-1 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span>Chromium Headless Siap</span>
+                </p>
+                <p class="text-[11px] text-zinc-500 mt-1">Driver browser aktif di background</p>
+              </div>
+
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
+                <span class="text-xs text-zinc-400">Target Server</span>
+                <p class="text-base font-bold text-zinc-200 mt-1 font-mono">portal.summitadyawinsa.co.id</p>
+                <p class="text-[11px] text-zinc-500 mt-1">Kredensial FactoryHub terhubung</p>
+              </div>
+
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
+                <span class="text-xs text-zinc-400">Checksheet Siap Submit</span>
+                <p class="text-base font-bold text-amber-400 mt-1 font-mono">{{ countStatus('Belum Di Input') }} Part</p>
+                <p class="text-[11px] text-zinc-500 mt-1">Bisa disubmit sekaligus via Batch Action</p>
+              </div>
+            </div>
+
+            <!-- Terminal Execution Logs -->
+            <div class="mt-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-zinc-300 font-mono">LIVE TERMINAL LOGS</span>
+                <span class="text-[11px] text-zinc-500">Auto-scroll aktif</span>
+              </div>
+              <div class="bg-black/80 border border-zinc-800 rounded-xl p-4 font-mono text-xs text-zinc-300 h-64 overflow-y-auto space-y-1">
+                <p class="text-zinc-500">[*] Menunggu instruksi otomasi baru...</p>
+                <p v-for="(log, idx) in batchLogs" :key="idx"
+                   :class="log.includes('BERHASIL') || log.includes('Done') ? 'text-emerald-400 font-bold' :
+                           log.includes('ERROR') || log.includes('Gagal') ? 'text-rose-400 font-bold' : 'text-zinc-300'">
+                  {{ log }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- PAGE 5: 👥 ANGGOTA TIM -->
+        <main v-show="activePage === 'team'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
+              <div>
+                <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <span>Manajemen Anggota Tim QC</span>
+                  <span class="px-2 py-0.5 text-xs font-mono bg-zinc-800 text-zinc-300 rounded border border-zinc-700">
+                    {{ users.length }} Pengguna
+                  </span>
+                </h2>
+                <p class="text-xs text-zinc-400 mt-1">
+                  Kelola akun operator, NIK, peran hak akses, dan pantau pembagian beban tugas.
+                </p>
+              </div>
+
+              <!-- Admin: Add User Button -->
+              <div v-if="currentUser.role === 'admin'">
+                <button @click="showUsersModal = true"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  <span>Tambah Anggota Baru</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Team Members Directory Table -->
+            <div class="mt-6 border border-zinc-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[11px]">
+                  <tr>
+                    <th class="py-3 px-4 w-12 text-center">No</th>
+                    <th class="py-3 px-4">Nama Lengkap</th>
+                    <th class="py-3 px-4">Username</th>
+                    <th class="py-3 px-4">NIK</th>
+                    <th class="py-3 px-4">Peran (Role)</th>
+                    <th class="py-3 px-4 text-center">Tugas Dipegang</th>
+                    <th class="py-3 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/60 bg-zinc-900/50">
+                  <tr v-for="(u, idx) in users" :key="u.id" class="hover:bg-zinc-800/30">
+                    <td class="py-3 px-4 text-center font-mono text-zinc-500">{{ idx + 1 }}</td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-zinc-300">
+                          {{ u.name.charAt(0) }}
+                        </div>
+                        <span class="font-bold text-zinc-100">{{ u.name }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 font-mono text-zinc-400">{{ u.username }}</td>
+                    <td class="py-3 px-4 font-mono text-zinc-400">{{ u.nik || '-' }}</td>
+                    <td class="py-3 px-4">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase"
+                            :class="u.role === 'admin' ? 'bg-indigo-950 text-indigo-300 border-indigo-800' : 'bg-zinc-800 text-zinc-300 border-zinc-700'">
+                        {{ u.role }}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="font-mono font-bold text-zinc-200">{{ countByTeam(u.name) }} Part</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <button @click="goToChecksheetsWithTeam(u.name)"
+                              class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs border border-zinc-700">
+                        Buka Tugas
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+
+        <!-- PAGE 6: ⚙️ INTEGRASI & SETELAN -->
+        <main v-show="activePage === 'settings'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
+            <div class="pb-5 border-b border-zinc-800">
+              <h2 class="text-lg font-bold text-zinc-100">Integrasi & Pengaturan Sistem</h2>
+              <p class="text-xs text-zinc-400 mt-1">Konfigurasi sinkronisasi cloud, Google Spreadsheet, dan sistem penyimpanan.</p>
+            </div>
+
+            <!-- Google Sheet Section -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-zinc-100">Google Spreadsheet Tim</h3>
+                    <p class="text-xs text-zinc-400">Terhubung ke sheet operasional QC resmi</p>
+                  </div>
+                </div>
+                <button @click="syncGoogleSheet" :disabled="isSyncing"
+                        class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2">
+                  <svg v-if="isSyncing" class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <span>{{ isSyncing ? 'Menyinkronkan...' : 'Sync Sekarang' }}</span>
+                </button>
+              </div>
+
+              <div class="pt-2">
+                <a href="https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing" target="_blank"
+                   class="text-xs text-indigo-400 hover:text-indigo-300 font-mono break-all underline">
+                  https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing
+                </a>
+              </div>
+            </div>
+
+            <!-- Storage & Database Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
+                <span class="text-xs text-zinc-400 font-semibold">Folder Dokumen Aktif</span>
+                <p class="text-xs font-mono text-zinc-200">documents/CS INCOMING</p>
+                <p class="text-[11px] text-zinc-500">234 File Excel, 425 Sheet Pemeriksaan</p>
+              </div>
+
+              <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
+                <span class="text-xs text-zinc-400 font-semibold">Folder Arsip Non-Incoming</span>
+                <p class="text-xs font-mono text-zinc-200">/Users/mac/Documents/Summit_Checksheet_Archive</p>
+                <p class="text-[11px] text-zinc-500">Tersimpan aman di folder Documents Mac</p>
+              </div>
+            </div>
+          </div>
+        </main>
+
+      </div>
 
       <!-- Slide-over Review & Submit Drawer -->
       <div v-if="activeChecksheet" class="fixed inset-0 z-50 bg-black/70 flex justify-end" @click.self="closeDetail">
@@ -448,693 +1108,249 @@
             <div>
               <div class="flex items-center gap-2">
                 <h2 class="text-base font-bold text-zinc-100 font-mono">{{ activeChecksheet.part_number }}</h2>
-                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  {{ activeChecksheet.customer }}
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold border"
+                      :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                              activeChecksheet.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                              activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                              'bg-rose-950 text-rose-300 border-rose-800'">
+                  {{ activeChecksheet.status }}
                 </span>
               </div>
-              <p class="text-xs text-zinc-400 mt-0.5">{{ activeChecksheet.part_name }} (Model: {{ activeChecksheet.model }})</p>
+              <p class="text-xs text-zinc-400 mt-0.5">{{ activeChecksheet.part_name || '-' }}</p>
             </div>
-            <button @click="closeDetail" class="text-zinc-400 hover:text-zinc-100 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors" title="Tutup (Esc)">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button @click="closeDetail" class="text-zinc-500 hover:text-zinc-300 text-lg">✕</button>
+          </div>
+
+          <!-- Drawer Tabs: Points vs Sketches -->
+          <div class="flex items-center gap-2 border-b border-zinc-800 pt-4 pb-2">
+            <button @click="drawerTab = 'points'"
+                    :class="drawerTab === 'points' ? 'bg-zinc-800 text-zinc-100 font-bold border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'"
+                    class="px-3.5 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              <span>Titik Inspeksi ({{ (activeChecksheet.points || []).length }})</span>
+            </button>
+            <button @click="drawerTab = 'images'"
+                    :class="drawerTab === 'images' ? 'bg-zinc-800 text-zinc-100 font-bold border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'"
+                    class="px-3.5 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span>Gambar Sketsa Part ({{ (activeChecksheet.images || []).length }})</span>
             </button>
           </div>
 
-          <!-- Read-only Alert Banner for Operator viewing other's task -->
-          <div v-if="!isOwnTask(activeChecksheet)" class="mt-3 p-3 rounded-lg bg-amber-950/40 border border-amber-800/60 flex items-center gap-2.5 text-xs text-amber-200">
-            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div>
-              <span class="font-semibold">Mode Pratinjau (Hanya Baca):</span>
-              <span> Task ini ditugaskan ke <strong class="text-white">{{ activeChecksheet.assigned_to || 'Belum Ditugaskan' }}</strong>. Anda dapat melihat detail inspeksi, namun aksi perubahan dan submit hanya dapat dilakukan oleh penanggung jawab atau admin.</span>
+          <!-- TAB 1: Points Table & Form -->
+          <div v-show="drawerTab === 'points'" class="flex-1 overflow-y-auto py-4 space-y-4">
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-2 gap-3 text-xs bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
+              <div>
+                <span class="text-zinc-500 block">Customer</span>
+                <span class="font-medium text-zinc-200">{{ activeChecksheet.customer || '-' }}</span>
+              </div>
+              <div>
+                <span class="text-zinc-500 block">Model</span>
+                <span class="font-mono text-zinc-200">{{ activeChecksheet.model || '-' }}</span>
+              </div>
+              <div>
+                <span class="text-zinc-500 block">No. Dokumen</span>
+                <span class="font-mono text-zinc-200">{{ activeChecksheet.doc_number || '-' }}</span>
+              </div>
+              <div>
+                <span class="text-zinc-500 block">Penanggung Jawab</span>
+                <span class="font-semibold text-zinc-200">{{ activeChecksheet.assigned_to || 'Unassigned' }}</span>
+              </div>
+            </div>
+
+            <!-- Inspection Points Table -->
+            <div class="border border-zinc-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[10px]">
+                  <tr>
+                    <th class="p-2.5 w-10 text-center">No</th>
+                    <th class="p-2.5">Item Inspeksi</th>
+                    <th class="p-2.5">Standar / Limit</th>
+                    <th class="p-2.5">Alat Ukur</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800/60 bg-zinc-900/40">
+                  <tr v-for="(pt, idx) in activeChecksheet.points" :key="idx">
+                    <td class="p-2.5 text-center font-mono text-zinc-500">{{ pt.item_no || idx + 1 }}</td>
+                    <td class="p-2.5 font-medium text-zinc-200">{{ pt.inspection_item }}</td>
+                    <td class="p-2.5 font-mono text-zinc-300">{{ pt.standard || '-' }}</td>
+                    <td class="p-2.5 text-zinc-400">{{ pt.method || 'Visual' }}</td>
+                  </tr>
+                  <tr v-if="!activeChecksheet.points || activeChecksheet.points.length === 0">
+                    <td colspan="4" class="p-6 text-center text-zinc-500">Tidak ada titik ukur inspeksi</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <!-- Meta Configuration -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 mb-3">
+          <!-- TAB 2: Drawing Sketches Gallery -->
+          <div v-show="drawerTab === 'images'" class="flex-1 overflow-y-auto py-4">
+            <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="grid grid-cols-2 gap-3">
+              <div v-for="(img, idx) in activeChecksheet.images" :key="idx"
+                   @click="previewImage = img"
+                   class="group relative bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden cursor-pointer hover:border-zinc-600 transition-all">
+                <img :src="img" :alt="'Sketsa ' + activeChecksheet.part_number" class="w-full h-44 object-contain bg-zinc-950 p-2">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <span class="px-2.5 py-1 bg-zinc-900 text-white rounded text-xs font-semibold">Perbesar</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="py-12 text-center text-zinc-500 text-xs">
+              Tidak ada gambar sketsa part untuk checksheet ini.
+            </div>
+          </div>
+
+          <!-- Drawer Footer Action -->
+          <div class="pt-4 border-t border-zinc-800 flex items-center justify-between gap-3">
+            <button @click="markNeedsRevision"
+                    class="px-3 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-lg text-xs font-semibold transition-colors">
+              ⚠️ Butuh Revisi
+            </button>
+            <div class="flex items-center gap-2">
+              <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
+                      class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50">
+                Dry-run Test
+              </button>
+              <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
+                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2">
+                <span>Submit ke FactoryHub</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lightbox Zoom Modal -->
+      <div v-if="previewImage" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" @click="previewImage = null">
+        <div class="relative max-w-4xl max-h-[90vh]" @click.stop>
+          <img :src="previewImage" alt="Preview Gambar" class="max-w-full max-h-[85vh] object-contain rounded-xl">
+          <button @click="previewImage = null" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center text-sm font-bold">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Batch Automation Modal -->
+      <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <h3 class="text-sm font-bold text-zinc-100">Eksekusi Batch Otomasi Playwright</h3>
+            <button @click="closeBatchModal" class="text-zinc-500 hover:text-zinc-300">✕</button>
+          </div>
+          <p class="text-xs text-zinc-400">
+            Memproses <strong>{{ selectedIds.length }} part terpilih</strong> secara berurutan langsung ke portal FactoryHub.
+          </p>
+          <div class="bg-black/80 rounded-xl p-3 h-52 overflow-y-auto font-mono text-xs text-zinc-300 space-y-1">
+            <p v-for="(l, idx) in batchLogs" :key="idx">{{ l }}</p>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button @click="closeBatchModal" :disabled="isBatchRunning" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold">Tutup</button>
+            <button @click="startBatchAutomation" :disabled="isBatchRunning" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-2">
+              <svg v-if="isBatchRunning" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span>{{ isBatchRunning ? 'Sedang Berjalan...' : 'Mulai Batch' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Checksheet Modal (Admin Only) -->
+      <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <h3 class="text-sm font-bold text-zinc-100">Upload Checksheet Baru</h3>
+            <button @click="showUploadModal = false" class="text-zinc-500 hover:text-zinc-300">✕</button>
+          </div>
+          <form @submit.prevent="submitUpload" class="space-y-4 text-xs">
             <div>
-              <label class="text-xs text-zinc-400 font-medium">Penanggung Jawab</label>
-              <!-- DYNAMIC: populated from operatorUsers -->
-              <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta"
-                      :disabled="currentUser.role !== 'admin'"
-                      class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+              <label class="block text-zinc-300 font-medium mb-1.5">Pilih File (.xlsx / .xls)</label>
+              <input type="file" multiple @change="handleFileSelect" accept=".xlsx,.xls"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200">
+            </div>
+            <div>
+              <label class="block text-zinc-300 font-medium mb-1.5">Tugaskan ke Operator</label>
+              <select v-model="uploadAssignee" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-200">
                 <option value="Unassigned">Belum Ditugaskan (Unassigned)</option>
                 <option v-for="u in operatorUsers" :key="u.id" :value="u.name">{{ u.name }}</option>
               </select>
             </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" @click="showUploadModal = false" class="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold">Batal</button>
+              <button type="submit" :disabled="isUploading || !selectedFiles.length" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50">
+                {{ isUploading ? 'Mengunggah...' : 'Upload & Ekstrak' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Manage Users Modal (Admin Only) -->
+      <div v-if="showUsersModal" class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <h3 class="text-sm font-bold text-zinc-100">Tambah Anggota Tim Baru</h3>
+            <button @click="showUsersModal = false" class="text-zinc-500 hover:text-zinc-300">✕</button>
+          </div>
+          <form @submit.prevent="createUser" class="space-y-3 text-xs">
             <div>
-              <label class="text-xs text-zinc-400 font-medium">Status Checksheet</label>
-              <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
-                      :disabled="!isOwnTask(activeChecksheet)"
-                      :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 text-purple-300 font-semibold' : 'text-zinc-200'"
-                      class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs focus:border-zinc-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
-                <option value="Belum Di Input">Belum Di Input (Ready)</option>
-                <option value="Butuh Revisi">⚠️ Butuh Revisi</option>
-                <option value="Checksheet Done">Checksheet Done</option>
-                <option value="Tidak Ada Part">Tidak Ada Part</option>
+              <label class="block text-zinc-300 font-medium mb-1">Username</label>
+              <input v-model="newUserForm.username" type="text" required placeholder="Contoh: agus"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100">
+            </div>
+            <div>
+              <label class="block text-zinc-300 font-medium mb-1">Nama Lengkap</label>
+              <input v-model="newUserForm.name" type="text" required placeholder="Contoh: Agus Setiawan"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100">
+            </div>
+            <div>
+              <label class="block text-zinc-300 font-medium mb-1">NIK</label>
+              <input v-model="newUserForm.nik" type="text" placeholder="Contoh: 070817-037"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100">
+            </div>
+            <div>
+              <label class="block text-zinc-300 font-medium mb-1">Kata Sandi</label>
+              <input v-model="newUserForm.password" type="password" required placeholder="Minimal 6 karakter"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100">
+            </div>
+            <div>
+              <label class="block text-zinc-300 font-medium mb-1">Peran (Role)</label>
+              <select v-model="newUserForm.role" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-200">
+                <option value="operator">Operator</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
-            <div>
-              <label class="text-xs text-zinc-400 font-medium">Doc Number</label>
-              <input v-model="activeChecksheet.doc_number" @blur="saveChecksheetMeta" type="text"
-                     :disabled="!isOwnTask(activeChecksheet)"
-                     class="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 font-mono focus:border-zinc-600 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
-            </div>
-          </div>
-
-          <!-- Keterangan / Catatan Revisi Field -->
-          <div class="mb-4 bg-zinc-950/70 border rounded-lg p-2.5"
-               :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-800/80 bg-purple-950/20' : 'border-zinc-800'">
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-medium" :class="activeChecksheet.status === 'Butuh Revisi' ? 'text-purple-300 font-semibold' : 'text-zinc-400'">
-                {{ activeChecksheet.status === 'Butuh Revisi' ? 'Catatan Kebutuhan Revisi (Wajib Diisi):' : 'Keterangan / Catatan Tambahan:' }}
-              </label>
-              <button v-if="isOwnTask(activeChecksheet) && activeChecksheet.status !== 'Butuh Revisi'"
-                      @click="markNeedsRevision"
-                      class="text-[11px] text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1 transition-colors">
-                <span>⚠️ Tandai Butuh Revisi</span>
+            <div class="flex justify-end gap-2 pt-3">
+              <button type="button" @click="showUsersModal = false" class="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold">Batal</button>
+              <button type="submit" :disabled="isCreatingUser" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50">
+                {{ isCreatingUser ? 'Menyimpan...' : 'Simpan Anggota' }}
               </button>
             </div>
-            <input v-model="activeChecksheet.keterangan" @blur="saveChecksheetMeta" type="text"
-                   :disabled="!isOwnTask(activeChecksheet)"
-                   :placeholder="activeChecksheet.status === 'Butuh Revisi' ? 'Jelaskan rincian poin/drawing bermasalah (misal: balon no. 4 tidak ada di sketsa)...' : 'Catatan opsional...'"
-                   :class="activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 focus:border-purple-400 text-purple-200 bg-zinc-900' : 'border-zinc-800 text-zinc-200 bg-zinc-900'"
-                   class="w-full border rounded px-3 py-1.5 text-xs focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-            <p v-if="activeChecksheet.status === 'Butuh Revisi'" class="text-[11px] text-purple-400/90 mt-1.5">
-              💡 Catatan ini otomatis tersimpan ke database dan tersinkronisasi ke Google Spreadsheet tim.
-            </p>
-          </div>
-
-          <!-- Tab Navigation for Drawer Content -->
-          <div class="flex items-center gap-4 border-b border-zinc-800 pb-2 mb-3">
-            <button @click="drawerTab = 'points'"
-                    :class="drawerTab === 'points' ? 'text-indigo-400 border-b-2 border-indigo-500 font-semibold' : 'text-zinc-400 hover:text-zinc-200 font-medium'"
-                    class="pb-1 text-xs transition-colors flex items-center gap-1.5">
-              <span>Titik Inspeksi</span>
-              <span class="px-1.5 py-0.5 text-[10px] bg-zinc-800 text-zinc-300 rounded-full font-mono">
-                {{ activeChecksheet.points.length }}
-              </span>
-            </button>
-            <button @click="drawerTab = 'images'"
-                    :class="drawerTab === 'images' ? 'text-indigo-400 border-b-2 border-indigo-500 font-semibold' : 'text-zinc-400 hover:text-zinc-200 font-medium'"
-                    class="pb-1 text-xs transition-colors flex items-center gap-1.5">
-              <span>Gambar Sketsa Part</span>
-              <span class="px-1.5 py-0.5 text-[10px] bg-zinc-800 text-zinc-300 rounded-full font-mono">
-                {{ (activeChecksheet.images || []).length }}
-              </span>
-            </button>
-          </div>
-
-          <!-- TAB 1: Inspection Points Table -->
-          <div v-show="drawerTab === 'points'" class="flex-1 my-2">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                Titik Inspeksi ({{ activeChecksheet.points.length }} Baris)
-              </h3>
-              <button v-if="isOwnTask(activeChecksheet)" @click="savePoints" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
-                Simpan Perubahan
-              </button>
-            </div>
-
-            <div class="border border-zinc-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-zinc-950 text-zinc-400 font-semibold sticky top-0 border-b border-zinc-800">
-                  <tr>
-                    <th class="p-2 w-12 text-center">No</th>
-                    <th class="p-2">Item Inspeksi</th>
-                    <th class="p-2">Standar / Toleransi</th>
-                    <th class="p-2 w-28">Metode</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800">
-                  <tr v-for="pt in activeChecksheet.points" :key="pt.id" class="hover:bg-zinc-800/40">
-                    <td class="p-1.5 font-mono text-center">
-                      <input v-model="pt.item_no" :readonly="!isOwnTask(activeChecksheet)" class="w-8 bg-transparent text-center border-b border-transparent focus:border-zinc-500 focus:outline-none disabled:opacity-75">
-                    </td>
-                    <td class="p-1.5">
-                      <input v-model="pt.inspection_item" :readonly="!isOwnTask(activeChecksheet)" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none disabled:opacity-75">
-                    </td>
-                    <td class="p-1.5 font-mono">
-                      <input v-model="pt.standard" :readonly="!isOwnTask(activeChecksheet)" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none disabled:opacity-75">
-                    </td>
-                    <td class="p-1.5">
-                      <input v-model="pt.method" :readonly="!isOwnTask(activeChecksheet)" class="w-full bg-transparent border-b border-transparent focus:border-zinc-500 focus:outline-none disabled:opacity-75">
-                    </td>
-                  </tr>
-                  <tr v-if="activeChecksheet.points.length === 0">
-                    <td colspan="4" class="p-6 text-center text-zinc-500">
-                      Belum ada data titik inspeksi pada checksheet ini.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- TAB 2: Part Images & Drawing Sketches -->
-          <div v-show="drawerTab === 'images'" class="flex-1 my-2">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                Gambar Sketsa & Titik Ukur ({{ (activeChecksheet.images || []).length }})
-              </h3>
-              <span class="text-[11px] text-zinc-500">Klik gambar untuk memperbesar</span>
-            </div>
-
-            <!-- Images Grid -->
-            <div v-if="(activeChecksheet.images || []).length > 0" class="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto p-1">
-              <div v-for="(img, imgIdx) in activeChecksheet.images" :key="img.id || imgIdx"
-                   @click="previewImage = img.image_url"
-                   class="group bg-zinc-950 border border-zinc-800 hover:border-indigo-500 rounded-lg overflow-hidden cursor-pointer transition-all flex flex-col">
-                <div class="relative aspect-video bg-zinc-900 flex items-center justify-center overflow-hidden">
-                  <img :src="img.image_url" :alt="img.filename" class="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-200">
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <span class="px-2 py-1 bg-zinc-900/90 text-zinc-200 text-[11px] rounded font-medium flex items-center gap-1">
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
-                      Perbesar
-                    </span>
-                  </div>
-                </div>
-                <div class="p-2 flex items-center justify-between bg-zinc-900/60 border-t border-zinc-800 text-[11px]">
-                  <span class="text-zinc-300 truncate max-w-[140px] font-mono">{{ img.filename }}</span>
-                  <span class="text-zinc-500 text-[10px] uppercase font-mono">Sketsa #{{ imgIdx + 1 }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Empty State for Images -->
-            <div v-else class="border border-zinc-800 border-dashed rounded-lg p-8 text-center bg-zinc-950/50">
-              <svg class="w-8 h-8 text-zinc-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <p class="text-xs text-zinc-300 font-medium">Belum ada gambar sketsa tersimpan</p>
-              <p class="text-[11px] text-zinc-500 mt-1 max-w-sm mx-auto">
-                Gambar sketsa titik inspeksi diekstrak otomatis saat file checksheet Excel diupload ke sistem.
-              </p>
-            </div>
-          </div>
-
-          <!-- Live Automation Log Stream -->
-          <div v-if="liveLogs.length > 0" class="mt-4 bg-zinc-950 border border-zinc-800 rounded-lg p-3">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800">
-              <span class="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Log Playwright Realtime
-              </span>
-              <span class="text-[11px] text-zinc-500 font-mono">{{ liveLogs.length }} lines</span>
-            </div>
-            <div class="max-h-40 overflow-y-auto font-mono text-[11px] text-zinc-300 space-y-1">
-              <div v-for="(line, lidx) in liveLogs" :key="lidx">{{ line }}</div>
-            </div>
-                    <!-- Drawer Footer Actions -->
-          <div class="pt-4 border-t border-zinc-800 flex items-center justify-between gap-3 mt-auto">
-            <div v-if="!isOwnTask(activeChecksheet)" class="text-xs text-zinc-500 italic">
-              Otomatisasi submit dinonaktifkan untuk akun Anda pada task ini.
-            </div>
-            <div v-else class="flex items-center gap-2 text-xs text-zinc-500">
-              <span>Status: <strong class="text-zinc-300">{{ activeChecksheet.status }}</strong></span>
-            </div>
-
-            <div v-if="isOwnTask(activeChecksheet)" class="flex items-center gap-3">
-              <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
-                      class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700 transition-colors disabled:opacity-50">
-                Uji Form (Dry Run)
-              </button>
-              <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
-                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 disabled:opacity-50">
-                <svg v-if="isAutomating" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span>Submit ke FactoryHub</span>
-              </button>
-            </div>
-            <div v-else>
-              <button @click="closeDetail" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium border border-zinc-700">
-                Tutup Pratinjau
-              </button>
-            </div>
-          </div>  </div>
+          </form>
         </div>
       </div>
 
-      <!-- Floating Batch Actions Bar (Admin or Batch Exec) -->
-      <transition enter-active-class="transform transition ease-out duration-150"
-                  enter-from-class="translate-y-8 opacity-0"
-                  enter-to-class="translate-y-0 opacity-100"
-                  leave-active-class="transform transition ease-in duration-100"
-                  leave-from-class="translate-y-0 opacity-100"
-                  leave-to-class="translate-y-8 opacity-0">
-        <div v-if="selectedIds.length > 0"
-             class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-700 px-5 py-3 rounded-xl shadow-xl flex items-center gap-4 text-xs">
-          <div class="flex items-center gap-2 pr-3 border-r border-zinc-700">
-            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <span class="font-bold text-zinc-100 font-mono">{{ selectedIds.length }}</span>
-            <span class="text-zinc-300">part dipilih</span>
-          </div>
-
-          <!-- Reassign Buttons (Admin Only) -->
-          <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1.5">
-            <span class="text-zinc-400 text-xs">Tugaskan ke:</span>
-            <button @click="batchAssign('Unassigned')"
-                    class="px-2.5 py-1 bg-amber-950 hover:bg-amber-900 text-amber-300 rounded text-xs font-medium border border-amber-800 transition-colors">
-              Kosongkan (Unassigned)
-            </button>
-            <!-- DYNAMIC: populated from operatorUsers -->
-            <button v-for="u in operatorUsers" :key="u.id"
-                    @click="batchAssign(u.name)"
-                    class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-xs font-medium border border-zinc-700 transition-colors">
-              {{ u.name }}
-            </button>
-          </div>
-
-          <div v-if="currentUser.role === 'admin'" class="h-4 w-px bg-zinc-700"></div>
-
-          <!-- Batch Submit CTA -->
-          <button @click="openBatchModal"
-                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold flex items-center gap-1.5 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span>Batch Submit ke FactoryHub</span>
+      <!-- Floating Batch Bar (Admin) -->
+      <div v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
+           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-700 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4">
+        <span class="text-xs font-mono font-bold text-indigo-400">
+          {{ selectedIds.length }} part dipilih
+        </span>
+        <div class="h-4 w-px bg-zinc-700"></div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-zinc-400 mr-1">Tugaskan ke:</span>
+          <button @click="batchAssign('Unassigned')" class="px-2.5 py-1 bg-amber-950 hover:bg-amber-900 text-amber-200 border border-amber-800 rounded text-xs font-semibold">
+            Unassigned
           </button>
-
-          <button @click="selectedIds = []" title="Batal Pilihan (Esc)" class="text-zinc-400 hover:text-zinc-100 p-1">
-            ✕
+          <button v-for="u in operatorUsers" :key="u.id" @click="batchAssign(u.name)"
+                  class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded text-xs font-semibold">
+            {{ u.name }}
           </button>
         </div>
-      </transition>
-
-      <!-- Modal Batch Execution -->
-      <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" @click.self="closeBatchModal">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-          <!-- Header -->
-          <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
-            <div>
-              <h3 class="text-sm font-bold text-zinc-100">
-                Batch Runner FactoryHub ({{ selectedIds.length }} Part)
-              </h3>
-              <p class="text-xs text-zinc-400 mt-0.5">Eksekusi submission berurutan dengan antrian otomatis.</p>
-            </div>
-            <button @click="closeBatchModal" :disabled="isBatchRunning" class="text-zinc-400 hover:text-zinc-100 p-1 disabled:opacity-30">
-              ✕
-            </button>
-          </div>
-
-          <!-- Content -->
-          <div class="p-5 flex-1 overflow-y-auto space-y-4">
-            <!-- Selected Items -->
-            <div class="flex flex-wrap gap-2">
-              <span v-for="id in selectedIds" :key="id" class="px-2.5 py-1 rounded bg-zinc-800 border border-zinc-700 text-xs font-mono text-zinc-200">
-                #{{ id }} {{ getPartNumber(id) }}
-              </span>
-            </div>
-
-            <!-- Action Button if not running -->
-            <div v-if="!isBatchRunning && batchLogs.length === 0" class="p-4 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-between">
-              <div class="text-xs text-zinc-300">
-                Browser Chrome akan dibuka dan mengisi checksheet satu per satu secara berurutan.
-              </div>
-              <button @click="startBatchAutomation(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors">
-                Mulai Batch Submission
-              </button>
-            </div>
-
-            <!-- Live Log Console -->
-            <div v-if="batchLogs.length > 0 || isBatchRunning">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Terminal Log Playwright</span>
-                <span v-if="isBatchRunning" class="text-xs text-amber-400 font-mono">Sedang Berjalan...</span>
-                <span v-else class="text-xs text-emerald-400 font-mono">Selesai</span>
-              </div>
-              <div class="bg-black text-emerald-400 font-mono text-[11px] p-3.5 rounded-lg border border-zinc-800 h-64 overflow-y-auto space-y-1">
-                <div v-for="(log, idx) in batchLogs" :key="idx" class="leading-relaxed whitespace-pre-wrap">
-                  {{ log }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="p-4 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
-            <p class="text-xs text-zinc-500">
-              * Pastikan profil Chrome sudah login ke portal FactoryHub sebelum memulai.
-            </p>
-            <button @click="closeBatchModal" :disabled="isBatchRunning"
-                    class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium disabled:opacity-40">
-              Tutup
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Upload Modal (Admin Only) -->
-      <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" @click.self="showUploadModal = false">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-6 shadow-2xl">
-          <h3 class="text-sm font-bold text-zinc-100">Upload Checksheet Baru</h3>
-          <p class="text-xs text-zinc-400 mt-1 mb-4">
-            Unggah dokumen Excel (.xlsx) atau PDF. Sistem otomatis mengekstrak tabel dan gambar.
-          </p>
-
-          <div class="mb-4">
-            <label class="text-xs text-zinc-300 font-medium">Tugaskan ke Penanggung Jawab:</label>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
-              <button @click="uploadAssignee = 'Unassigned'"
-                      :class="uploadAssignee === 'Unassigned' ? 'bg-amber-600 text-white font-semibold border-amber-500' : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'"
-                      class="py-1.5 rounded-lg text-xs border transition-colors text-center">
-                Belum Ditugaskan
-              </button>
-              <button v-for="u in operatorUsers" :key="u.id"
-                      @click="uploadAssignee = u.name"
-                      :class="uploadAssignee === u.name ? 'bg-indigo-600 text-white font-semibold border-indigo-500' : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'"
-                      class="py-1.5 rounded-lg text-xs border transition-colors text-center">
-                {{ u.name }}
-              </button>
-            </div>
-          </div>
-
-          <div class="border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl p-8 text-center bg-zinc-950 transition-colors cursor-pointer"
-               @click="$refs.fileInput.click()">
-            <input type="file" ref="fileInput" multiple accept=".xlsx,.xls,.pdf" class="hidden" @change="handleFileSelect">
-            <svg class="w-8 h-8 text-zinc-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
-            <p class="text-xs text-zinc-200 font-medium">Pilih file checksheet Excel atau PDF</p>
-            <p class="text-[11px] text-zinc-500 mt-1">Dapat memilih beberapa file sekaligus (batch upload)</p>
-          </div>
-
-          <div v-if="selectedFiles.length > 0" class="mt-3 text-xs text-indigo-400 font-mono">
-            {{ selectedFiles.length }} file dipilih untuk diekstrak.
-          </div>
-
-          <div class="flex items-center justify-end gap-2.5 mt-6">
-            <button @click="showUploadModal = false; selectedFiles = []"
-                    class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium">
-              Batal
-            </button>
-            <button @click="submitUpload" :disabled="selectedFiles.length === 0 || isUploading"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors">
-              {{ isUploading ? 'Memproses Ekstraksi...' : 'Mulai Ekstraksi' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. USER MANAGEMENT MODAL (Admin Only) -->
-      <div v-if="showUsersModal" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" @click.self="showUsersModal = false">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-          <!-- Header -->
-          <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
-            <div>
-              <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                <span>Manajemen Anggota Tim & Akun</span>
-                <span class="text-xs font-normal text-zinc-500">({{ users.length }} akun terdaftar)</span>
-              </h3>
-              <p class="text-xs text-zinc-400 mt-0.5">Tambah akun baru, atur peran (Admin/Operator), atau reset password.</p>
-            </div>
-            <button @click="showUsersModal = false" class="text-zinc-400 hover:text-zinc-100 p-1">
-              ✕
-            </button>
-          </div>
-
-          <!-- Body -->
-          <div class="p-5 flex-1 overflow-y-auto space-y-6">
-            <!-- Add User Form -->
-            <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
-              <h4 class="text-xs font-bold text-zinc-200 uppercase tracking-wider mb-3">Tambah Anggota Baru</h4>
-              <form @submit.prevent="createUser" class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div>
-                  <label class="block text-[11px] text-zinc-400 mb-1">Username</label>
-                  <input v-model="newUserForm.username" type="text" required placeholder="misal: asep"
-                         class="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-zinc-400 mb-1">Nama Lengkap</label>
-                  <input v-model="newUserForm.name" type="text" required placeholder="misal: Asep"
-                         class="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-zinc-400 mb-1">NIK (Opsional)</label>
-                  <input v-model="newUserForm.nik" type="text" placeholder="070817-xxx"
-                         class="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-zinc-400 mb-1">Password</label>
-                  <input v-model="newUserForm.password" type="text" required placeholder="password123"
-                         class="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 font-mono">
-                </div>
-                <div class="flex items-end">
-                  <button type="submit" :disabled="isCreatingUser"
-                          class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold transition-colors disabled:opacity-50">
-                    {{ isCreatingUser ? 'Menyimpan...' : '+ Tambah' }}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Users Table -->
-            <div class="border border-zinc-800 rounded-lg overflow-hidden">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-zinc-950 text-zinc-400 font-semibold border-b border-zinc-800">
-                  <tr>
-                    <th class="p-2.5 w-10 text-center">ID</th>
-                    <th class="p-2.5">Username</th>
-                    <th class="p-2.5">Nama</th>
-                    <th class="p-2.5">NIK</th>
-                    <th class="p-2.5 w-24">Role</th>
-                    <th class="p-2.5 w-20 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800">
-                  <tr v-for="u in users" :key="u.id" class="hover:bg-zinc-800/40">
-                    <td class="p-2.5 text-center font-mono text-zinc-400">{{ u.id }}</td>
-                    <td class="p-2.5 font-mono font-bold text-zinc-100">{{ u.username }}</td>
-                    <td class="p-2.5 text-zinc-200">{{ u.name }}</td>
-                    <td class="p-2.5 font-mono text-zinc-400">{{ u.nik || '-' }}</td>
-                    <td class="p-2.5">
-                      <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase"
-                            :class="u.role === 'admin' ? 'bg-indigo-950 text-indigo-300 border border-indigo-800' : 'bg-zinc-800 text-zinc-300 border border-zinc-700'">
-                        {{ u.role }}
-                      </span>
-                    </td>
-                    <td class="p-2.5 text-center">
-                      <button v-if="u.id !== currentUser.id" @click="deleteUser(u.id, u.name)"
-                              class="text-rose-400 hover:text-rose-300 text-[11px] font-medium p-1">
-                        Hapus
-                      </button>
-                      <span v-else class="text-[11px] text-zinc-500">Anda</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="p-4 border-t border-zinc-800 bg-zinc-950 flex justify-end">
-            <button @click="showUsersModal = false"
-                    class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium">
-              Selesai
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. PART CHECKER MODAL (Single & Batch) -->
-      <div v-if="showPartCheckerModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" @click.self="showPartCheckerModal = false">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-          <!-- Header -->
-          <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
-            <div>
-              <div class="flex items-center gap-2.5">
-                <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                  <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                  </svg>
-                  <span>Cek Part Master FactoryHub</span>
-                </h3>
-                <span v-if="catalogStats.total_parts" class="px-2 py-0.5 text-[11px] font-mono rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  {{ catalogStats.total_parts.toLocaleString() }} Part Terdaftar
-                </span>
-              </div>
-              <p class="text-xs text-zinc-400 mt-0.5">
-                Cari & verifikasi apakah part terdaftar di Master (Regular/New Project) dan apakah checksheet sudah ada di database.
-              </p>
-            </div>
-
-            <!-- Sync Button & Close -->
-            <div class="flex items-center gap-3">
-              <button @click="triggerCatalogSync" :disabled="isSyncingCatalog"
-                      class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                      title="Ambil data master part terbaru langsung dari portal FactoryHub">
-                <svg v-if="isSyncingCatalog" class="animate-spin w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <svg v-else class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span>{{ isSyncingCatalog ? 'Sinkronisasi...' : 'Sync dari FactoryHub' }}</span>
-              </button>
-              <button @click="showPartCheckerModal = false" class="text-zinc-400 hover:text-zinc-100 p-1 rounded hover:bg-zinc-800 transition-colors" title="Tutup (Esc)">
-                ✕
-              </button>
-            </div>
-          </div>
-
-          <!-- Body -->
-          <div class="p-5 overflow-y-auto space-y-4 flex-1">
-            <!-- Search Input Area -->
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="text-xs text-zinc-300 font-semibold">
-                  Masukkan Part Number (Mendukung Batch Input):
-                </label>
-                <div class="flex items-center gap-2">
-                  <button @click="partInputSample" class="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium">
-                    Isi Contoh Part
-                  </button>
-                  <span class="text-zinc-600">•</span>
-                  <button @click="partSearchInput = ''; partSearchResults = null" class="text-[11px] text-zinc-400 hover:text-zinc-200">
-                    Bersihkan
-                  </button>
-                </div>
-              </div>
-              <div class="relative">
-                <textarea v-model="partSearchInput" rows="3"
-                          placeholder="Ketik atau paste nomor part di sini (pisahkan dengan koma, spasi, atau baris baru)&#10;Contoh: 65191-TSE-X000-50, 11198-61J02-000, 739L3000P"
-                          class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-xs text-zinc-100 font-mono focus:border-zinc-600 focus:outline-none placeholder:text-zinc-600 resize-none"></textarea>
-              </div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-[11px] text-zinc-500">
-                  Mendukung pencarian fuzzy cerdas (kebal typo O/0, I/1, dan strip)
-                </span>
-                <button @click="executePartSearch" :disabled="!partSearchInput.trim() || isSearchingParts"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors disabled:opacity-50">
-                  <svg v-if="isSearchingParts" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  <span>{{ isSearchingParts ? 'Memeriksa...' : 'Periksa Part Sekarang' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Results Section -->
-            <div v-if="partSearchResults" class="space-y-3 pt-2 border-t border-zinc-800">
-              <!-- KPI Summary Cards -->
-              <div class="grid grid-cols-4 gap-2.5">
-                <div class="bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-center">
-                  <span class="text-[10px] uppercase font-semibold text-zinc-400">Total Dicek</span>
-                  <p class="text-lg font-bold text-zinc-100 font-mono mt-0.5">{{ partSearchResults.summary.total_queried }}</p>
-                </div>
-                <div class="bg-zinc-950 border border-emerald-900/50 p-2.5 rounded-lg text-center">
-                  <span class="text-[10px] uppercase font-semibold text-emerald-400">Ada di Master</span>
-                  <p class="text-lg font-bold text-emerald-400 font-mono mt-0.5">{{ partSearchResults.summary.found_in_master }}</p>
-                </div>
-                <div class="bg-zinc-950 border border-rose-900/50 p-2.5 rounded-lg text-center">
-                  <span class="text-[10px] uppercase font-semibold text-rose-400">Belum Terdaftar</span>
-                  <p class="text-lg font-bold text-rose-400 font-mono mt-0.5">{{ partSearchResults.summary.missing_in_master }}</p>
-                </div>
-                <div class="bg-zinc-950 border border-indigo-900/50 p-2.5 rounded-lg text-center">
-                  <span class="text-[10px] uppercase font-semibold text-indigo-400">Ada Checksheet</span>
-                  <p class="text-lg font-bold text-indigo-400 font-mono mt-0.5">{{ partSearchResults.summary.found_in_database }}</p>
-                </div>
-              </div>
-
-              <!-- Results Table -->
-              <div class="border border-zinc-800 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
-                <table class="w-full text-left text-xs border-collapse">
-                  <thead class="bg-zinc-950 text-zinc-400 font-semibold sticky top-0 border-b border-zinc-800">
-                    <tr>
-                      <th class="p-2.5 w-10 text-center">No</th>
-                      <th class="p-2.5">Part Number</th>
-                      <th class="p-2.5">Nama Part</th>
-                      <th class="p-2.5">Status Master</th>
-                      <th class="p-2.5">Template FH</th>
-                      <th class="p-2.5">Checksheet Lokal</th>
-                      <th class="p-2.5 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-zinc-800">
-                    <tr v-for="(r, idx) in partSearchResults.results" :key="idx" class="hover:bg-zinc-800/40">
-                      <td class="p-2 text-center text-zinc-500 font-mono text-[11px]">{{ idx + 1 }}</td>
-                      <td class="p-2 font-mono font-semibold text-zinc-200">
-                        <div class="flex items-center gap-1.5">
-                          <span>{{ r.part_number }}</span>
-                          <button @click="copyText(r.part_number)" title="Salin nomor part" class="text-zinc-500 hover:text-zinc-300 p-0.5">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
-                          </button>
-                        </div>
-                        <div v-if="r.similar && r.similar.length > 0" class="text-[10px] text-amber-400/90 font-sans mt-0.5">
-                          Mirip: {{ r.similar.join(', ') }}
-                        </div>
-                      </td>
-                      <td class="p-2 text-zinc-300 max-w-[180px] truncate" :title="r.part_name">{{ r.part_name || '-' }}</td>
-                      <td class="p-2">
-                        <span v-if="r.status_master === 'TERDAFTAR'"
-                              class="px-2 py-0.5 rounded text-[10px] font-semibold"
-                              :class="r.category === 'REGULAR' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-amber-950 text-amber-300 border border-amber-800'">
-                          {{ r.category }}
-                        </span>
-                        <span v-else class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-950 text-rose-300 border border-rose-800">
-                          TIDAK TERDAFTAR
-                        </span>
-                      </td>
-                      <td class="p-2">
-                        <span v-if="r.has_template" class="text-emerald-400 font-medium text-[11px] flex items-center gap-1">
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                          Ada Template
-                        </span>
-                        <span v-else class="text-zinc-500 text-[11px]">-</span>
-                      </td>
-                      <td class="p-2">
-                        <div v-if="r.checksheet" class="text-[11px]">
-                          <span class="font-semibold text-zinc-200">#{{ r.checksheet.id }}</span>
-                          <span class="text-zinc-400 mx-1">•</span>
-                          <span class="text-zinc-300">{{ r.checksheet.assigned_to }}</span>
-                          <div class="text-[10px] text-zinc-500">{{ r.checksheet.status }}</div>
-                        </div>
-                        <span v-else class="text-zinc-500 text-[11px]">- Belum ada</span>
-                      </td>
-                      <td class="p-2 text-right">
-                        <button v-if="r.checksheet" @click="openChecksheetFromChecker(r.checksheet.id)"
-                                class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-indigo-300 rounded text-[11px] font-medium transition-colors">
-                          Buka Checksheet
-                        </button>
-                        <span v-else class="text-zinc-600 text-[11px]">-</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Action Bar for Missing Parts -->
-              <div v-if="partSearchResults.summary.missing_in_master > 0" class="flex items-center justify-between p-3 bg-rose-950/30 border border-rose-900/50 rounded-lg">
-                <span class="text-xs text-rose-300">
-                  Ditemukan {{ partSearchResults.summary.missing_in_master }} part yang belum terdaftar di FactoryHub.
-                </span>
-                <button @click="copyMissingParts"
-                        class="px-3 py-1 bg-rose-900/60 hover:bg-rose-900 text-rose-200 rounded text-xs font-semibold border border-rose-700 transition-colors flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                  <span>Salin Part Belum Terdaftar</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="p-4 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
-            <span class="text-xs text-zinc-500 font-mono">
-              Terakhir Sync: {{ catalogStats.synced_at ? new Date(catalogStats.synced_at).toLocaleString('id-ID') : 'Belum pernah' }}
-            </span>
-            <button @click="showPartCheckerModal = false" class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium">
-              Tutup
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. LIGHTBOX MODAL FOR DRAWING PREVIEW -->
-      <div v-if="previewImage" class="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4" @click.self="previewImage = null">
-        <div class="relative max-w-5xl max-h-[90vh] flex flex-col items-center">
-          <div class="absolute -top-10 right-0 flex items-center gap-3">
-            <a :href="previewImage" target="_blank" download class="text-zinc-400 hover:text-zinc-100 text-xs flex items-center gap-1 bg-zinc-800/80 px-2.5 py-1 rounded">
-              Buka di Tab Baru ↗
-            </a>
-            <button @click="previewImage = null" class="text-zinc-400 hover:text-zinc-100 bg-zinc-800/80 p-1 rounded">
-              ✕
-            </button>
-          </div>
-          <img :src="previewImage" alt="Drawing Sketch Preview" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-zinc-800">
-        </div>
+        <button @click="selectedIds = []" class="text-zinc-500 hover:text-zinc-300 text-xs ml-2">✕ Batal</button>
       </div>
 
     </div>
-
   </div>
 
   <script>
@@ -1142,211 +1358,131 @@
 
     createApp({
       setup() {
-        // Auth State
+        // Navigation & Page State
+        const activePage = ref('dashboard');
+        const isSidebarCollapsed = ref(false);
+        const isMobileSidebarOpen = ref(false);
+
+        // Authentication & User
         const currentUser = ref(null);
-        const authToken = ref(localStorage.getItem('qc_session_token') || '');
+        const authToken = ref(localStorage.getItem('summit_token') || '');
         const loginForm = ref({ username: '', password: '' });
         const isLoggingIn = ref(false);
         const loginError = ref('');
 
-        // Team Users & Management State (DYNAMIC)
+        // Team & Users
         const users = ref([]);
         const showUsersModal = ref(false);
-        const newUserForm = ref({ username: '', name: '', nik: '', password: '', role: 'operator' });
         const isCreatingUser = ref(false);
+        const newUserForm = ref({ username: '', name: '', nik: '', password: '', role: 'operator' });
 
-        // Checksheets Data State
+        // Checksheets Data & Filters
         const checksheets = ref([]);
-        const isLoading = ref(true);
+        const isLoading = ref(false);
         const activeTeam = ref('Semua');
         const searchQuery = ref('');
         const statusFilter = ref('ALL');
-
-        // Selection & Batch Action State
         const selectedIds = ref([]);
+
+        // Upload & Automation
+        const showUploadModal = ref(false);
+        const uploadAssignee = ref('Unassigned');
+        const selectedFiles = ref([]);
+        const isUploading = ref(false);
+        const isSyncing = ref(false);
+
+        // Drawer & Lightbox
+        const activeChecksheet = ref(null);
+        const drawerTab = ref('points');
+        const previewImage = ref(null);
+        const isAutomating = ref(false);
+
+        // Batch Automation
         const showBatchModal = ref(false);
         const batchLogs = ref([]);
         const isBatchRunning = ref(false);
-        let batchEventSource = null;
 
-        // Detail / Review State
-        const activeChecksheet = ref(null);
-        const liveLogs = ref([]);
-        const isAutomating = ref(false);
-        const drawerTab = ref('points');
-        const previewImage = ref(null);
-        let eventSource = null;
-
-        // Part Checker & Catalog State
+        // Master Part Checker
         const showPartCheckerModal = ref(false);
-        const catalogStats = ref({
-          total_parts: 0,
-          total_regular: 0,
-          total_project: 0,
-          total_templates: 0,
-          synced_at: null
-        });
+        const catalogStats = ref({ total_parts: 0, total_templates: 0, last_synced: null });
         const partSearchInput = ref('');
         const partSearchResults = ref(null);
         const isSearchingParts = ref(false);
         const isSyncingCatalog = ref(false);
 
-        // Upload State
-        const showUploadModal = ref(false);
-        const uploadAssignee = ref('Unassigned');
-        const selectedFiles = ref([]);
-        const isUploading = ref(false);
+        // Page titles
+        const pageTitle = computed(() => {
+          switch (activePage.value) {
+            case 'dashboard': return 'Dashboard & Ringkasan';
+            case 'checksheets': return 'Daftar Checksheet Operasional';
+            case 'master_part': return 'Pencarian Master Part FactoryHub';
+            case 'automation': return 'Antrean Otomasi Playwright';
+            case 'team': return 'Manajemen Anggota Tim';
+            case 'settings': return 'Integrasi & Pengaturan';
+            default: return 'Workspace';
+          }
+        });
 
-        // Sync State
-        const isSyncing = ref(false);
+        const pageSubtitle = computed(() => {
+          switch (activePage.value) {
+            case 'dashboard': return 'Pantau statistik checksheet, pembagian kerja tim, dan progres per customer.';
+            case 'checksheets': return 'Tinjau, edit titik pengukuran, periksa gambar drawing, dan submit ke FactoryHub.';
+            case 'master_part': return 'Cek ketersediaan part number terhadap 2.080 part terdaftar di FactoryHub.';
+            case 'automation': return 'Monitor eksekusi background worker headless Playwright dan riwayat submit.';
+            case 'team': return 'Daftar operator, hak akses, dan metrik tugas masing-masing personel.';
+            case 'settings': return 'Tautan Google Spreadsheet tim dan konfigurasi sistem.';
+            default: return '';
+          }
+        });
 
-        // Operator Users (Excludes admin from operator tabs)
+        const navigate = (page) => {
+          activePage.value = page;
+          isMobileSidebarOpen.value = false;
+        };
+
+        const goToChecksheetsWithStatus = (st) => {
+          statusFilter.value = st;
+          activePage.value = 'checksheets';
+        };
+
+        const goToChecksheetsWithTeam = (team) => {
+          activeTeam.value = team;
+          activePage.value = 'checksheets';
+        };
+
+        // Customer Stats
+        const customerStats = computed(() => {
+          const list = [
+            { name: 'PT. HPM', total: 0, done: 0, ready: 0, noPart: 0 },
+            { name: 'PT. MMKI', total: 0, done: 0, ready: 0, noPart: 0 },
+            { name: 'PT. SIM', total: 0, done: 0, ready: 0, noPart: 0 }
+          ];
+
+          checksheets.value.forEach(c => {
+            const cust = list.find(l => c.customer && c.customer.includes(l.name.replace('PT. ', ''))) || list[0];
+            cust.total += 1;
+            if (c.status === 'Checksheet Done') cust.done += 1;
+            else if (c.status === 'Belum Di Input') cust.ready += 1;
+            else if (c.status === 'Tidak Ada Part') cust.noPart += 1;
+          });
+
+          return list.map(l => ({
+            ...l,
+            percent: l.total ? Math.round((l.done / l.total) * 100) : 0,
+            readyPercent: l.total ? Math.round((l.ready / l.total) * 100) : 0
+          }));
+        });
+
+        const recentChecksheets = computed(() => {
+          return checksheets.value.slice(0, 6);
+        });
+
         const operatorUsers = computed(() => {
           return users.value.filter(u => u.role === 'operator');
         });
 
-        // Auth Methods
-        const checkSavedSession = async () => {
-          const savedUserStr = localStorage.getItem('qc_session_user');
-          if (authToken.value && savedUserStr) {
-            try {
-              currentUser.value = JSON.parse(savedUserStr);
-              // Set default filter to user's assigned part if operator
-              if (currentUser.value.role === 'operator') {
-                activeTeam.value = currentUser.value.name;
-              }
-              await loadUsers();
-              await loadChecksheets();
-            } catch (e) {
-              logout();
-            }
-          }
-        };
-
-        const submitLogin = async () => {
-          isLoggingIn.value = true;
-          loginError.value = '';
-          try {
-            const res = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(loginForm.value)
-            });
-            const data = await res.json();
-            if (res.ok && data.token) {
-              authToken.value = data.token;
-              currentUser.value = data.user;
-              localStorage.setItem('qc_session_token', data.token);
-              localStorage.setItem('qc_session_user', JSON.stringify(data.user));
-
-              // If operator, default activeTeam to their own name
-              if (data.user.role === 'operator') {
-                activeTeam.value = data.user.name;
-              } else {
-                activeTeam.value = 'Semua';
-              }
-
-              await loadUsers();
-              await loadChecksheets();
-            } else {
-              loginError.value = data.detail || 'Username atau password salah.';
-            }
-          } catch (e) {
-            loginError.value = 'Gagal menghubungi server.';
-          } finally {
-            isLoggingIn.value = false;
-          }
-        };
-
-        const fillLogin = (u, p) => {
-          loginForm.value.username = u;
-          loginForm.value.password = p;
-        };
-
-        const logout = () => {
-          currentUser.value = null;
-          authToken.value = '';
-          localStorage.removeItem('qc_session_token');
-          localStorage.removeItem('qc_session_user');
-          loginForm.value = { username: '', password: '' };
-        };
-
-        // Users Management Methods
-        const loadUsers = async () => {
-          try {
-            const res = await fetch('/api/users');
-            if (res.ok) {
-              users.value = await res.json();
-              if (!uploadAssignee.value) {
-                uploadAssignee.value = 'Unassigned';
-              }
-            }
-          } catch (e) {
-            console.error('Gagal mengambil daftar pengguna:', e);
-          }
-        };
-
-        const createUser = async () => {
-          isCreatingUser.value = true;
-          try {
-            const res = await fetch('/api/users', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken.value}`
-              },
-              body: JSON.stringify(newUserForm.value)
-            });
-            const data = await res.json();
-            if (res.ok) {
-              newUserForm.value = { username: '', name: '', nik: '', password: '', role: 'operator' };
-              await loadUsers();
-              alert(`Pengguna '${data.user.name}' berhasil ditambahkan!`);
-            } else {
-              alert(data.detail || 'Gagal menambahkan pengguna.');
-            }
-          } catch (e) {
-            alert('Terjadi kesalahan saat menambahkan user.');
-          } finally {
-            isCreatingUser.value = false;
-          }
-        };
-
-        const deleteUser = async (userId, userName) => {
-          if (!confirm(`Nonaktifkan akun '${userName}'?`)) return;
-          try {
-            const res = await fetch(`/api/users/${userId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${authToken.value}` }
-            });
-            if (res.ok) {
-              await loadUsers();
-            } else {
-              const data = await res.json();
-              alert(data.detail || 'Gagal menghapus user.');
-            }
-          } catch (e) {
-            alert('Terjadi kesalahan.');
-          }
-        };
-
-        // Checksheets Data Methods
-        const loadChecksheets = async () => {
-          isLoading.value = true;
-          try {
-            const res = await fetch('/api/checksheets');
-            if (res.ok) {
-              checksheets.value = await res.json();
-            }
-          } catch (e) {
-            console.error('Gagal mengambil data checksheet:', e);
-          } finally {
-            isLoading.value = false;
-          }
-        };
-
-        const countStatus = (status) => {
-          return checksheets.value.filter(c => c.status === status).length;
+        const countStatus = (st) => {
+          return checksheets.value.filter(c => c.status === st).length;
         };
 
         const countByTeam = (member) => {
@@ -1384,14 +1520,9 @@
                 matchTeam = c.assigned_to === currentUser.value.name;
               }
             } else {
-              // Admin role
-              if (activeTeam.value === 'Semua') {
-                matchTeam = true;
-              } else if (activeTeam.value === 'Unassigned') {
-                matchTeam = isUnassigned(c);
-              } else {
-                matchTeam = c.assigned_to === activeTeam.value;
-              }
+              if (activeTeam.value === 'Semua') matchTeam = true;
+              else if (activeTeam.value === 'Unassigned') matchTeam = isUnassigned(c);
+              else matchTeam = c.assigned_to === activeTeam.value;
             }
 
             const matchStatus = statusFilter.value === 'ALL' || c.status === statusFilter.value;
@@ -1407,17 +1538,12 @@
         const resetFilters = () => {
           searchQuery.value = '';
           statusFilter.value = 'ALL';
-          if (currentUser.value?.role === 'operator') {
-            activeTeam.value = currentUser.value.name;
-          } else {
-            activeTeam.value = 'Semua';
-          }
+          activeTeam.value = currentUser.value?.role === 'operator' ? currentUser.value.name : 'Semua';
         };
 
         const isAllSelected = computed(() => {
           const selectable = filteredChecksheets.value.filter(c => isOwnTask(c));
-          return selectable.length > 0 &&
-            selectable.every(c => selectedIds.value.includes(c.id));
+          return selectable.length > 0 && selectable.every(c => selectedIds.value.includes(c.id));
         });
 
         const toggleSelectAll = () => {
@@ -1431,170 +1557,230 @@
 
         const toggleSelect = (id) => {
           const idx = selectedIds.value.indexOf(id);
-          if (idx > -1) {
-            selectedIds.value.splice(idx, 1);
-          } else {
-            selectedIds.value.push(id);
+          if (idx === -1) selectedIds.value.push(id);
+          else selectedIds.value.splice(idx, 1);
+        };
+
+        // Authentication Methods
+        const checkSavedSession = async () => {
+          const token = localStorage.getItem('summit_token');
+          if (!token) return;
+          try {
+            const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.ok) {
+              currentUser.value = await res.json();
+              activeTeam.value = currentUser.value.role === 'operator' ? currentUser.value.name : 'Semua';
+              await Promise.all([loadChecksheets(), loadUsers(), loadCatalogStats()]);
+            } else {
+              logout();
+            }
+          } catch (e) {
+            logout();
           }
         };
 
-        const getPartNumber = (id) => {
-          const cs = checksheets.value.find(c => c.id === id);
-          return cs ? cs.part_number : `#${id}`;
-        };
-
-        const batchAssign = async (targetAssignee) => {
-          if (!confirm(`Tugaskan ${selectedIds.value.length} part terpilih ke ${targetAssignee}?`)) return;
+        const submitLogin = async () => {
+          isLoggingIn.value = true;
+          loginError.value = '';
           try {
-            const res = await fetch('/api/checksheets/batch-assign', {
+            const res = await fetch('/api/auth/login', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                checksheet_ids: selectedIds.value,
-                assigned_to: targetAssignee
-              })
+              body: JSON.stringify(loginForm.value)
+            });
+            const data = await res.json();
+            if (res.ok && data.token) {
+              localStorage.setItem('summit_token', data.token);
+              authToken.value = data.token;
+              currentUser.value = data.user;
+              activeTeam.value = currentUser.value.role === 'operator' ? currentUser.value.name : 'Semua';
+              await Promise.all([loadChecksheets(), loadUsers(), loadCatalogStats()]);
+            } else {
+              loginError.value = data.detail || 'Username atau password salah.';
+            }
+          } catch (e) {
+            loginError.value = 'Gagal menghubungi server.';
+          } finally {
+            isLoggingIn.value = false;
+          }
+        };
+
+        const fillLogin = (u, p) => {
+          loginForm.value.username = u;
+          loginForm.value.password = p;
+        };
+
+        const logout = () => {
+          localStorage.removeItem('summit_token');
+          currentUser.value = null;
+          authToken.value = '';
+          checksheets.value = [];
+          activePage.value = 'dashboard';
+        };
+
+        // Load Checksheets & Users
+        const loadChecksheets = async () => {
+          isLoading.value = true;
+          try {
+            const res = await fetch('/api/checksheets?limit=1000');
+            if (res.ok) checksheets.value = await res.json();
+          } catch (e) {
+            console.error('Failed to load checksheets:', e);
+          } finally {
+            isLoading.value = false;
+          }
+        };
+
+        const loadUsers = async () => {
+          try {
+            const res = await fetch('/api/users');
+            if (res.ok) users.value = await res.json();
+          } catch (e) {
+            console.error('Failed to load users:', e);
+          }
+        };
+
+        const loadCatalogStats = async () => {
+          try {
+            const res = await fetch('/api/catalog/stats');
+            if (res.ok) catalogStats.value = await res.json();
+          } catch (e) {}
+        };
+
+        const createUser = async () => {
+          isCreatingUser.value = true;
+          try {
+            const res = await fetch('/api/users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newUserForm.value)
             });
             if (res.ok) {
-              selectedIds.value = [];
-              await loadChecksheets();
+              await loadUsers();
+              showUsersModal.value = false;
+              newUserForm.value = { username: '', name: '', nik: '', password: '', role: 'operator' };
+              alert('Anggota tim berhasil ditambahkan!');
             } else {
-              alert('Gagal menugaskan part.');
+              const err = await res.json();
+              alert(err.detail || 'Gagal menambahkan anggota.');
             }
-          } catch(e) {
-            alert('Terjadi kesalahan penugasan.');
+          } catch (e) {
+            alert('Kesalahan jaringan.');
+          } finally {
+            isCreatingUser.value = false;
           }
-        };
-
-        const openBatchModal = () => {
-          showBatchModal.value = true;
-          batchLogs.value = [];
-        };
-
-        const closeBatchModal = () => {
-          if (batchEventSource) {
-            batchEventSource.close();
-            batchEventSource = null;
-          }
-          isBatchRunning.value = false;
-          showBatchModal.value = false;
-          loadChecksheets();
-        };
-
-        const startBatchAutomation = (submit = true) => {
-          if (selectedIds.value.length === 0) return;
-          isBatchRunning.value = true;
-          batchLogs.value = [];
-          if (batchEventSource) {
-            batchEventSource.close();
-          }
-          const idsParam = selectedIds.value.join(',');
-          batchEventSource = new EventSource(`/api/automation/batch/stream?ids=${idsParam}&submit=${submit}&headless=false`);
-          batchEventSource.onmessage = (e) => {
-            batchLogs.value.push(e.data);
-            if (e.data.includes('[DONE]')) {
-              if (batchEventSource) {
-                batchEventSource.close();
-                batchEventSource = null;
-              }
-              isBatchRunning.value = false;
-              loadChecksheets();
-            }
-          };
-          batchEventSource.onerror = () => {
-            if (batchEventSource) {
-              batchEventSource.close();
-              batchEventSource = null;
-            }
-            isBatchRunning.value = false;
-            loadChecksheets();
-          };
         };
 
         const openDetail = async (id) => {
           try {
-            drawerTab.value = 'points';
             const res = await fetch(`/api/checksheets/${id}`);
             if (res.ok) {
               activeChecksheet.value = await res.json();
-              liveLogs.value = [];
+              drawerTab.value = 'points';
             }
           } catch (e) {
-            alert('Gagal mengambil data checksheet');
+            alert('Gagal memuat detail checksheet.');
           }
         };
 
         const closeDetail = () => {
           activeChecksheet.value = null;
-          stopLogStream();
-        };
-
-        const saveChecksheetMeta = async () => {
-          if (!activeChecksheet.value) return;
-          try {
-            await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                assigned_to: activeChecksheet.value.assigned_to,
-                doc_number: activeChecksheet.value.doc_number,
-                status: activeChecksheet.value.status,
-                keterangan: activeChecksheet.value.keterangan
-              })
-            });
-            await loadChecksheets();
-          } catch (e) {
-            console.error('Gagal menyimpan metadata:', e);
-          }
+          previewImage.value = null;
         };
 
         const markNeedsRevision = async () => {
           if (!activeChecksheet.value) return;
-          const currentReason = activeChecksheet.value.keterangan || '';
-          const reason = prompt('Masukkan catatan/alasan apa yang perlu direvisi:', currentReason);
-          if (reason !== null) {
-            activeChecksheet.value.status = 'Butuh Revisi';
-            activeChecksheet.value.keterangan = reason;
-            await saveChecksheetMeta();
-          }
-        };
-
-        const savePoints = async () => {
-          if (!activeChecksheet.value) return;
-          const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/points`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ points: activeChecksheet.value.points })
-          });
-          if (res.ok) {
-            alert('Perubahan titik inspeksi berhasil disimpan!');
-          }
-        };
-
-        const startAutomation = (id, submit) => {
-          liveLogs.value = [];
-          isAutomating.value = true;
-          stopLogStream();
-
-          eventSource = new EventSource(`/api/automation/stream/${id}?submit=${submit}&headless=false`);
-          eventSource.onmessage = (e) => {
-            liveLogs.value.push(e.data);
-            if (e.data.includes('[DONE]')) {
-              stopLogStream();
-              isAutomating.value = false;
-              loadChecksheets();
+          const note = prompt('Masukkan catatan butuh revisi (misal toleransi tidak terbaca):', activeChecksheet.value.keterangan || '');
+          if (note === null) return;
+          try {
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'Butuh Revisi', keterangan: note })
+            });
+            if (res.ok) {
+              activeChecksheet.value.status = 'Butuh Revisi';
+              activeChecksheet.value.keterangan = note;
+              await loadChecksheets();
             }
-          };
-          eventSource.onerror = () => {
-            stopLogStream();
-            isAutomating.value = false;
-            loadChecksheets();
-          };
+          } catch (e) {
+            alert('Gagal menandai butuh revisi.');
+          }
         };
 
-        const stopLogStream = () => {
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
+        const batchAssign = async (target) => {
+          if (!selectedIds.value.length) return;
+          try {
+            await Promise.all(selectedIds.value.map(id =>
+              fetch(`/api/checksheets/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assigned_to: target })
+              })
+            ));
+            selectedIds.value = [];
+            await loadChecksheets();
+          } catch (e) {
+            alert('Gagal mengubah penugasan.');
+          }
+        };
+
+        const syncGoogleSheet = async () => {
+          isSyncing.value = true;
+          try {
+            const res = await fetch('/api/export/sheet/sync', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              alert(`Berhasil menyinkronkan ${data.rows_synced} baris ke Google Sheet!`);
+            } else {
+              alert('Gagal sinkronisasi: ' + (data.detail || 'Terjadi kesalahan'));
+            }
+          } catch (e) {
+            alert('Gagal menghubungi server.');
+          } finally {
+            isSyncing.value = false;
+          }
+        };
+
+        const openBatchModal = () => {
+          showBatchModal.value = true;
+          batchLogs.value = ['[*] Menyiapkan antrean otomasi Playwright...'];
+        };
+
+        const closeBatchModal = () => {
+          showBatchModal.value = false;
+        };
+
+        const startBatchAutomation = async () => {
+          isBatchRunning.value = true;
+          batchLogs.value = ['[*] Menjalankan batch otomasi Playwright di background server...'];
+          try {
+            const res = await fetch('/api/automation/batch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ checksheet_ids: selectedIds.value.length ? selectedIds.value : checksheets.value.filter(c => c.status === 'Belum Di Input').map(c => c.id).slice(0, 10) })
+            });
+            const data = await res.json();
+            batchLogs.value.push(`[+] Tugas batch dimulai: ${data.message || 'Antrean berjalan'}`);
+          } catch (e) {
+            batchLogs.value.push(`[!] Terjadi kesalahan: ${e.message}`);
+          } finally {
+            isBatchRunning.value = false;
+          }
+        };
+
+        const startAutomation = async (id, isDryRun) => {
+          isAutomating.value = true;
+          try {
+            const endpoint = isDryRun ? `/api/automation/dry-run/${id}` : `/api/automation/submit/${id}`;
+            const res = await fetch(endpoint, { method: 'POST' });
+            const data = await res.json();
+            alert(`Otomasi: ${data.message || 'Berhasil dijalankan'}`);
+            if (!isDryRun) await loadChecksheets();
+          } catch (e) {
+            alert('Gagal menjalankan otomasi.');
+          } finally {
+            isAutomating.value = false;
           }
         };
 
@@ -1603,95 +1789,58 @@
         };
 
         const submitUpload = async () => {
-          if (selectedFiles.value.length === 0) return;
+          if (!selectedFiles.value.length) return;
           isUploading.value = true;
-
           const formData = new FormData();
-          for (let f of selectedFiles.value) {
-            formData.append('files', f);
-          }
+          selectedFiles.value.forEach(f => formData.append('files', f));
           formData.append('assigned_to', uploadAssignee.value);
-
           try {
             const res = await fetch('/api/upload', {
               method: 'POST',
-              headers: {
-                'Authorization': 'Bearer ' + authToken.value
-              },
+              headers: { 'Authorization': 'Bearer ' + authToken.value },
               body: formData
             });
             if (res.ok) {
               showUploadModal.value = false;
               selectedFiles.value = [];
               await loadChecksheets();
+              alert('Checksheet berhasil diunggah!');
             } else {
               const err = await res.json();
-              alert('Gagal mengunggah: ' + (err.detail || 'Akses ditolak'));
+              alert(err.detail || 'Gagal mengunggah checksheet.');
             }
           } catch (e) {
-            alert('Terjadi kesalahan saat upload.');
+            alert('Kesalahan jaringan saat upload.');
           } finally {
             isUploading.value = false;
           }
         };
 
-        const syncGoogleSheet = async () => {
-          if (!confirm(`Sinkronkan data ${activeTeam.value} ke Google Spreadsheet sekarang?`)) return;
-          isSyncing.value = true;
-          try {
-            const res = await fetch(`/api/export/sync-google-sheet?assigned_to=${activeTeam.value === 'Semua' ? 'Zul' : activeTeam.value}`, {
-              method: 'POST'
-            });
-            const data = await res.json();
-            if (res.ok && data.status === 'success') {
-              alert(`Berhasil sinkron ${data.synced_count} baris ke Google Spreadsheet!`);
-            } else {
-              alert('Gagal sinkron: ' + (data.detail || data.message || 'Terjadi kesalahan'));
-            }
-          } catch (e) {
-            alert('Gagal memanggil API sinkronisasi.');
-          } finally {
-            isSyncing.value = false;
-          }
-        };
-
-        // Catalog & Part Checker Methods
-        const loadCatalogStats = async () => {
-          try {
-            const res = await fetch('/api/catalog/stats');
-            if (res.ok) {
-              catalogStats.value = await res.json();
-            }
-          } catch (e) {
-            console.error('Failed to load catalog stats:', e);
-          }
-        };
-
+        // Master Part Checker Methods
         const openPartChecker = () => {
-          showPartCheckerModal.value = true;
-          loadCatalogStats();
+          activePage.value = 'master_part';
         };
 
         const partInputSample = () => {
-          partSearchInput.value = '65191-TSE-X000-50, 11198-61J02-000, 739L3000P, 99999-NOT-FOUND';
+          partSearchInput.value = "62121-TG4-T000-H1\n5253AU23\n88315-73RA0\n65191_TRD\n71246-BZ010\n88231-73RA0\n64311-TG4R-T002-H1";
         };
 
         const executePartSearch = async () => {
           if (!partSearchInput.value.trim()) return;
           isSearchingParts.value = true;
           try {
-            const res = await fetch('/api/catalog/search', {
+            const res = await fetch('/api/catalog/check-batch', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: partSearchInput.value })
+              body: JSON.stringify({ text: partSearchInput.value })
             });
             if (res.ok) {
               partSearchResults.value = await res.json();
             } else {
-              alert('Gagal melakukan pencarian part.');
+              alert('Gagal mencari part.');
             }
           } catch (e) {
-            alert('Terjadi kesalahan jaringan.');
+            alert('Kesalahan koneksi ke server.');
           } finally {
             isSearchingParts.value = false;
           }
@@ -1709,15 +1858,10 @@
               alert('Gagal sinkronisasi: ' + (data.detail || 'Terjadi kesalahan'));
             }
           } catch (e) {
-            alert('Gagal menghubungi server otomasi untuk sinkronisasi.');
+            alert('Gagal menghubungi server.');
           } finally {
             isSyncingCatalog.value = false;
           }
-        };
-
-        const copyText = (text) => {
-          navigator.clipboard.writeText(text);
-          alert(`Nomor part "${text}" disalin ke clipboard!`);
         };
 
         const copyMissingParts = () => {
@@ -1727,19 +1871,18 @@
             .map(r => r.part_number);
           if (missing.length === 0) return;
           navigator.clipboard.writeText(missing.join('\n'));
-          alert(`${missing.length} part yang belum terdaftar disalin ke clipboard!`);
+          alert(`${missing.length} part belum terdaftar disalin ke clipboard!`);
         };
 
         const openChecksheetFromChecker = (id) => {
-          showPartCheckerModal.value = false;
+          activePage.value = 'checksheets';
           openDetail(id);
         };
 
-        // Keyboard navigation (R-32 Escape key handling)
+        // Keyboard handler
         window.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
             if (previewImage.value) previewImage.value = null;
-            else if (showPartCheckerModal.value && !isSearchingParts.value) showPartCheckerModal.value = false;
             else if (activeChecksheet.value) closeDetail();
             else if (showBatchModal.value && !isBatchRunning.value) closeBatchModal();
             else if (showUploadModal.value && !isUploading.value) showUploadModal.value = false;
@@ -1753,6 +1896,16 @@
         });
 
         return {
+          activePage,
+          isSidebarCollapsed,
+          isMobileSidebarOpen,
+          pageTitle,
+          pageSubtitle,
+          navigate,
+          goToChecksheetsWithStatus,
+          goToChecksheetsWithTeam,
+          customerStats,
+          recentChecksheets,
           currentUser,
           authToken,
           loginForm,
@@ -1767,55 +1920,46 @@
           newUserForm,
           isCreatingUser,
           createUser,
-          deleteUser,
           checksheets,
           isLoading,
           activeTeam,
           searchQuery,
           statusFilter,
           resetFilters,
+          countStatus,
           countByTeam,
           countUnassigned,
           countOtherTasks,
           isUnassigned,
           isOwnTask,
-          showUploadModal,
-          uploadAssignee,
-          selectedFiles,
-          isUploading,
+          filteredChecksheets,
           selectedIds,
           isAllSelected,
           toggleSelectAll,
           toggleSelect,
-          getPartNumber,
+          showUploadModal,
+          uploadAssignee,
+          selectedFiles,
+          isUploading,
+          handleFileSelect,
+          submitUpload,
+          activeChecksheet,
+          drawerTab,
+          openDetail,
+          closeDetail,
+          markNeedsRevision,
+          previewImage,
           batchAssign,
+          isSyncing,
+          syncGoogleSheet,
           showBatchModal,
           batchLogs,
           isBatchRunning,
           openBatchModal,
           closeBatchModal,
           startBatchAutomation,
-          activeChecksheet,
-          closeDetail,
-          liveLogs,
-          isAutomating,
-          countStatus,
-          filteredChecksheets,
-          openDetail,
-          saveChecksheetMeta,
-          markNeedsRevision,
-          savePoints,
           startAutomation,
-          stopLogStream,
-          handleFileSelect,
-          submitUpload,
-          isSyncing,
-          syncGoogleSheet,
-          // Drawer Tabs & Image Preview
-          drawerTab,
-          previewImage,
-          // Part Checker & Catalog Sync
-          showPartCheckerModal,
+          isAutomating,
           catalogStats,
           partSearchInput,
           partSearchResults,
@@ -1825,7 +1969,6 @@
           partInputSample,
           executePartSearch,
           triggerCatalogSync,
-          copyText,
           copyMissingParts,
           openChecksheetFromChecker
         };
