@@ -1497,6 +1497,23 @@
                 </div>
               </div>
 
+              <!-- Quick Engineering Symbols Bar -->
+              <div class="px-4 py-1.5 border-b border-zinc-800 bg-zinc-950 flex flex-wrap items-center justify-between gap-2 text-xs select-none">
+                <div class="flex items-center flex-wrap gap-1.5">
+                  <span class="text-[11px] text-zinc-500 font-semibold mr-1">Simbol:</span>
+                  <button v-for="sym in commonSymbols" :key="sym.char"
+                          type="button"
+                          @mousedown.prevent="insertSymbol(sym.char)"
+                          :title="sym.title"
+                          class="h-7 min-w-[28px] px-2 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-200 hover:text-white border border-zinc-700/80 hover:border-indigo-500 text-xs font-mono font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer select-none">
+                    {{ sym.char }}
+                  </button>
+                </div>
+                <div class="text-[10px] text-zinc-500 hidden sm:block">
+                  Klik simbol untuk menyisipkan ke posisi kursor sel aktif
+                </div>
+              </div>
+
               <!-- Grid Container with custom scroll -->
               <div class="flex-1 overflow-auto select-none" id="excel-grid-container">
                 <table class="w-full text-left text-xs border-collapse border border-zinc-800">
@@ -1536,7 +1553,7 @@
                           <input :id="'cell-' + rIdx + '-0'"
                                  type="text"
                                  v-model="p.item_no"
-                                 @focus="setActiveCell(rIdx, 0)"
+                                 @focus="setActiveCell(rIdx, 0, $event.target)"
                                  @keydown="handleGridKeydown($event, rIdx, 0)"
                                  @paste="handleExcelPaste($event, rIdx, 0)"
                                  class="w-full h-full px-1 py-2.5 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
@@ -1549,7 +1566,7 @@
                                   v-model="p.inspection_item"
                                   placeholder="Nama item inspeksi..."
                                   rows="2"
-                                  @focus="setActiveCell(rIdx, 1)"
+                                  @focus="setActiveCell(rIdx, 1, $event.target)"
                                   @keydown="handleGridKeydown($event, rIdx, 1)"
                                   @paste="handleExcelPaste($event, rIdx, 1)"
                                   class="w-full h-full px-3 py-2.5 bg-transparent font-medium text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
@@ -1561,7 +1578,7 @@
                                   v-model="p.standard"
                                   placeholder="Contoh: 150 ± 0.5 atau No Rust"
                                   rows="2"
-                                  @focus="setActiveCell(rIdx, 2)"
+                                  @focus="setActiveCell(rIdx, 2, $event.target)"
                                   @keydown="handleGridKeydown($event, rIdx, 2)"
                                   @paste="handleExcelPaste($event, rIdx, 2)"
                                   class="w-full h-full px-3 py-2.5 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
@@ -1576,7 +1593,7 @@
                                  v-model="p.method"
                                  placeholder="Pilih atau ketik..."
                                  @blur="normalizeRowTool(rIdx)"
-                                 @focus="setActiveCell(rIdx, 3)"
+                                 @focus="setActiveCell(rIdx, 3, $event.target)"
                                  @keydown="handleGridKeydown($event, rIdx, 3)"
                                  @paste="handleExcelPaste($event, rIdx, 3)"
                                  class="w-full h-full px-3 py-2.5 pr-8 bg-transparent text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
@@ -1596,7 +1613,7 @@
                                type="text"
                                v-model="p.master_data"
                                placeholder="Kode data..."
-                               @focus="setActiveCell(rIdx, 4)"
+                               @focus="setActiveCell(rIdx, 4, $event.target)"
                                @keydown="handleGridKeydown($event, rIdx, 4)"
                                @paste="handleExcelPaste($event, rIdx, 4)"
                                class="w-full h-full px-3 py-2.5 bg-transparent font-mono text-zinc-400 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
@@ -2450,9 +2467,67 @@
           }
         };
 
-        const setActiveCell = (row, col) => {
+        const lastFocusedInput = ref(null);
+
+        const commonSymbols = [
+          { char: 'ø', title: 'Diameter (ø)' },
+          { char: '⌀', title: 'Diameter Simbol Teknik (⌀)' },
+          { char: '±', title: 'Plus-Minus Toleransi (±)' },
+          { char: '≤', title: 'Kurang Dari atau Sama Dengan (≤)' },
+          { char: '≥', title: 'Lebih Dari atau Sama Dengan (≥)' },
+          { char: '<', title: 'Kurang Dari (<)' },
+          { char: '>', title: 'Lebih Dari (>)' },
+          { char: '°', title: 'Derajat Sudut (°)' },
+          { char: 'µm', title: 'Mikrometer (µm)' },
+          { char: '~', title: 'Rentang Toleransi (~)' },
+          { char: '⊥', title: 'Ketegaklurusan / Perpendicularity (⊥)' },
+          { char: '∥', title: 'Kesejajaran / Parallelism (∥)' }
+        ];
+
+        const setActiveCell = (row, col, el = null) => {
           activeRow.value = row;
           activeCol.value = col;
+          if (el) {
+            lastFocusedInput.value = el;
+          } else if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            lastFocusedInput.value = document.activeElement;
+          }
+        };
+
+        const insertSymbol = (char) => {
+          let targetEl = document.activeElement;
+          const isInput = targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA');
+
+          if (!isInput && lastFocusedInput.value && document.body.contains(lastFocusedInput.value)) {
+            targetEl = lastFocusedInput.value;
+            targetEl.focus();
+          }
+
+          if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA')) {
+            const start = targetEl.selectionStart !== null && targetEl.selectionStart !== undefined ? targetEl.selectionStart : targetEl.value.length;
+            const end = targetEl.selectionEnd !== null && targetEl.selectionEnd !== undefined ? targetEl.selectionEnd : start;
+            const val = targetEl.value || '';
+
+            const newVal = val.slice(0, start) + char + val.slice(end);
+            targetEl.value = newVal;
+
+            // Dispatch input event for Vue reactive v-model update
+            targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+
+            // Reposition cursor right after inserted symbol
+            const newPos = start + char.length;
+            targetEl.setSelectionRange(newPos, newPos);
+            targetEl.focus();
+            isPointsDirty.value = true;
+          } else {
+            // Fallback: append to the current active cell in activeRow
+            if (excelPoints.value && excelPoints.value[activeRow.value]) {
+              const colKey = excelCols[activeCol.value] || 'standard';
+              excelPoints.value[activeRow.value][colKey] = (excelPoints.value[activeRow.value][colKey] || '') + char;
+              isPointsDirty.value = true;
+              focusCell(activeRow.value, activeCol.value);
+            }
+          }
         };
 
         const focusCell = (row, col, prefix = 'cell') => {
@@ -3032,7 +3107,9 @@
           normalizeToolName,
           normalizeRowTool,
           autoStandardizeAllTools,
-          renumberExcelPoints
+          renumberExcelPoints,
+          commonSymbols,
+          insertSymbol
         };
       }
     }).mount('#app');
