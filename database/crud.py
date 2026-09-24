@@ -115,7 +115,7 @@ async def list_checksheets(
     assigned_to: Optional[str] = None,
     status: Optional[str] = None,
     search: Optional[str] = None,
-    limit: int = 150,
+    limit: int = 1000,
     offset: int = 0
 ) -> List[Checksheet]:
     query = select(Checksheet).options(selectinload(Checksheet.inspection_points), selectinload(Checksheet.images))

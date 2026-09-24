@@ -41,7 +41,7 @@ async def get_checksheets(
     assigned_to: Optional[str] = Query(None, description="Filter by assignee: Zul, Iqbal, Rama, Yogi"),
     status: Optional[str] = Query(None, description="Filter by status: Checksheet Done, Belum Di Input, Tidak Ada Part"),
     search: Optional[str] = Query(None, description="Search part number or name"),
-    limit: int = 150,
+    limit: int = 1000,
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
 ):
