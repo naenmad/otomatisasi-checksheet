@@ -708,6 +708,17 @@
                 <option value="Butuh Revisi">Butuh Revisi</option>
                 <option value="Tidak Ada Part">Tidak Ada Part</option>
               </select>
+
+              <!-- Quick Kirim Batch Button -->
+              <button @click="openBatchModal"
+                      :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                      :title="selectedIds.length > 0 ? 'Kirim ' + selectedIds.length + ' part yang dicentang ke FactoryHub' : 'Kirim batch otomasi Playwright'">
+                <svg class="w-3.5 h-3.5" :class="selectedIds.length > 0 ? 'text-white' : 'text-emerald-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                </svg>
+                <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
+              </button>
             </div>
           </div>
 
@@ -1177,14 +1188,19 @@
             </button>
           </div>
           <p class="text-xs text-zinc-400">
-            Memproses <strong>{{ selectedIds.length }} part terpilih</strong> secara berurutan langsung ke portal FactoryHub.
+            <span v-if="selectedIds.length > 0">
+              Memproses <strong>{{ selectedIds.length }} part terpilih</strong> secara berurutan langsung ke portal FactoryHub.
+            </span>
+            <span v-else>
+              Memproses antrean part berstatus <strong>"Belum Di Input"</strong> (hingga 10 part) secara berurutan langsung ke portal FactoryHub.
+            </span>
           </p>
           <div class="bg-black/80 rounded-xl p-3 h-52 overflow-y-auto font-mono text-xs text-zinc-300 space-y-1">
             <p v-for="(l, idx) in batchLogs" :key="idx">{{ l }}</p>
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <button @click="closeBatchModal" :disabled="isBatchRunning" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold cursor-pointer">Tutup</button>
-            <button @click="startBatchAutomation" :disabled="isBatchRunning" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer">
+            <button @click="startBatchAutomation" :disabled="isBatchRunning" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm">
               <svg v-if="isBatchRunning" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span>{{ isBatchRunning ? 'Sedang Berjalan...' : 'Mulai Batch' }}</span>
             </button>
@@ -1690,24 +1706,37 @@
         </div>
       </transition>
 
-      <!-- Floating Batch Bar (Admin) -->
-      <div v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
-           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-700 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4">
-        <span class="text-xs font-mono font-bold text-indigo-400">
-          {{ selectedIds.length }} part dipilih
+      <!-- Floating Batch Action Bar (Admin & Operator) -->
+      <div v-if="selectedIds.length > 0"
+           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900/95 backdrop-blur-md border border-zinc-700 shadow-2xl rounded-2xl px-5 py-3 flex flex-wrap items-center gap-3.5 max-w-4xl">
+        <span class="text-xs font-mono font-bold text-indigo-300 flex items-center gap-1.5 shrink-0">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selectedIds.length }} part dipilih</span>
         </span>
-        <div class="h-4 w-px bg-zinc-700"></div>
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs text-zinc-400 mr-1">Tugaskan ke:</span>
-          <button @click="batchAssign('Unassigned')" class="px-2.5 py-1 bg-amber-950 hover:bg-amber-900 text-amber-200 border border-amber-800 rounded text-xs font-semibold">
+
+        <div class="h-4 w-px bg-zinc-700 shrink-0"></div>
+
+        <!-- Direct Kirim Batch Button -->
+        <button @click="openBatchModal"
+                class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+          <span>Kirim Batch ke FactoryHub</span>
+        </button>
+
+        <!-- Reassign (Admin Only) -->
+        <div v-if="currentUser && currentUser.role === 'admin'" class="flex items-center gap-1.5 shrink-0">
+          <div class="h-4 w-px bg-zinc-700 mx-1"></div>
+          <span class="text-xs text-zinc-400 mr-0.5">Tugaskan:</span>
+          <button @click="batchAssign('Unassigned')" class="px-2 py-1 bg-amber-950 hover:bg-amber-900 text-amber-200 border border-amber-800 rounded text-[11px] font-semibold">
             Unassigned
           </button>
           <button v-for="u in operatorUsers" :key="u.id" @click="batchAssign(u.name)"
-                  class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded text-xs font-semibold">
+                  class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded text-[11px] font-semibold">
             {{ u.name }}
           </button>
         </div>
-        <button @click="selectedIds = []" class="text-zinc-400 hover:text-zinc-200 text-xs ml-2 cursor-pointer font-medium">Batal</button>
+
+        <button @click="selectedIds = []" class="text-zinc-400 hover:text-zinc-200 text-xs ml-auto cursor-pointer font-medium shrink-0">Batal</button>
       </div>
 
     </div>
@@ -2797,7 +2826,19 @@
 
         const openBatchModal = () => {
           showBatchModal.value = true;
-          batchLogs.value = ['[*] Menyiapkan antrean otomasi Playwright...'];
+          if (selectedIds.value.length === 0) {
+            const pending = checksheets.value.filter(c => c.status === 'Belum Di Input');
+            batchLogs.value = [
+              '[*] Menyiapkan antrean otomasi Playwright...',
+              '[*] Belum ada part yang dipilih via checkbox tabel.',
+              `[*] Ditemukan ${pending.length} part berstatus "Belum Di Input". Klik "Mulai Batch" untuk memproses antrean.`
+            ];
+          } else {
+            batchLogs.value = [
+              '[*] Menyiapkan antrean otomasi Playwright...',
+              `[*] Terpilih ${selectedIds.value.length} part spesifik. Klik "Mulai Batch" untuk mengirim langsung ke FactoryHub.`
+            ];
+          }
         };
 
         const closeBatchModal = () => {
@@ -2806,17 +2847,30 @@
 
         const startBatchAutomation = async () => {
           isBatchRunning.value = true;
-          batchLogs.value = ['[*] Menjalankan batch otomasi Playwright di background server...'];
+          const targetIds = selectedIds.value.length
+            ? selectedIds.value
+            : checksheets.value.filter(c => c.status === 'Belum Di Input').map(c => c.id).slice(0, 10);
+
+          if (!targetIds.length) {
+            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Belum Di Input" untuk diproses.');
+            showToast('Tidak ada checksheet yang perlu disubmit.', 'error');
+            isBatchRunning.value = false;
+            return;
+          }
+
+          batchLogs.value.push(`[*] Menjalankan batch otomasi ${targetIds.length} part di background server...`);
           try {
             const res = await fetch('/api/automation/batch', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ checksheet_ids: selectedIds.value.length ? selectedIds.value : checksheets.value.filter(c => c.status === 'Belum Di Input').map(c => c.id).slice(0, 10) })
+              body: JSON.stringify({ checksheet_ids: targetIds })
             });
             const data = await res.json();
             batchLogs.value.push(`[+] Tugas batch dimulai: ${data.message || 'Antrean berjalan'}`);
+            showToast(`Batch otomasi untuk ${targetIds.length} part berhasil dimulai!`, 'success');
           } catch (e) {
             batchLogs.value.push(`[!] Terjadi kesalahan: ${e.message}`);
+            showToast('Gagal memulai batch otomasi.', 'error');
           } finally {
             isBatchRunning.value = false;
           }
@@ -2828,10 +2882,10 @@
             const endpoint = isDryRun ? `/api/automation/dry-run/${id}` : `/api/automation/submit/${id}`;
             const res = await fetch(endpoint, { method: 'POST' });
             const data = await res.json();
-            alert(`Otomasi: ${data.message || 'Berhasil dijalankan'}`);
+            showToast(`Otomasi: ${data.message || 'Berhasil dijalankan'}`, 'success');
             if (!isDryRun) await loadChecksheets();
           } catch (e) {
-            alert('Gagal menjalankan otomasi.');
+            showToast('Gagal menjalankan otomasi.', 'error');
           } finally {
             isAutomating.value = false;
           }
