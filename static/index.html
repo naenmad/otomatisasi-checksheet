@@ -328,9 +328,9 @@
                 <span class="hidden sm:inline">{{ isSyncing ? 'Menyinkronkan...' : 'Sync Sheet' }}</span>
               </button>
               <a href="https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing" target="_blank"
-                 class="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium transition-colors"
+                 class="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
                  title="Buka Google Spreadsheet">
-                ↗
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               </a>
             </div>
 
@@ -2707,13 +2707,14 @@
           try {
             const res = await fetch('/api/export/sheet/sync', { method: 'POST' });
             const data = await res.json();
-            if (res.ok && data.status === 'success') {
-              alert(`Berhasil menyinkronkan ${data.rows_synced} baris ke Google Sheet!`);
+            if (res.ok && (data.status === 'success' || (data.rows_synced !== undefined && data.rows_synced > 0) || (data.synced_count !== undefined && data.synced_count > 0))) {
+              const count = data.rows_synced !== undefined ? data.rows_synced : (data.synced_count || 0);
+              showToast(`Berhasil menyinkronkan ${count} baris ke Google Sheet!`, 'success');
             } else {
-              alert('Gagal sinkronisasi: ' + (data.detail || 'Terjadi kesalahan'));
+              showToast('Gagal sinkronisasi: ' + (data.detail || data.message || 'Terjadi kesalahan'), 'error');
             }
           } catch (e) {
-            alert('Gagal menghubungi server.');
+            showToast('Gagal menghubungi server.', 'error');
           } finally {
             isSyncing.value = false;
           }

@@ -92,6 +92,7 @@ from services.google_sheets_service import sync_all_checksheets_to_sheet, GOOGLE
 
 
 @router.post("/sync-google-sheet")
+@router.post("/sheet/sync")
 async def sync_to_google_sheet(
     db: AsyncSession = Depends(get_db)
 ):
@@ -100,6 +101,8 @@ async def sync_to_google_sheet(
     """
     try:
         res = await sync_all_checksheets_to_sheet()
+        if isinstance(res, dict):
+            res["rows_synced"] = res.get("synced_count", 0)
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal sync ke Google Spreadsheet: {str(e)}")
