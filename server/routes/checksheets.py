@@ -118,30 +118,36 @@ def _build_checksheet_images(cs: Checksheet) -> list:
     for img in cs.images:
         path = img.image_path or ""
         url = img.image_url or ""
-        if "storage/images" in path:
-            sub = path.split("storage/images", 1)[1].lstrip("/\\")
-            url = f"/media/images/{sub}"
-        elif "extracted_images" in path:
-            sub = path.split("extracted_images", 1)[1].lstrip("/\\")
-            url = f"/media/extracted/{sub}"
-        elif url and "storage/images" in url:
-            sub = url.split("storage/images", 1)[1].lstrip("/\\")
-            url = f"/media/images/{sub}"
-        # Verify file exists on disk if path is provided
-        if path and not os.path.exists(path):
+        is_remote_url = url.startswith("http://") or url.startswith("https://")
+
+        if not is_remote_url:
+            if "storage/images" in path:
+                sub = path.split("storage/images", 1)[1].lstrip("/\\")
+                url = f"/media/images/{sub}"
+            elif "extracted_images" in path:
+                sub = path.split("extracted_images", 1)[1].lstrip("/\\")
+                url = f"/media/extracted/{sub}"
+            elif url and "storage/images" in url:
+                sub = url.split("storage/images", 1)[1].lstrip("/\\")
+                url = f"/media/images/{sub}"
+
+        # Verify file exists on disk if local path is provided and not remote
+        if not is_remote_url and path and not os.path.exists(path):
             continue
 
-        # Strictly exclude company logos or header banners
-        if path:
+        # Strictly exclude company logos or header banners if local inspection is available
+        if path and os.path.exists(path):
             img_info = get_cached_image_info(path)
             if img_info.get("is_logo", False):
                 continue
+
+        filename = os.path.basename(path) if path else (os.path.basename(url.split("?")[0]) if url else "image.webp")
 
         res.append({
             "id": img.id,
             "image_url": url,
             "image_path": path,
-            "filename": os.path.basename(path)
+            "filename": filename
         })
 
     # Fallback: scan existing server storage folders if not yet linked in DB
@@ -336,6 +342,13 @@ async def upload_checksheet_image(
         raise HTTPException(status_code=400, detail=f"Gagal memproses file gambar: {str(e)}")
 
     url_sub = f"/media/images/{clean_p}/{safe_name}"
+    try:
+        from services.supabase_storage_service import upload_image_to_supabase
+        remote_url = upload_image_to_supabase(target_path, clean_p, safe_name)
+        if remote_url:
+            url_sub = remote_url
+    except Exception as e:
+        pass
 
     existing_img = None
     for img in cs.images:

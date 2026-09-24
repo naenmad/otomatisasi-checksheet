@@ -1272,40 +1272,83 @@
         </div>
       </div>
 
-      <!-- Live Automation Console Modal (Single & Batch) -->
-      <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-            <div>
-              <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                <span>{{ activeAutomationTarget ? ('Otomasi Part: ' + activeAutomationTarget.part_number) : 'Eksekusi Batch Otomasi FactoryHub' }}</span>
-              </h3>
-              <p class="text-xs text-zinc-400 mt-0.5">
-                {{ isDryRunMode 
-                    ? 'Mode Dry-Run: Mengisi form FactoryHub untuk ditinjau tanpa menekan tombol submit resmi.' 
-                    : 'Mode Kirim Resmi: Mengisi form & menekan tombol submit resmi di FactoryHub. Status otomatis diubah ke Done.' }}
-              </p>
-            </div>
-            <button @click="closeBatchModal" aria-label="Tutup" class="text-zinc-500 hover:text-zinc-300 cursor-pointer">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      <!-- Floating Automation Console Widget (Single & Batch) -->
+      <div v-if="showBatchModal" class="fixed bottom-6 right-6 z-50 pointer-events-auto transition-all duration-300">
+        <!-- Minimized Floating Pill -->
+        <div v-if="isBatchMinimized" 
+             @click="isBatchMinimized = false"
+             class="group flex items-center gap-3 px-4 py-2.5 rounded-full bg-zinc-900/95 border border-zinc-700 hover:border-indigo-500 shadow-2xl backdrop-blur-md cursor-pointer select-none transition-all hover:scale-[1.02]">
+          <div class="flex items-center gap-2">
+            <span v-if="isBatchRunning" class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+            </span>
+            <span v-else class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-semibold text-zinc-200">
+              {{ activeAutomationTarget ? activeAutomationTarget.part_number : 'Batch Playwright' }}
+            </span>
+          </div>
+          <span class="text-[11px] font-mono text-zinc-400">
+            {{ isBatchRunning ? 'Berjalan...' : 'Selesai' }}
+          </span>
+          <div class="flex items-center gap-1 border-l border-zinc-700/80 pl-2">
+            <button @click.stop="isBatchMinimized = false" title="Perbesar" class="p-1 text-zinc-400 hover:text-zinc-100 rounded hover:bg-zinc-800">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+              </svg>
             </button>
+            <button @click.stop="closeBatchModal" title="Tutup" class="p-1 text-zinc-400 hover:text-rose-400 rounded hover:bg-zinc-800">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Maximized Floating Window -->
+        <div v-else class="bg-zinc-900/95 border border-zinc-700/90 rounded-2xl w-[520px] max-w-[calc(100vw-2rem)] p-4 shadow-2xl backdrop-blur-md space-y-3">
+          <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800">
+            <div class="flex items-center gap-2">
+              <div class="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
+                  <span>{{ activeAutomationTarget ? ('Otomasi Part: ' + activeAutomationTarget.part_number) : 'Eksekusi Batch Otomasi FactoryHub' }}</span>
+                </h3>
+                <p class="text-[10px] text-zinc-400">
+                  {{ isDryRunMode ? 'Mode Dry-Run: Pratinjau form tanpa simpan permanen' : 'Mode Kirim: Submit resmi ke FactoryHub' }}
+                </p>
+              </div>
+            </div>
+            <!-- Window controls: Minimize & Close -->
+            <div class="flex items-center gap-1">
+              <button @click="isBatchMinimized = true" title="Kecilkan (Minimize)" class="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+              </button>
+              <button @click="closeBatchModal" title="Tutup" class="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
           </div>
 
           <!-- Mode Badge & Status Indicator -->
-          <div class="flex items-center justify-between text-xs px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+          <div class="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-zinc-950/80 border border-zinc-800/80">
             <div class="flex items-center gap-2">
-              <span class="text-zinc-400">Mode:</span>
-              <span v-if="isDryRunMode" class="px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-800">
-                DRY-RUN (Pratinjau Tanpa Simpan)
+              <span class="text-zinc-400 text-[11px]">Mode:</span>
+              <span v-if="isDryRunMode" class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-800">
+                DRY-RUN
               </span>
-              <span v-else class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                KIRIM RESMI (Submit FactoryHub)
+              <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                KIRIM RESMI
               </span>
             </div>
             <div class="flex items-center gap-1.5 font-mono text-[11px]">
               <span v-if="isBatchRunning" class="flex items-center gap-1.5 text-amber-400 font-bold">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>Proses Berjalan...</span>
+                <span>Berjalan...</span>
               </span>
               <span v-else class="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -1315,28 +1358,29 @@
           </div>
 
           <!-- Terminal Log Box with Auto Scroll -->
-          <div id="automation-terminal-logs" class="bg-black/90 rounded-xl p-3.5 h-64 overflow-y-auto font-mono text-xs text-zinc-300 space-y-1 border border-zinc-800/80 select-text">
+          <div id="automation-terminal-logs" class="bg-black/90 rounded-xl p-3 h-56 overflow-y-auto font-mono text-[11px] text-zinc-300 space-y-1 border border-zinc-800 select-text">
             <p v-for="(l, idx) in batchLogs" :key="idx" 
                :class="l.includes('[✓]') ? 'text-emerald-400 font-bold' : (l.includes('[ERROR]') || l.includes('[!]') ? 'text-rose-400 font-semibold' : (l.includes('[*]') ? 'text-indigo-300' : 'text-zinc-300'))">
               {{ l }}
             </p>
           </div>
 
-          <div class="flex items-center justify-between pt-2">
-            <span class="text-[11px] text-zinc-500 font-mono">
-              {{ isBatchRunning ? 'Browser Playwright sedang aktif di latar...' : 'Proses otomasi telah selesai.' }}
-            </span>
+          <div class="flex items-center justify-between pt-1">
+            <button @click="isBatchMinimized = true" class="text-[11px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer flex items-center gap-1">
+              <span>Kecilkan widget</span>
+            </button>
             <div class="flex gap-2">
-              <button @click="closeBatchModal" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold cursor-pointer">
+              <button @click="closeBatchModal" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold cursor-pointer">
                 Tutup
               </button>
-              <button v-if="!activeAutomationTarget && !isBatchRunning" @click="startBatchAutomation" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
+              <button v-if="!activeAutomationTarget && !isBatchRunning" @click="startBatchAutomation" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm">
                 <span>Mulai Batch Ulang</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+
 
       <!-- Upload Checksheet Modal (Admin Only) -->
       <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
@@ -1911,12 +1955,31 @@
     createApp({
       setup() {
         // Navigation & Page State
-        const activePage = ref('dashboard');
+        const VALID_PAGES = ['dashboard', 'checksheets', 'master_part', 'automation', 'team', 'settings'];
+
+        const getPageFromRoute = () => {
+          const hash = window.location.hash.replace(/^#\/?/, '').trim();
+          if (VALID_PAGES.includes(hash)) return hash;
+          const path = window.location.pathname.replace(/^\//, '').split('/')[0].trim();
+          if (VALID_PAGES.includes(path)) return path;
+          return 'dashboard';
+        };
+
+        const activePage = ref(getPageFromRoute());
         const isSidebarCollapsed = ref(false);
         const isMobileSidebarOpen = ref(false);
 
         // Authentication & User
-        const currentUser = ref(null);
+        const getSavedUser = () => {
+          try {
+            const raw = localStorage.getItem('summit_user');
+            return raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            return null;
+          }
+        };
+
+        const currentUser = ref(getSavedUser());
         const authToken = ref(localStorage.getItem('summit_token') || '');
         const loginForm = ref({ username: '', password: '' });
         const isLoggingIn = ref(false);
@@ -2030,6 +2093,7 @@
 
         // Batch & Single Automation
         const showBatchModal = ref(false);
+        const isBatchMinimized = ref(false);
         const batchLogs = ref([]);
         const isBatchRunning = ref(false);
         const activeAutomationTarget = ref(null);
@@ -2068,19 +2132,28 @@
           }
         });
 
-        const navigate = (page) => {
+        const navigate = (page, replaceHistory = false) => {
+          if (!VALID_PAGES.includes(page)) page = 'dashboard';
           activePage.value = page;
           isMobileSidebarOpen.value = false;
+          const newPath = '/' + page;
+          if (window.location.pathname !== newPath) {
+            if (replaceHistory) {
+              window.history.replaceState({ page }, '', newPath);
+            } else {
+              window.history.pushState({ page }, '', newPath);
+            }
+          }
         };
 
         const goToChecksheetsWithStatus = (st) => {
           statusFilter.value = st;
-          activePage.value = 'checksheets';
+          navigate('checksheets');
         };
 
         const goToChecksheetsWithTeam = (team) => {
           activeTeam.value = team;
-          activePage.value = 'checksheets';
+          navigate('checksheets');
         };
 
         // Customer Stats
@@ -2281,18 +2354,29 @@
         // Authentication Methods
         const checkSavedSession = async () => {
           const token = localStorage.getItem('summit_token');
-          if (!token) return;
+          if (!token) {
+            currentUser.value = null;
+            localStorage.removeItem('summit_user');
+            return;
+          }
           try {
             const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
             if (res.ok) {
-              currentUser.value = await res.json();
-              activeTeam.value = currentUser.value.role === 'operator' ? currentUser.value.name : 'Semua';
+              const me = await res.json();
+              currentUser.value = me;
+              localStorage.setItem('summit_user', JSON.stringify(me));
+              activeTeam.value = me.role === 'operator' ? me.name : 'Semua';
               await Promise.all([loadChecksheets(), loadUsers(), loadCatalogStats()]);
             } else {
               logout();
             }
           } catch (e) {
-            logout();
+            // Keep local user session on intermittent network drop
+            if (currentUser.value) {
+              await Promise.all([loadChecksheets(), loadUsers(), loadCatalogStats()]).catch(() => {});
+            } else {
+              logout();
+            }
           }
         };
 
@@ -2308,9 +2392,10 @@
             const data = await res.json();
             if (res.ok && data.token) {
               localStorage.setItem('summit_token', data.token);
+              localStorage.setItem('summit_user', JSON.stringify(data.user));
               authToken.value = data.token;
               currentUser.value = data.user;
-              activeTeam.value = currentUser.value.role === 'operator' ? currentUser.value.name : 'Semua';
+              activeTeam.value = data.user.role === 'operator' ? data.user.name : 'Semua';
               await Promise.all([loadChecksheets(), loadUsers(), loadCatalogStats()]);
             } else {
               loginError.value = data.detail || 'Username atau password salah.';
@@ -2329,10 +2414,11 @@
 
         const logout = () => {
           localStorage.removeItem('summit_token');
+          localStorage.removeItem('summit_user');
           currentUser.value = null;
           authToken.value = '';
           checksheets.value = [];
-          activePage.value = 'dashboard';
+          navigate('dashboard', true);
         };
 
         // Load Checksheets & Users
@@ -3118,6 +3204,7 @@
         const openBatchModal = () => {
           activeAutomationTarget.value = null;
           isDryRunMode.value = false;
+          isBatchMinimized.value = false;
           showBatchModal.value = true;
           if (selectedIds.value.length === 0) {
             const pending = checksheets.value.filter(c => c.status === 'Belum Di Input');
@@ -3136,6 +3223,7 @@
 
         const closeBatchModal = () => {
           showBatchModal.value = false;
+          isBatchMinimized.value = false;
           activeAutomationTarget.value = null;
         };
 
@@ -3197,6 +3285,7 @@
           const cs = checksheets.value.find(c => c.id === id) || activeChecksheet.value;
           activeAutomationTarget.value = cs;
           isDryRunMode.value = isDryRun;
+          isBatchMinimized.value = false;
           showBatchModal.value = true;
           isBatchRunning.value = true;
           isAutomating.value = true;
@@ -3282,7 +3371,7 @@
 
         // Master Part Checker Methods
         const openPartChecker = () => {
-          activePage.value = 'master_part';
+          navigate('master_part');
         };
 
         const partInputSample = () => {
@@ -3339,7 +3428,7 @@
         };
 
         const openChecksheetFromChecker = (id) => {
-          activePage.value = 'checksheets';
+          navigate('checksheets');
           openDetail(id);
         };
 
@@ -3367,7 +3456,7 @@
           // Main Table Row Navigation when on checksheets page and no modal is open
           const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
           const isInputActive = tag === 'input' || tag === 'textarea' || tag === 'select';
-          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || showBatchModal.value || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value;
+          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || (showBatchModal.value && !isBatchMinimized.value) || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value;
 
           if (activePage.value === 'checksheets' && !isModalOpen && !isInputActive) {
             const list = filteredChecksheets.value;
@@ -3396,6 +3485,17 @@
         });
 
         onMounted(() => {
+          window.addEventListener('popstate', () => {
+            activePage.value = getPageFromRoute();
+          });
+          window.addEventListener('hashchange', () => {
+            activePage.value = getPageFromRoute();
+          });
+          const currentRoute = getPageFromRoute();
+          const targetPath = '/' + currentRoute;
+          if (window.location.pathname !== targetPath) {
+            window.history.replaceState({ page: currentRoute }, '', targetPath);
+          }
           checkSavedSession();
           loadCatalogStats();
           window.addEventListener('paste', handleGlobalPaste);
@@ -3469,6 +3569,7 @@
           isIngestingImages,
           runSyncImages,
           showBatchModal,
+          isBatchMinimized,
           batchLogs,
           isBatchRunning,
           activeAutomationTarget,

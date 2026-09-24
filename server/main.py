@@ -84,6 +84,16 @@ async def root():
     }
 
 
+@app.get("/{page:path}")
+async def serve_spa(page: str):
+    if page.startswith(("api/", "docs", "redoc", "openapi.json", "media/", "static/")):
+        return {"detail": "Not Found", "status": 404}
+    index_file = "static/index.html"
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"detail": "SPA index file not found", "status": 404}
+
+
 if __name__ == "__main__":
     import uvicorn
     is_windows = sys.platform == "win32"
