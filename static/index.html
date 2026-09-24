@@ -105,26 +105,36 @@
                isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
              ]">
         <!-- Brand Header -->
-        <div class="h-14 border-b border-zinc-800 px-4 flex items-center justify-between">
-          <div class="flex items-center gap-3 overflow-hidden">
+        <div class="h-14 border-b border-zinc-800 flex items-center transition-all"
+             :class="isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'">
+          <!-- Brand when Expanded -->
+          <div v-if="!isSidebarCollapsed" class="flex items-center gap-3 overflow-hidden">
             <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-indigo-400 shrink-0">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
             </div>
-            <div v-if="!isSidebarCollapsed" class="truncate">
+            <div class="truncate">
               <span class="text-xs font-bold text-zinc-100 block truncate">Summit FactoryHub</span>
               <span class="text-[10px] text-zinc-400 block truncate">Quality Suite</span>
             </div>
           </div>
-          <!-- Desktop Collapse Button -->
+
+          <!-- Desktop Toggle Button (No collision when collapsed) -->
           <button @click="isSidebarCollapsed = !isSidebarCollapsed"
-                  class="hidden lg:flex w-6 h-6 items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 text-xs transition-colors"
+                  class="hidden lg:flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                  :class="isSidebarCollapsed ? 'w-10 h-10 bg-zinc-800/80 border border-zinc-700 text-indigo-400 hover:text-indigo-300' : 'w-7 h-7 text-xs'"
                   :title="isSidebarCollapsed ? 'Perluas Sidebar' : 'Ciutkan Sidebar'">
-            <svg class="w-4 h-4 transition-transform" :class="isSidebarCollapsed ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <!-- When collapsed: show expand icon with brand accent -->
+            <svg v-if="isSidebarCollapsed" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+            </svg>
+            <!-- When expanded: show collapse chevron -->
+            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
             </svg>
           </button>
+
           <!-- Mobile Close Button -->
           <button @click="isMobileSidebarOpen = false"
                   class="lg:hidden w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-200">
@@ -133,11 +143,16 @@
         </div>
 
         <!-- Navigation Links -->
-        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav class="flex-1 space-y-1 overflow-y-auto"
+             :class="isSidebarCollapsed ? 'p-2' : 'p-3'">
           <!-- 1. Dashboard -->
           <button @click="navigate('dashboard')"
-                  :class="activePage === 'dashboard' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Dashboard' : ''"
+                  :class="[
+                    activePage === 'dashboard' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'dashboard' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
             </svg>
@@ -146,8 +161,12 @@
 
           <!-- 2. Checksheet Workspace -->
           <button @click="navigate('checksheets')"
-                  :class="activePage === 'checksheets' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Daftar Checksheet (' + checksheets.length + ')' : ''"
+                  :class="[
+                    activePage === 'checksheets' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'checksheets' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
@@ -159,8 +178,12 @@
 
           <!-- 3. Cek Master Part -->
           <button @click="navigate('master_part')"
-                  :class="activePage === 'master_part' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Cek Master Part' : ''"
+                  :class="[
+                    activePage === 'master_part' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'master_part' ? 'text-amber-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
@@ -172,8 +195,12 @@
 
           <!-- 4. Antrean Otomasi -->
           <button @click="navigate('automation')"
-                  :class="activePage === 'automation' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Antrean Otomasi' : ''"
+                  :class="[
+                    activePage === 'automation' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'automation' ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
@@ -183,8 +210,12 @@
 
           <!-- 5. Tim & Anggota -->
           <button @click="navigate('team')"
-                  :class="activePage === 'team' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Anggota Tim' : ''"
+                  :class="[
+                    activePage === 'team' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'team' ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
@@ -196,8 +227,12 @@
 
           <!-- 6. Integrasi & Setelan -->
           <button @click="navigate('settings')"
-                  :class="activePage === 'settings' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-xs transition-all text-left group">
+                  :title="isSidebarCollapsed ? 'Integrasi & Setelan' : ''"
+                  :class="[
+                    activePage === 'settings' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
+                    isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                  ]"
+                  class="w-full flex items-center rounded-lg border text-xs transition-all text-left group">
             <svg class="w-4 h-4 shrink-0" :class="activePage === 'settings' ? 'text-zinc-200' : 'text-zinc-400 group-hover:text-zinc-200'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -207,7 +242,9 @@
         </nav>
 
         <!-- Sidebar Footer & User Profile -->
-        <div class="p-3 border-t border-zinc-800 bg-zinc-950/60">
+        <div class="border-t border-zinc-800 bg-zinc-950/60"
+             :class="isSidebarCollapsed ? 'p-2' : 'p-3'">
+          <!-- Expanded Profile View -->
           <div v-if="!isSidebarCollapsed" class="flex items-center gap-3 mb-2.5 px-1">
             <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-indigo-300 shrink-0">
               {{ currentUser.name.charAt(0).toUpperCase() }}
@@ -222,10 +259,19 @@
             </span>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <button @click="logout"
-                    class="flex-1 py-1.5 px-2 bg-zinc-900 hover:bg-rose-950 hover:text-rose-300 text-zinc-400 border border-zinc-800 hover:border-rose-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <!-- Collapsed Profile Avatar Tooltip -->
+          <div v-else class="mb-2 flex justify-center" :title="currentUser.name + ' (' + currentUser.role + ')'">
+            <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-indigo-300">
+              {{ currentUser.name.charAt(0).toUpperCase() }}
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <div class="flex items-center justify-center">
+            <button @click="logout" :title="isSidebarCollapsed ? 'Keluar dari akun' : ''"
+                    class="py-1.5 bg-zinc-900 hover:bg-rose-950 hover:text-rose-300 text-zinc-400 border border-zinc-800 hover:border-rose-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                    :class="isSidebarCollapsed ? 'w-10 h-10' : 'flex-1 px-2'">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
               <span v-if="!isSidebarCollapsed">Keluar</span>
