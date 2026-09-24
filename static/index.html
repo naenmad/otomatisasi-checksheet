@@ -728,11 +728,27 @@
               <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
                   <tr>
-                    <th class="py-3 px-3 w-10 text-center">
-                      <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
-                             :disabled="currentUser.role === 'operator' && activeTeam === 'LAINNYA'"
-                             class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                             aria-label="Pilih Semua Checksheet">
+                    <th class="py-3 px-3 w-12 text-center select-none">
+                      <button type="button"
+                              @click="toggleSelectAll"
+                              :disabled="currentUser && currentUser.role === 'operator' && activeTeam === 'LAINNYA'"
+                              class="w-4 h-4 mx-auto rounded border flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                              :class="[
+                                isAllSelected 
+                                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm ring-1 ring-indigo-400/40' 
+                                  : (isPartiallySelected 
+                                      ? 'bg-indigo-950 border-indigo-500 text-indigo-300 ring-1 ring-indigo-500/30' 
+                                      : 'bg-zinc-950/80 border-zinc-700 hover:border-zinc-500 text-transparent')
+                              ]"
+                              :title="isAllSelected ? 'Batalkan pilihan semua' : 'Pilih semua part'"
+                              aria-label="Pilih Semua Checksheet">
+                        <svg v-if="isAllSelected" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        <svg v-else-if="isPartiallySelected" class="w-3 h-3 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                        </svg>
+                      </button>
                     </th>
                     <th class="py-3 px-3 w-12 text-center">No</th>
                     <th class="py-3 px-3 w-32">Penanggung Jawab</th>
@@ -765,14 +781,33 @@
                 <!-- Table Rows -->
                 <tbody v-else class="divide-y divide-zinc-800/60">
                   <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
-                      class="hover:bg-zinc-800/40 transition-colors group cursor-pointer"
-                      :class="{'bg-indigo-950/25 ring-1 ring-inset ring-indigo-500/40': focusedCsIndex === idx}"
-                      @click="focusedCsIndex = idx; isOwnTask(cs) && toggleSelect(cs.id)">
-                    <td class="py-3 px-3 text-center" @click.stop>
-                      <input type="checkbox" :value="cs.id" v-model="selectedIds"
-                             :disabled="!isOwnTask(cs)"
-                             class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                             :aria-label="'Pilih part ' + cs.part_number">
+                      class="transition-all duration-150 group cursor-pointer border-l-4"
+                      :class="[
+                        selectedIds.includes(cs.id) 
+                          ? 'bg-indigo-950/45 hover:bg-indigo-900/50 border-l-indigo-500 text-zinc-100 shadow-sm' 
+                          : (focusedCsIndex === idx 
+                              ? 'bg-zinc-800/60 border-l-zinc-500 text-zinc-200' 
+                              : 'border-l-transparent hover:bg-zinc-800/40 text-zinc-300')
+                      ]"
+                      @click="handleRowClick($event, cs, idx)"
+                      @dblclick="openExcelStudio(cs)"
+                      title="Klik baris untuk memilih part. Dobel-klik untuk membuka editor.">
+                    <td class="py-3 px-3 text-center select-none" @click.stop="isOwnTask(cs) && (focusedCsIndex = idx, toggleSelect(cs.id))">
+                      <button type="button"
+                              :disabled="!isOwnTask(cs)"
+                              class="w-4 h-4 mx-auto rounded border flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed focus:outline-none"
+                              :class="[
+                                selectedIds.includes(cs.id)
+                                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm ring-2 ring-indigo-500/30 scale-105'
+                                  : 'bg-zinc-950/80 border-zinc-700 text-transparent group-hover:border-zinc-500 hover:border-indigo-400'
+                              ]"
+                              :aria-checked="selectedIds.includes(cs.id)"
+                              role="checkbox"
+                              :aria-label="'Pilih part ' + cs.part_number">
+                        <svg v-if="selectedIds.includes(cs.id)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </button>
                     </td>
                     <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ idx + 1 }}</td>
                     <td class="py-3 px-3">
@@ -2012,6 +2047,13 @@
           return selectable.length > 0 && selectable.every(c => selectedIds.value.includes(c.id));
         });
 
+        const isPartiallySelected = computed(() => {
+          const selectable = filteredChecksheets.value.filter(c => isOwnTask(c));
+          if (selectable.length === 0) return false;
+          const count = selectable.filter(c => selectedIds.value.includes(c.id)).length;
+          return count > 0 && count < selectable.length;
+        });
+
         const toggleSelectAll = () => {
           const selectable = filteredChecksheets.value.filter(c => isOwnTask(c));
           if (isAllSelected.value) {
@@ -2025,6 +2067,14 @@
           const idx = selectedIds.value.indexOf(id);
           if (idx === -1) selectedIds.value.push(id);
           else selectedIds.value.splice(idx, 1);
+        };
+
+        const handleRowClick = (event, cs, idx) => {
+          if (event.target.closest('button') || event.target.closest('a')) return;
+          focusedCsIndex.value = idx;
+          if (isOwnTask(cs)) {
+            toggleSelect(cs.id);
+          }
         };
 
         // Authentication Methods
@@ -3022,6 +3072,10 @@
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
               focusedCsIndex.value = Math.max(0, focusedCsIndex.value - 1);
+            } else if (e.key === ' ' || e.code === 'Space') {
+              e.preventDefault();
+              const targetCs = list[focusedCsIndex.value];
+              if (targetCs && isOwnTask(targetCs)) toggleSelect(targetCs.id);
             } else if (e.key === 'Enter') {
               e.preventDefault();
               const targetCs = list[focusedCsIndex.value];
@@ -3080,8 +3134,10 @@
           filteredChecksheets,
           selectedIds,
           isAllSelected,
+          isPartiallySelected,
           toggleSelectAll,
           toggleSelect,
+          handleRowClick,
           showUploadModal,
           uploadAssignee,
           selectedFiles,
