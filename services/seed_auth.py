@@ -17,7 +17,7 @@ INITIAL_USERS = [
         "username": "admin",
         "name": "Administrator QC",
         "nik": "070817-001",
-        "password": "admin123",
+        "password": "admin123!",
         "role": "admin"
     },
     {

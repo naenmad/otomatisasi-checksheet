@@ -55,7 +55,7 @@ Buka link tersebut di Google Chrome atau Microsoft Edge.
 
 *5. AKUN LOGIN OPERATOR & ADMIN*
 Gunakan akun yang sudah disediakan:
-- *Admin:* `admin` / `admin123`
+- *Admin:* `admin` / `admin123!`
 - *Operator Zul:* `zul` / `operator123`
 - *Operator Dimas:* `dimas` / `operator123`
 - *Operator Rian:* `rian` / `operator123`
