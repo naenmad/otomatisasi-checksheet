@@ -25,7 +25,7 @@ cs_incoming_analysis.json
 
 # Checksheet Documents (Keep folder structure, ignore large binaries)
 # documents/*
-!documents/.gitkeep
+# !documents/.gitkeep
 
 
 # Storage Uploads & Media (Keep folder structure, ignore contents)
