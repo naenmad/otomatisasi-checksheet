@@ -59,7 +59,7 @@
           <div>
             <label class="block text-xs font-medium text-zinc-300 mb-1.5">Username</label>
             <input v-model="loginForm.username" type="text" required autocomplete="username"
-                   placeholder="Contoh: admin, zul, iqbal"
+                   placeholder="Masukkan username"
                    class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none">
           </div>
 
@@ -76,23 +76,6 @@
             <span>{{ isLoggingIn ? 'Memverifikasi...' : 'Masuk' }}</span>
           </button>
         </form>
-
-        <!-- Quick Login Helpers for Team -->
-        <div class="mt-6 pt-5 border-t border-zinc-800/80">
-          <p class="text-[11px] text-zinc-500 font-medium mb-2.5">Pilih akun cepat untuk uji coba:</p>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <button @click="fillLogin('admin', 'admin123')" type="button"
-                    class="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-left transition-colors">
-              <span class="font-bold text-zinc-200 block">Admin</span>
-              <span class="text-[10px] text-zinc-400">admin / admin123</span>
-            </button>
-            <button @click="fillLogin('zul', 'zul123')" type="button"
-                    class="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-left transition-colors">
-              <span class="font-bold text-zinc-200 block">Zul (Operator)</span>
-              <span class="text-[10px] text-zinc-400">zul / zul123</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 

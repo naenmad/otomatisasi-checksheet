@@ -1,23 +1,88 @@
 """
 Google Sheets Synchronization Service for Checksheet Automation.
-Formats and synchronizes checksheet records directly to Google Spreadsheets.
+Formats and synchronizes checksheet records across 3 worksheets:
+1. Overview (Ringkasan KPI, Statistik PIC, Model & Status)
+2. Data Master (Database lengkap seluruh part checksheet)
+3. Log (Histori proses, aktivitas input, pembaruan, dan otomasi)
 """
 import os
 import asyncio
 from datetime import datetime
-from typing import Dict, Any, Optional
+from collections import Counter
+from typing import Dict, Any, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from database.models import Checksheet
+from database.models import Checksheet, SubmissionQueue
 from database.connection import AsyncSessionLocal
 
 DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing"
 GOOGLE_SHEET_URL = os.getenv("GOOGLE_SHEET_URL", DEFAULT_SHEET_URL).strip()
 
 
-def build_spreadsheet_tsv(checksheets: list) -> str:
-    """Build cleanly formatted TSV table with headers and data."""
+def clean_cell(val: Any) -> str:
+    """Clean tab and newline characters from string values to preserve TSV layout."""
+    if val is None:
+        return "-"
+    return str(val).replace("\t", " ").replace("\n", " ").replace("\r", " ").strip()
+
+
+def build_overview_tsv(checksheets: list) -> str:
+    """Build cleanly formatted executive summary TSV for the Overview tab."""
+    total = len(checksheets)
+    done_count = sum(1 for c in checksheets if c.status == "Checksheet Done")
+    ready_count = sum(1 for c in checksheets if c.status == "Belum Di Input")
+    rev_count = sum(1 for c in checksheets if c.status == "Butuh Revisi")
+    no_part_count = sum(1 for c in checksheets if c.status == "Tidak Ada Part")
+    total_points = sum(len(c.inspection_points) if c.inspection_points else 0 for c in checksheets)
+
+    pct_done = f"{(done_count / total * 100):.1f}%" if total > 0 else "0.0%"
+    pct_ready = f"{(ready_count / total * 100):.1f}%" if total > 0 else "0.0%"
+    pct_rev = f"{(rev_count / total * 100):.1f}%" if total > 0 else "0.0%"
+    pct_no_part = f"{(no_part_count / total * 100):.1f}%" if total > 0 else "0.0%"
+
+    lines = []
+    lines.append("RINGKASAN & STATISTIK MASTER CHECKSHEET - PT. SUMMIT ADYAWINSA INDONESIA")
+    lines.append(f"Waktu Sinkronisasi Terakhir:\t{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    lines.append("")
+
+    # Section 1: KPI Metrics
+    lines.append("METRIK STATUS UTAMA\tJUMLAH PART\tPERSENTASE\tDESKRIPSI")
+    lines.append(f"Total Part Terdaftar\t{total}\t100.0%\tSeluruh katalog checksheet aktif")
+    lines.append(f"Checksheet Selesai (Done)\t{done_count}\t{pct_done}\tData terisi lengkap dan siap otomasi")
+    lines.append(f"Belum Di Input (Ready)\t{ready_count}\t{pct_ready}\tMenunggu input balloon dan inspeksi")
+    lines.append(f"Butuh Revisi\t{rev_count}\t{pct_rev}\tPerlu perbaikan sketsa atau data inspeksi")
+    lines.append(f"Tidak Ada Part\t{no_part_count}\t{pct_no_part}\tPart tidak ditemukan pada master drawing")
+    lines.append(f"Total Poin Inspeksi Terdaftar\t{total_points}\t-\tAkumulasi seluruh item pengukuran")
+    lines.append("")
+
+    # Section 2: PIC Breakdown
+    lines.append("STATISTIK PENANGGUNG JAWAB (PIC)\tTOTAL TUGAS\tDONE\tBELUM INPUT\tREVISI\tPROGRESS (%)")
+    pic_groups: Dict[str, List] = {}
+    for cs in checksheets:
+        pic = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Belum Ditugaskan"
+        pic_groups.setdefault(pic, []).append(cs)
+
+    for pic, items in sorted(pic_groups.items(), key=lambda x: len(x[1]), reverse=True):
+        p_total = len(items)
+        p_done = sum(1 for c in items if c.status == "Checksheet Done")
+        p_ready = sum(1 for c in items if c.status == "Belum Di Input")
+        p_rev = sum(1 for c in items if c.status == "Butuh Revisi")
+        p_pct = f"{(p_done / p_total * 100):.1f}%" if p_total > 0 else "0.0%"
+        lines.append(f"{pic}\t{p_total}\t{p_done}\t{p_ready}\t{p_rev}\t{p_pct}")
+    lines.append("")
+
+    # Section 3: Model Breakdown
+    lines.append("DISTRIBUSI MODEL PRODUK\tJUMLAH PART")
+    models = Counter(cs.model or "-" for cs in checksheets)
+    for model, count in models.most_common(15):
+        lines.append(f"{model}\t{count}")
+
+    return "\n".join(lines)
+
+
+def build_master_tsv(checksheets: list) -> str:
+    """Build cleanly formatted TSV table with headers and all part rows for Data Master."""
     headers = [
         "No",
         "Penanggung Jawab (PIC)",
@@ -40,46 +105,140 @@ def build_spreadsheet_tsv(checksheets: list) -> str:
         row = [
             str(idx),
             (cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Belum Ditugaskan"),
-            cs.part_number or "-",
-            cs.part_name or "-",
-            cs.model or "-",
-            cs.customer or "-",
-            cs.doc_number or "-",
+            clean_cell(cs.part_number),
+            clean_cell(cs.part_name),
+            clean_cell(cs.model),
+            clean_cell(cs.customer),
+            clean_cell(cs.doc_number),
             str(len(cs.inspection_points) if cs.inspection_points else 0),
-            cs.status or "-",
-            cs.keterangan or "-",
-            cs.factoryhub_url or "-",
+            clean_cell(cs.status),
+            clean_cell(cs.keterangan),
+            clean_cell(cs.factoryhub_url),
             updated
         ]
-        # Clean any accidental newlines or tabs in cell content
-        clean_row = [str(cell).replace("\t", " ").replace("\n", " ").replace("\r", " ") for cell in row]
-        lines.append("\t".join(clean_row))
+        lines.append("\t".join(row))
+
+    return "\n".join(lines)
+
+
+def build_log_tsv(checksheets: list, submission_logs: list) -> str:
+    """Build cleanly formatted audit and activity history TSV for the Log tab."""
+    headers = [
+        "No",
+        "Waktu (Timestamp)",
+        "Part Number / Target",
+        "Penanggung Jawab / Operator",
+        "Tipe Proses / Aksi",
+        "Status",
+        "Keterangan / Catatan Detail"
+    ]
+
+    lines = ["\t".join(headers)]
+    log_counter = 1
+
+    # 1. Current Sync Event
+    lines.append("\t".join([
+        str(log_counter),
+        datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "SISTEM CHECKSHEET",
+        "SYSTEM",
+        "SINKRONISASI GOOGLE SPREADSHEET",
+        "SUCCESS",
+        f"Sinkronisasi otomatis berhasil diperbarui untuk {len(checksheets)} part master data"
+    ]))
+    log_counter += 1
+
+    # 2. Submission Queue Logs (FactoryHub automation executions)
+    for sub in submission_logs:
+        part_num = sub.checksheet.part_number if sub.checksheet else f"ID #{sub.checksheet_id}"
+        t_time = sub.started_at.strftime("%d/%m/%Y %H:%M:%S") if sub.started_at else "-"
+        detail = sub.error_message if sub.status == "FAILED" else (sub.log_output[:120] if sub.log_output else "Proses otomatisasi FactoryHub selesai")
+        lines.append("\t".join([
+            str(log_counter),
+            t_time,
+            clean_cell(part_num),
+            clean_cell(sub.operator_name or "Operator"),
+            "OTOMASI FACTORYHUB",
+            clean_cell(sub.status),
+            clean_cell(detail)
+        ]))
+        log_counter += 1
+
+    # 3. Checksheets with active status updates or custom keterangan (activity logs)
+    active_updates = [
+        cs for cs in checksheets
+        if (cs.status in ("Checksheet Done", "Butuh Revisi", "Tidak Ada Part") or (cs.keterangan and cs.keterangan != "-"))
+    ]
+    # Sort by updated_at descending
+    active_updates.sort(key=lambda x: x.updated_at or datetime.min, reverse=True)
+
+    for cs in active_updates:
+        t_time = cs.updated_at.strftime("%d/%m/%Y %H:%M:%S") if cs.updated_at else "-"
+        action_type = "UPDATE STATUS"
+        if cs.status == "Checksheet Done":
+            action_type = "INPUT SELESAI"
+        elif cs.status == "Butuh Revisi":
+            action_type = "PERMINTAAN REVISI"
+        elif cs.status == "Tidak Ada Part":
+            action_type = "PART TIDAK ADA"
+
+        detail = cs.keterangan if (cs.keterangan and cs.keterangan != "-") else f"Pembaruan status {cs.status} dengan {len(cs.inspection_points) if cs.inspection_points else 0} poin inspeksi"
+        lines.append("\t".join([
+            str(log_counter),
+            t_time,
+            clean_cell(cs.part_number),
+            clean_cell(cs.assigned_to or "Unassigned"),
+            action_type,
+            clean_cell(cs.status),
+            clean_cell(detail)
+        ]))
+        log_counter += 1
 
     return "\n".join(lines)
 
 
 async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict[str, Any]:
     """
-    Fetch all checksheets from database, build formatted TSV table,
-    and paste into Google Spreadsheet via Playwright.
+    Fetch all checksheets & submission logs, build TSVs for 3 worksheets:
+    Overview, Data Master, and Log, and paste directly into Google Spreadsheet.
     """
     from playwright.async_api import async_playwright
 
     target_url = sheet_url or GOOGLE_SHEET_URL
-    print(f"[*] Menyiapkan sinkronisasi Google Sheet: {target_url}...")
+    print(f"[*] Menyiapkan sinkronisasi 3 Sheet Google: {target_url}...")
 
-    # Load all checksheets
+    # Load data from database
     async with AsyncSessionLocal() as session:
         from database.crud import list_checksheets
-        checksheets = await list_checksheets(session=session, limit=500)
+        checksheets = await list_checksheets(session=session, limit=1000)
+
+        # Load submission logs
+        res = await session.execute(
+            select(SubmissionQueue).order_by(SubmissionQueue.started_at.desc()).limit(100)
+        )
+        submission_logs = res.scalars().all()
 
     if not checksheets:
         return {"status": "empty", "message": "Tidak ada data checksheet di database."}
 
-    tsv_data = build_spreadsheet_tsv(checksheets)
+    # Generate TSV content for all 3 sheets
+    overview_tsv = build_overview_tsv(checksheets)
+    master_tsv = build_master_tsv(checksheets)
+    log_tsv = build_log_tsv(checksheets, submission_logs)
+
+    tab_data_map = [
+        ("Data Master", master_tsv),
+        ("Overview", overview_tsv),
+        ("Log", log_tsv),
+    ]
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, channel="chrome")
+        # Launch browser with Chrome channel or default chromium
+        try:
+            browser = await p.chromium.launch(headless=True, channel="chrome")
+        except Exception:
+            browser = await p.chromium.launch(headless=True)
+
         context = await browser.new_context(viewport={"width": 1400, "height": 900})
         await context.grant_permissions(["clipboard-read", "clipboard-write"])
         page = await context.new_page()
@@ -89,23 +248,48 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
             await page.wait_for_timeout(4000)
             await page.keyboard.press("Escape")
 
-            # Select A1 in Name Box
-            name_box = page.locator("#t-name-box")
-            await name_box.click()
-            await name_box.fill("A1")
-            await page.keyboard.press("Enter")
-            await page.wait_for_timeout(600)
+            synced_tabs = []
 
-            # Paste formatted TSV table
-            await page.evaluate("(text) => navigator.clipboard.writeText(text)", tsv_data)
-            await page.wait_for_timeout(300)
-            await page.keyboard.press("Meta+v")
-            await page.wait_for_timeout(3500)
+            for tab_name, tsv_content in tab_data_map:
+                tab_locator = page.locator(".docs-sheet-tab", has_text=tab_name).first
+                if await tab_locator.count() > 0:
+                    print(f"[*] Mengarahkan ke tab '{tab_name}'...")
+                    await tab_locator.click()
+                    await page.wait_for_timeout(1200)
 
-            print(f"[✓] Berhasil sinkronisasi {len(checksheets)} baris ke Google Sheet!")
+                    # Clear formula or focus
+                    await page.keyboard.press("Escape")
+                    await page.wait_for_timeout(300)
+
+                    # Jump to cell A1 via Name Box
+                    name_box = page.locator("#t-name-box")
+                    if await name_box.count() > 0:
+                        await name_box.click()
+                        await name_box.fill("A1")
+                        await page.keyboard.press("Enter")
+                        await page.wait_for_timeout(500)
+
+                    # Copy TSV to clipboard and paste
+                    await page.evaluate("(text) => navigator.clipboard.writeText(text)", tsv_content)
+                    await page.wait_for_timeout(300)
+                    await page.keyboard.press("ControlOrMeta+v")
+                    await page.wait_for_timeout(3000)
+                    synced_tabs.append(tab_name)
+                    print(f"[✓] Berhasil sinkronisasi tab '{tab_name}'")
+                else:
+                    print(f"[!] Tab '{tab_name}' tidak ditemukan, melewati tab ini.")
+
+            # Return focus to Overview tab so it is the default visible sheet
+            overview_tab = page.locator(".docs-sheet-tab", has_text="Overview").first
+            if await overview_tab.count() > 0:
+                await overview_tab.click()
+                await page.wait_for_timeout(1000)
+
+            print(f"[✓] Selesai! Berhasil sinkronisasi 3 sheet: {synced_tabs}")
             return {
                 "status": "success",
                 "synced_count": len(checksheets),
+                "synced_tabs": synced_tabs,
                 "sheet_url": target_url,
                 "synced_at": datetime.now().isoformat()
             }
