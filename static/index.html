@@ -52,7 +52,7 @@
         <!-- Error Notification -->
         <div v-if="loginError" class="mb-4 p-3 bg-rose-950/80 border border-rose-800 text-rose-300 rounded-lg text-xs flex items-center justify-between">
           <span>{{ loginError }}</span>
-          <button @click="loginError = ''" class="text-rose-400 hover:text-rose-200">✕</button>
+          <button @click="loginError = ''" class="text-rose-400 hover:text-rose-200 text-sm font-bold">&times;</button>
         </div>
 
         <form @submit.prevent="submitLogin" class="space-y-4">
@@ -143,8 +143,9 @@
 
           <!-- Mobile Close Button -->
           <button @click="isMobileSidebarOpen = false"
+                  aria-label="Tutup Menu"
                   class="lg:hidden w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-200">
-            ✕
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
@@ -349,7 +350,7 @@
           </div>
         </header>
 
-        <!-- PAGE 1: 📊 DASHBOARD -->
+        <!-- PAGE 1: DASHBOARD -->
         <main v-show="activePage === 'dashboard'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <!-- Welcome Banner -->
           <div class="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -565,9 +566,9 @@
                       </span>
                     </td>
                     <td class="py-2.5 px-3 text-center">
-                      <button @click="openDetail(cs.id)"
-                              class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded text-xs font-medium transition-colors">
-                        Review
+                      <button @click="openExcelStudio(cs)"
+                              class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold transition-colors cursor-pointer shadow-sm">
+                        Review & Edit
                       </button>
                     </td>
                   </tr>
@@ -577,7 +578,7 @@
           </div>
         </main>
 
-        <!-- PAGE 2: 📋 CHECKSHEETS OPERATIONAL WORKSPACE -->
+        <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
         <main v-show="activePage === 'checksheets'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
           <!-- Interactive Metric Filters -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -695,8 +696,8 @@
                 <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2.5 top-2 text-zinc-500 hover:text-zinc-300 text-xs">
-                  ✕
+                <button v-if="searchQuery" @click="searchQuery = ''" aria-label="Hapus pencarian" class="absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
 
@@ -801,21 +802,14 @@
                     </td>
                     <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
                     <td class="py-3 px-3 text-center" @click.stop>
-                      <div class="flex items-center justify-center gap-1.5">
-                        <button @click="openDetail(cs.id)"
-                                :class="isOwnTask(cs) ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800'"
-                                class="px-2.5 py-1 rounded text-xs font-medium border transition-colors cursor-pointer">
-                          {{ isOwnTask(cs) ? 'Review' : 'Lihat' }}
-                        </button>
-                        <button @click="openExcelStudioDirect(cs)"
-                                title="Buka Spreadsheet Mode Excel (E)"
-                                class="px-2 py-1 rounded text-xs font-bold border border-indigo-800/80 bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer shadow-sm">
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                          </svg>
-                          <span class="text-[10px]">Excel</span>
-                        </button>
-                      </div>
+                      <button @click="openExcelStudio(cs)"
+                              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm mx-auto cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>Review & Edit</span>
+                      </button>
                     </td>
                   </tr>
 
@@ -840,7 +834,7 @@
           </div>
         </main>
 
-        <!-- PAGE 3: 🔍 CEK MASTER PART (FULL PAGE) -->
+        <!-- PAGE 3: CEK MASTER PART (FULL PAGE) -->
         <main v-show="activePage === 'master_part'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
@@ -969,7 +963,7 @@
           </div>
         </main>
 
-        <!-- PAGE 4: 🚀 ANTREAN OTOMASI -->
+        <!-- PAGE 4: ANTREAN OTOMASI -->
         <main v-show="activePage === 'automation'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
@@ -1034,7 +1028,7 @@
           </div>
         </main>
 
-        <!-- PAGE 5: 👥 ANGGOTA TIM -->
+        <!-- PAGE 5: ANGGOTA TIM -->
         <main v-show="activePage === 'team'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-zinc-800 gap-3">
@@ -1109,7 +1103,7 @@
           </div>
         </main>
 
-        <!-- PAGE 6: ⚙️ INTEGRASI & SETELAN -->
+        <!-- PAGE 6: INTEGRASI & SETELAN -->
         <main v-show="activePage === 'settings'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
             <div class="pb-5 border-b border-zinc-800">
@@ -1163,235 +1157,12 @@
 
       </div>
 
-      <!-- Slide-over Review & Submit Drawer -->
-      <div v-if="activeChecksheet" class="fixed inset-0 z-50 bg-black/70 flex justify-end" @click.self="closeDetail">
-        <div class="bg-zinc-900 border-l border-zinc-800 w-full max-w-2xl h-full flex flex-col p-6 shadow-xl overflow-y-auto">
-          <!-- Header -->
-          <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-base font-bold text-zinc-100 font-mono">{{ activeChecksheet.part_number }}</h2>
-                <span class="px-2 py-0.5 rounded text-[11px] font-semibold border"
-                      :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
-                              activeChecksheet.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
-                              activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
-                              'bg-rose-950 text-rose-300 border-rose-800'">
-                  {{ activeChecksheet.status }}
-                </span>
-              </div>
-              <p class="text-xs text-zinc-400 mt-0.5">{{ activeChecksheet.part_name || '-' }}</p>
-            </div>
-            <button @click="closeDetail" class="text-zinc-500 hover:text-zinc-300 text-lg">✕</button>
-          </div>
-
-          <!-- Drawer Tabs: Points vs Sketches -->
-          <div class="flex items-center gap-2 border-b border-zinc-800 pt-4 pb-2">
-            <button @click="drawerTab = 'points'"
-                    :class="drawerTab === 'points' ? 'bg-zinc-800 text-zinc-100 font-bold border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'"
-                    class="px-3.5 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors">
-              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-              <span>Titik Inspeksi ({{ (activeChecksheet.points || []).length }})</span>
-            </button>
-            <button @click="drawerTab = 'images'"
-                    :class="drawerTab === 'images' ? 'bg-zinc-800 text-zinc-100 font-bold border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'"
-                    class="px-3.5 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors">
-              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span>Gambar Sketsa Part ({{ (activeChecksheet.images || []).length }})</span>
-            </button>
-          </div>
-
-          <!-- TAB 1: Points Table & Form -->
-          <div v-show="drawerTab === 'points'" class="flex-1 overflow-y-auto py-4 space-y-4">
-            <!-- Metadata Grid -->
-            <div class="grid grid-cols-2 gap-3 text-xs bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
-              <div>
-                <span class="text-zinc-500 block">Customer</span>
-                <span class="font-medium text-zinc-200">{{ activeChecksheet.customer || '-' }}</span>
-              </div>
-              <div>
-                <span class="text-zinc-500 block">Model</span>
-                <span class="font-mono text-zinc-200">{{ activeChecksheet.model || '-' }}</span>
-              </div>
-              <div>
-                <span class="text-zinc-500 block">No. Dokumen</span>
-                <span class="font-mono text-zinc-200">{{ activeChecksheet.doc_number || '-' }}</span>
-              </div>
-              <div>
-                <span class="text-zinc-500 block">Penanggung Jawab</span>
-                <span class="font-semibold text-zinc-200">{{ activeChecksheet.assigned_to || 'Unassigned' }}</span>
-              </div>
-            </div>
-
-            <!-- Action Toolbar: Excel Studio Button & Inline Edit Toggle -->
-            <div class="flex items-center justify-between gap-2 bg-zinc-950 border border-zinc-800 p-2.5 rounded-xl">
-              <button @click="openExcelStudio(activeChecksheet)"
-                      class="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Buka Mode Excel Studio (Split View)</span>
-              </button>
-              <button @click="toggleInlineEdit"
-                      :class="isInlineEditing ? 'bg-amber-600 text-white border-amber-500' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'"
-                      class="py-2 px-3 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span>{{ isInlineEditing ? '✕ Selesai' : '✏️ Edit Cepat' }}</span>
-              </button>
-            </div>
-
-            <!-- Inline Editable Mode in Drawer -->
-            <div v-if="isInlineEditing" class="border border-indigo-900/80 rounded-xl overflow-hidden bg-zinc-950 shadow-md">
-              <div class="px-3 py-2 bg-indigo-950/40 border-b border-indigo-900/60 flex items-center justify-between">
-                <span class="text-[11px] font-bold text-indigo-300">Edit Cepat (Navigasi: ↑ ↓ ← →, Enter, Tab)</span>
-                <button @click="addExcelRow" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[10px] font-semibold cursor-pointer">+ Baris</button>
-              </div>
-              <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                <table class="w-full text-left text-xs border-collapse">
-                  <thead class="bg-zinc-900 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[10px] sticky top-0 z-10">
-                    <tr>
-                      <th class="p-2 w-10 text-center">No</th>
-                      <th class="p-2">Item Inspeksi</th>
-                      <th class="p-2">Standar / Toleransi</th>
-                      <th class="p-2">Alat Ukur</th>
-                      <th class="p-2 w-8"></th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-zinc-800">
-                    <tr v-for="(p, rIdx) in excelPoints" :key="rIdx" class="hover:bg-zinc-900/80">
-                      <td class="p-0 border-r border-zinc-800/60 align-middle">
-                        <input :id="'drawer-cell-' + rIdx + '-0'"
-                               v-model="p.item_no"
-                               @focus="setActiveCell(rIdx, 0)"
-                               @keydown="handleGridKeydown($event, rIdx, 0, 'drawer')"
-                               @paste="handleExcelPaste($event, rIdx, 0)"
-                               class="w-full p-2 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
-                      </td>
-                      <td class="p-0 border-r border-zinc-800/60 align-middle">
-                        <textarea :id="'drawer-cell-' + rIdx + '-1'"
-                                  v-model="p.inspection_item"
-                                  placeholder="Nama item..."
-                                  rows="2"
-                                  @focus="setActiveCell(rIdx, 1)"
-                                  @keydown="handleGridKeydown($event, rIdx, 1, 'drawer')"
-                                  @paste="handleExcelPaste($event, rIdx, 1)"
-                                  class="w-full p-2 bg-transparent text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
-                      </td>
-                      <td class="p-0 border-r border-zinc-800/60 align-middle">
-                        <textarea :id="'drawer-cell-' + rIdx + '-2'"
-                                  v-model="p.standard"
-                                  placeholder="Standar..."
-                                  rows="2"
-                                  @focus="setActiveCell(rIdx, 2)"
-                                  @keydown="handleGridKeydown($event, rIdx, 2, 'drawer')"
-                                  @paste="handleExcelPaste($event, rIdx, 2)"
-                                  class="w-full p-2 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
-                      </td>
-                      <td class="p-0 border-r border-zinc-800/60 align-middle">
-                        <div class="relative flex items-center">
-                          <input :id="'drawer-cell-' + rIdx + '-3'"
-                                 type="text"
-                                 list="standard-tools-list"
-                                 v-model="p.method"
-                                 placeholder="Visual / Caliper"
-                                 @blur="normalizeRowTool(rIdx)"
-                                 @focus="setActiveCell(rIdx, 3)"
-                                 @keydown="handleGridKeydown($event, rIdx, 3, 'drawer')"
-                                 @paste="handleExcelPaste($event, rIdx, 3)"
-                                 class="w-full p-2 pr-7 bg-transparent text-zinc-300 placeholder-zinc-600 focus:bg-indigo-950/60 focus:text-indigo-200 focus:outline-none border-2 border-transparent focus:border-indigo-500 rounded-none text-xs">
-                          <select @change="p.method = $event.target.value; isPointsDirty = true; $event.target.value=''"
-                                  class="absolute right-1 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 bg-zinc-800 text-zinc-300 border border-zinc-700 rounded px-1 py-0.5 text-[9px] cursor-pointer">
-                            <option value="" disabled selected>▾</option>
-                            <option v-for="t in standardToolsList" :key="t" :value="t">{{ t }}</option>
-                          </select>
-                        </div>
-                      </td>
-                      <td class="p-0 text-center align-middle">
-                        <div class="flex items-center justify-center gap-0.5 px-1">
-                          <button @click="insertExcelRowAfter(rIdx)" title="Sisipkan baris baru di bawah" class="p-1 text-zinc-400 hover:text-indigo-300 font-bold text-xs cursor-pointer">+</button>
-                          <button @click="deleteExcelRow(rIdx)" title="Hapus baris ini" class="p-1 text-zinc-600 hover:text-rose-400 font-bold text-xs cursor-pointer">✕</button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="p-2.5 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
-                <button @click="addExcelRow" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer">+ Tambah Baris</button>
-                <button @click="saveExcelPoints" :disabled="isSavingPoints"
-                        class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50 shadow cursor-pointer">
-                  {{ isSavingPoints ? 'Menyimpan...' : 'Simpan Titik Ukur' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Read-only Inspection Points Table (when not in inline edit) -->
-            <div v-else class="border border-zinc-800 rounded-xl overflow-hidden">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-semibold uppercase text-[10px]">
-                  <tr>
-                    <th class="p-2.5 w-10 text-center">No</th>
-                    <th class="p-2.5">Item Inspeksi</th>
-                    <th class="p-2.5">Standar / Limit</th>
-                    <th class="p-2.5">Alat Ukur</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800/60 bg-zinc-900/40">
-                  <tr v-for="(pt, idx) in activeChecksheet.points" :key="idx">
-                    <td class="p-2.5 text-center font-mono text-zinc-500">{{ pt.item_no || idx + 1 }}</td>
-                    <td class="p-2.5 font-medium text-zinc-200">{{ pt.inspection_item }}</td>
-                    <td class="p-2.5 font-mono text-zinc-300 whitespace-pre-wrap break-words max-w-[220px]">{{ pt.standard || '-' }}</td>
-                    <td class="p-2.5 text-zinc-400">{{ pt.method || 'Visual' }}</td>
-                  </tr>
-                  <tr v-if="!activeChecksheet.points || activeChecksheet.points.length === 0">
-                    <td colspan="4" class="p-6 text-center text-zinc-500">Tidak ada titik ukur inspeksi</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- TAB 2: Drawing Sketches Gallery -->
-          <div v-show="drawerTab === 'images'" class="flex-1 overflow-y-auto py-4">
-            <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="grid grid-cols-2 gap-3">
-              <div v-for="(img, idx) in activeChecksheet.images" :key="idx"
-                   @click="previewImage = (typeof img === 'string' ? img : (img.image_url || img.image_path))"
-                   class="group relative bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden cursor-pointer hover:border-zinc-600 transition-all">
-                <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" :alt="'Sketsa ' + activeChecksheet.part_number" class="w-full h-44 object-contain bg-zinc-950 p-2">
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span class="px-2.5 py-1 bg-zinc-900/90 text-white rounded text-xs font-semibold shadow border border-zinc-700">Perbesar</span>
-                </div>
-              </div>
-            </div>
-            <div v-else class="py-12 text-center text-zinc-500 text-xs">
-              Tidak ada gambar sketsa part untuk checksheet ini.
-            </div>
-          </div>
-
-          <!-- Drawer Footer Action -->
-          <div class="pt-4 border-t border-zinc-800 flex items-center justify-between gap-3">
-            <button @click="markNeedsRevision"
-                    class="px-3 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded-lg text-xs font-semibold transition-colors">
-              ⚠️ Butuh Revisi
-            </button>
-            <div class="flex items-center gap-2">
-              <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
-                      class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50">
-                Dry-run Test
-              </button>
-              <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
-                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2">
-                <span>Submit ke FactoryHub</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Lightbox Zoom Modal -->
       <div v-if="previewImage" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" @click="previewImage = null">
         <div class="relative max-w-4xl max-h-[90vh]" @click.stop>
           <img :src="typeof previewImage === 'string' ? previewImage : (previewImage.image_url || previewImage.image_path)" alt="Preview Gambar" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-zinc-800 bg-zinc-950">
-          <button @click="previewImage = null" aria-label="Tutup preview gambar" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white flex items-center justify-center text-sm font-bold shadow-lg transition-colors cursor-pointer">
-            ✕
+          <button @click="previewImage = null" aria-label="Tutup preview gambar" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center shadow-lg transition-colors cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
@@ -1401,7 +1172,9 @@
         <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
             <h3 class="text-sm font-bold text-zinc-100">Eksekusi Batch Otomasi Playwright</h3>
-            <button @click="closeBatchModal" class="text-zinc-500 hover:text-zinc-300">✕</button>
+            <button @click="closeBatchModal" aria-label="Tutup" class="text-zinc-500 hover:text-zinc-300">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
           </div>
           <p class="text-xs text-zinc-400">
             Memproses <strong>{{ selectedIds.length }} part terpilih</strong> secara berurutan langsung ke portal FactoryHub.
@@ -1410,8 +1183,8 @@
             <p v-for="(l, idx) in batchLogs" :key="idx">{{ l }}</p>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button @click="closeBatchModal" :disabled="isBatchRunning" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold">Tutup</button>
-            <button @click="startBatchAutomation" :disabled="isBatchRunning" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-2">
+            <button @click="closeBatchModal" :disabled="isBatchRunning" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold cursor-pointer">Tutup</button>
+            <button @click="startBatchAutomation" :disabled="isBatchRunning" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer">
               <svg v-if="isBatchRunning" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span>{{ isBatchRunning ? 'Sedang Berjalan...' : 'Mulai Batch' }}</span>
             </button>
@@ -1424,24 +1197,26 @@
         <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
             <h3 class="text-sm font-bold text-zinc-100">Upload Checksheet Baru</h3>
-            <button @click="showUploadModal = false" class="text-zinc-500 hover:text-zinc-300">✕</button>
+            <button @click="showUploadModal = false" aria-label="Tutup" class="text-zinc-500 hover:text-zinc-300">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
           </div>
           <form @submit.prevent="submitUpload" class="space-y-4 text-xs">
             <div>
               <label class="block text-zinc-300 font-medium mb-1.5">Pilih File (.xlsx / .xls)</label>
               <input type="file" multiple @change="handleFileSelect" accept=".xlsx,.xls"
-                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200">
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-200 cursor-pointer">
             </div>
             <div>
               <label class="block text-zinc-300 font-medium mb-1.5">Tugaskan ke Operator</label>
-              <select v-model="uploadAssignee" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-200">
+              <select v-model="uploadAssignee" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-200 cursor-pointer">
                 <option value="Unassigned">Belum Ditugaskan (Unassigned)</option>
                 <option v-for="u in operatorUsers" :key="u.id" :value="u.name">{{ u.name }}</option>
               </select>
             </div>
             <div class="flex justify-end gap-2 pt-2">
-              <button type="button" @click="showUploadModal = false" class="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold">Batal</button>
-              <button type="submit" :disabled="isUploading || !selectedFiles.length" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50">
+              <button type="button" @click="showUploadModal = false" class="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold cursor-pointer">Batal</button>
+              <button type="submit" :disabled="isUploading || !selectedFiles.length" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold disabled:opacity-50 cursor-pointer">
                 {{ isUploading ? 'Mengunggah...' : 'Upload & Ekstrak' }}
               </button>
             </div>
@@ -1454,7 +1229,9 @@
         <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
             <h3 class="text-sm font-bold text-zinc-100">Tambah Anggota Tim Baru</h3>
-            <button @click="showUsersModal = false" class="text-zinc-500 hover:text-zinc-300">✕</button>
+            <button @click="showUsersModal = false" aria-label="Tutup" class="text-zinc-500 hover:text-zinc-300">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
           </div>
           <form @submit.prevent="createUser" class="space-y-3 text-xs">
             <div>
@@ -1494,90 +1271,107 @@
         </div>
       </div>
 
-      <!-- EXCEL SPREADSHEET STUDIO MODAL (Full Split Screen) -->
+      <!-- UNIFIED CHECKSHEET STUDIO MODAL (Review & Edit Split Screen) -->
       <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
         <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-[97vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden">
           
           <!-- Top Studio Header -->
-          <div class="px-5 py-3 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-4 shrink-0">
+          <div class="px-5 py-3 bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <!-- Left: Part Info & Title -->
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <h2 class="text-sm font-bold text-zinc-100 font-mono tracking-tight">{{ activeChecksheet.part_number }}</h2>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono">
                     {{ activeChecksheet.model || 'No Model' }}
                   </span>
                   <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
                     {{ activeChecksheet.customer || 'No Customer' }}
                   </span>
+                  <!-- Quick Status Dropdown -->
+                  <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
+                          class="px-2 py-0.5 rounded text-[10px] font-semibold border cursor-pointer focus:outline-none"
+                          :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                  activeChecksheet.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                  activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                                  'bg-rose-950 text-rose-300 border-rose-800'">
+                    <option value="Belum Di Input">Belum Di Input</option>
+                    <option value="Checksheet Done">Checksheet Done</option>
+                    <option value="Butuh Revisi">Butuh Revisi</option>
+                    <option value="Tidak Ada Part">Tidak Ada Part</option>
+                    <option value="DRAFT">DRAFT</option>
+                  </select>
+                  <!-- Quick Assignee Dropdown -->
+                  <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta"
+                          class="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded px-2 py-0.5 text-[10px] font-medium cursor-pointer focus:outline-none">
+                    <option value="Unassigned">Unassigned</option>
+                    <option v-for="u in operatorUsers" :key="u.id" :value="u.name">{{ u.name }}</option>
+                  </select>
                 </div>
                 <p class="text-xs text-zinc-400 truncate">{{ activeChecksheet.part_name || 'Tanpa Nama Part' }}</p>
               </div>
             </div>
 
-            <!-- Center: Keyboard Cheat Sheet -->
-            <div class="hidden lg:flex items-center gap-2 text-[11px] text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 font-mono">
-              <span class="text-indigo-400 font-bold">NAVIGASI:</span>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">↑</kbd>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">↓</kbd>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">←</kbd>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">→</kbd>
-              <span class="text-zinc-600">|</span>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Enter / Tab</kbd> Pindah
-              <span class="text-zinc-600">|</span>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Ctrl+V</kbd> Paste Excel
-              <span class="text-zinc-600">|</span>
-              <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">Ctrl+S</kbd> Simpan
-            </div>
-
-            <!-- Right: Actions & Save -->
-            <div class="flex items-center gap-2.5 shrink-0">
-              <div v-if="isPointsDirty" class="flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+            <!-- Right: Actions, Automation & Save -->
+            <div class="flex items-center gap-2 shrink-0">
+              <div v-if="isPointsDirty" class="flex items-center gap-1.5 text-xs text-amber-400 font-medium mr-1">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>Belum disimpan</span>
+                <span class="hidden sm:inline">Belum disimpan</span>
               </div>
-              <div v-else class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+              <div v-else class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium mr-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Tersimpan</span>
+                <span class="hidden sm:inline">Tersimpan</span>
               </div>
 
-              <button @click="addExcelRow" 
-                      class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer">
-                <span>+ Baris</span>
+              <!-- Automation Actions -->
+              <button @click="startAutomation(activeChecksheet.id, true)" :disabled="isAutomating"
+                      title="Uji coba otomasi tanpa submit portal"
+                      class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer">
+                Dry-run
+              </button>
+              <button @click="startAutomation(activeChecksheet.id, false)" :disabled="isAutomating"
+                      title="Kirim checksheet ini langsung ke portal FactoryHub via Playwright"
+                      class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow cursor-pointer">
+                <span>Submit FactoryHub</span>
               </button>
 
-              <button @click="saveExcelPoints" :disabled="isSavingPoints"
+              <!-- Save All Changes (Ctrl+S) -->
+              <button @click="saveChecksheetAndPoints" :disabled="isSavingPoints"
                       class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow cursor-pointer">
                 <svg v-if="isSavingPoints" class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 <span>{{ isSavingPoints ? 'Menyimpan...' : 'Simpan (Ctrl+S)' }}</span>
               </button>
 
+              <!-- Close Studio Button -->
               <button @click="closeExcelStudio" 
-                      aria-label="Tutup Excel Studio"
-                      class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer ml-1">
-                ✕
+                      aria-label="Tutup Studio"
+                      class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer ml-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
 
-          <!-- Body: Split Left (Sketch) and Right (Grid) -->
+          <!-- Body: Split Left (Drawing & Info) and Right (Grid) -->
           <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
             
-            <!-- LEFT PANEL: Sketch Drawing Viewer (42% width) -->
-            <div class="w-full md:w-[42%] border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950 flex flex-col shrink-0">
+            <!-- LEFT PANEL: Sketch Drawing Viewer & Metadata (40% width) -->
+            <div class="w-full md:w-[40%] border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950 flex flex-col shrink-0 overflow-y-auto">
+              
+              <!-- Hidden Image File Input for Manual Picker -->
+              <input ref="imageFileInput" type="file" accept="image/*" class="hidden" @change="handleImageFileSelect">
+
               <!-- Sketch Toolbar -->
-              <div class="p-2.5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-2 text-xs">
+              <div class="p-2.5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-2 text-xs shrink-0">
                 <div class="flex items-center gap-2">
-                  <span class="font-bold text-zinc-300">Gambar Sketsa CAD / Balon</span>
+                  <span class="font-bold text-zinc-300">Gambar Sketsa Drawing</span>
                   <span class="text-zinc-500 text-[11px]">({{ (activeChecksheet.images || []).length }} Gambar)</span>
                 </div>
-                <!-- Zoom Controls -->
+                <!-- Zoom Controls & Reset -->
                 <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5">
                   <button @click="sketchZoom = Math.max(0.5, sketchZoom - 0.25)" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer">-</button>
                   <span class="text-[11px] font-mono text-zinc-400 px-1">{{ Math.round(sketchZoom * 100) }}%</span>
@@ -1586,30 +1380,101 @@
                 </div>
               </div>
 
-              <!-- Sketch Image Display Area -->
-              <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/40 relative">
+              <!-- Sketch Image Display Area with Drag & Drop + Paste Overlay -->
+              <div class="relative flex-1 min-h-[280px] max-h-[48vh] overflow-auto p-3 flex items-center justify-center bg-black/50 select-none group"
+                   @dragover.prevent="isDraggingImage = true"
+                   @dragleave="isDraggingImage = false"
+                   @drop.prevent="handleImageDrop">
+
+                <!-- Image Present -->
                 <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="transition-transform duration-100 origin-center" :style="{ transform: `scale(${sketchZoom})` }">
                   <img :src="typeof activeChecksheet.images[activeSketchIdx] === 'string' ? activeChecksheet.images[activeSketchIdx] : (activeChecksheet.images[activeSketchIdx].image_url || activeChecksheet.images[activeSketchIdx].image_path)"
                        :alt="'Sketsa ' + activeChecksheet.part_number"
-                       class="max-w-full max-h-[75vh] object-contain rounded-lg border border-zinc-800/60 shadow-lg select-none">
+                       class="max-w-full max-h-[44vh] object-contain rounded-lg border border-zinc-800 shadow-md">
                 </div>
-                <div v-else class="text-center p-8 text-zinc-500 text-xs">
-                  <p>Tidak ada sketsa gambar untuk checksheet ini.</p>
+
+                <!-- Empty State (No Image) -->
+                <div v-else class="text-center p-6 text-zinc-400 flex flex-col items-center">
+                  <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-3">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  </div>
+                  <p class="text-xs font-semibold text-zinc-300">Belum ada gambar sketsa</p>
+                  <p class="text-[11px] text-zinc-500 mt-1 max-w-xs">Tarik file gambar ke sini, tekan <strong>Ctrl+V</strong> untuk paste, atau klik tombol di bawah</p>
+                  <button @click="$refs.imageFileInput.click()" type="button" class="mt-3 px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors">
+                    Pilih File Gambar
+                  </button>
+                </div>
+
+                <!-- Floating Actions on Top Right of Image -->
+                <div v-if="activeChecksheet.images && activeChecksheet.images.length"
+                     class="absolute top-2 right-2 flex items-center gap-1.5 bg-zinc-950/85 backdrop-blur-sm border border-zinc-800 rounded-lg p-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <button @click="$refs.imageFileInput.click()" title="Ganti atau tambah gambar baru"
+                          class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Ganti / Tambah</span>
+                  </button>
+                  <button @click="deleteCurrentImage" title="Hapus gambar ini (misal logo PT yang salah ekstrak)"
+                          class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Hapus Gambar</span>
+                  </button>
+                </div>
+
+                <!-- Visual Dropzone Overlay when Dragging a File -->
+                <div v-if="isDraggingImage"
+                     class="absolute inset-0 bg-indigo-950/90 border-2 border-dashed border-indigo-400 flex flex-col items-center justify-center p-4 z-20 pointer-events-none">
+                  <svg class="w-10 h-10 text-indigo-300 mb-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                  <p class="text-sm font-bold text-indigo-200">Lepaskan file gambar di sini</p>
+                  <p class="text-xs text-indigo-400 mt-0.5">Otomatis menambahkan sketsa ke part ini</p>
                 </div>
               </div>
 
-              <!-- Sketch Thumbnail Selector (if > 1) -->
-              <div v-if="activeChecksheet.images && activeChecksheet.images.length > 1" class="p-2 border-t border-zinc-800/80 bg-zinc-950 flex gap-2 overflow-x-auto">
+              <!-- Sketch Thumbnails (if any) -->
+              <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="p-2 border-t border-zinc-800/80 bg-zinc-950 flex items-center gap-2 overflow-x-auto shrink-0">
                 <button v-for="(img, idx) in activeChecksheet.images" :key="idx"
                         @click="activeSketchIdx = idx"
                         :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-zinc-800 opacity-60 hover:opacity-100'"
-                        class="h-12 w-20 rounded border bg-zinc-900 overflow-hidden shrink-0 transition-all cursor-pointer">
+                        class="h-12 w-16 rounded border bg-zinc-900 overflow-hidden shrink-0 transition-all cursor-pointer">
                   <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" class="w-full h-full object-cover">
                 </button>
+                <!-- Add image button in strip -->
+                <button @click="$refs.imageFileInput.click()" title="Tambah gambar lain"
+                        class="h-12 w-12 rounded border border-dashed border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-xs">
+                  <span class="text-base font-bold">+</span>
+                </button>
               </div>
+
+              <!-- Metadata & Revision Notes Section -->
+              <div class="p-3 border-t border-zinc-800/80 bg-zinc-900/30 space-y-2.5 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-zinc-500 font-medium mb-1">No. Dokumen</label>
+                    <input v-model="activeChecksheet.doc_number" @change="saveChecksheetMeta"
+                           type="text" placeholder="Contoh: Form 1"
+                           class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg font-mono text-zinc-200 focus:border-zinc-600 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-zinc-500 font-medium mb-1">Customer / Model</label>
+                    <div class="px-2.5 py-1.5 bg-zinc-950/60 border border-zinc-800/80 rounded-lg text-zinc-300 font-mono truncate">
+                      {{ activeChecksheet.customer || '-' }} / {{ activeChecksheet.model || '-' }}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-zinc-500 font-medium mb-1">Catatan / Keterangan Revisi</label>
+                  <textarea v-model="activeChecksheet.keterangan" @change="saveChecksheetMeta"
+                            rows="2" placeholder="Catatan part, revisi drawing, atau instruksi submit..."
+                            class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 resize-none focus:border-zinc-600 focus:outline-none"></textarea>
+                </div>
+                <div class="text-[11px] text-zinc-500 flex items-center justify-between">
+                  <span>Asal: {{ activeChecksheet.raw_file_path ? activeChecksheet.raw_file_path.split('/').pop() : 'Database' }}</span>
+                  <span class="font-mono">ID: #{{ activeChecksheet.id }}</span>
+                </div>
+              </div>
+
             </div>
 
-            <!-- RIGHT PANEL: Interactive Excel Grid (58% width) -->
+            <!-- RIGHT PANEL: Interactive Excel Grid (60% width) -->
             <div class="flex-1 flex flex-col min-w-0 bg-zinc-900/50">
               
               <!-- Excel Grid Action Bar -->
@@ -1621,13 +1486,14 @@
                   </span>
                   <button @click="autoStandardizeAllTools"
                           type="button"
-                          title="Ubah otomatis sebutan non-standar (misal Mata → Visual, Standar gg → Standard Gauge, CALIPER → Caliper)"
+                          title="Ubah otomatis sebutan non-standar (misal Mata -> Visual, Standar gg -> Standar Gauge, CALIPER -> Caliper)"
                           class="ml-2 px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-800 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
-                    <span>⚡ Standarkan Alat Ukur</span>
+                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Standarkan Alat Ukur</span>
                   </button>
                 </div>
                 <div class="flex items-center gap-2 text-zinc-400 text-[11px]">
-                  <span>💡 Geser icon <strong>⠿</strong> untuk urutan | Teks panjang otomatis turun ke bawah</span>
+                  <span>Tips: Drag grip handle untuk atur urutan | Teks panjang otomatis turun ke bawah</span>
                 </div>
               </div>
 
@@ -1718,7 +1584,7 @@
                           <select @change="p.method = $event.target.value; isPointsDirty = true; $event.target.value=''"
                                   title="Pilih alat ukur standar"
                                   class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 bg-zinc-800 text-zinc-300 border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] cursor-pointer">
-                            <option value="" disabled selected>▾</option>
+                            <option value="" disabled selected>Pilih...</option>
                             <option v-for="t in standardToolsList" :key="t" :value="t">{{ t }}</option>
                           </select>
                         </div>
@@ -1746,8 +1612,8 @@
                           </button>
                           <button @click="deleteExcelRow(rIdx)" 
                                   title="Hapus baris ini"
-                                  class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-rose-400 hover:bg-rose-950/50 transition-colors font-bold text-xs cursor-pointer">
-                            ✕
+                                  class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-rose-400 hover:bg-rose-950/50 transition-colors cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                           </button>
                         </div>
                       </td>
@@ -1801,7 +1667,9 @@
           <span v-if="toastType === 'success'" class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span v-else class="w-2 h-2 rounded-full bg-rose-400"></span>
           <span>{{ toastMessage }}</span>
-          <button @click="toastMessage = ''" class="ml-2 text-zinc-400 hover:text-zinc-200 cursor-pointer">✕</button>
+          <button @click="toastMessage = ''" aria-label="Tutup notifikasi" class="ml-2 text-zinc-400 hover:text-zinc-200 cursor-pointer flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
       </transition>
 
@@ -1822,7 +1690,7 @@
             {{ u.name }}
           </button>
         </div>
-        <button @click="selectedIds = []" class="text-zinc-500 hover:text-zinc-300 text-xs ml-2">✕ Batal</button>
+        <button @click="selectedIds = []" class="text-zinc-400 hover:text-zinc-200 text-xs ml-2 cursor-pointer font-medium">Batal</button>
       </div>
 
     </div>
@@ -1942,6 +1810,8 @@
         };
         const sketchZoom = ref(1.0);
         const activeSketchIdx = ref(0);
+        const isDraggingImage = ref(false);
+        const isUploadingImage = ref(false);
         const isInlineEditing = ref(false);
         const focusedCsIndex = ref(0);
         const toastMessage = ref('');
@@ -2222,15 +2092,7 @@
         };
 
         const openDetail = async (id) => {
-          try {
-            const res = await fetch(`/api/checksheets/${id}`);
-            if (res.ok) {
-              activeChecksheet.value = await res.json();
-              drawerTab.value = 'points';
-            }
-          } catch (e) {
-            alert('Gagal memuat detail checksheet.');
-          }
+          await openExcelStudio(id);
         };
 
         const showToast = (msg, type = 'success') => {
@@ -2360,15 +2222,20 @@
           showToast(`Berhasil menambah ${count} baris inspeksi`, 'success');
         };
 
-        const openExcelStudio = async (checksheet) => {
-          if (!checksheet) return;
-          activeChecksheet.value = checksheet;
+        const openExcelStudio = async (checksheetOrId) => {
+          if (!checksheetOrId) return;
+          const id = typeof checksheetOrId === 'object' ? checksheetOrId.id : checksheetOrId;
+          if (typeof checksheetOrId === 'object') {
+            activeChecksheet.value = checksheetOrId;
+          }
           try {
-            const res = await fetch(`/api/checksheets/${checksheet.id}`);
+            const res = await fetch(`/api/checksheets/${id}`);
             if (res.ok) {
               activeChecksheet.value = await res.json();
             }
           } catch (e) {}
+
+          if (!activeChecksheet.value) return;
 
           excelPoints.value = (activeChecksheet.value.points || []).map(p => ({
             ...p,
@@ -2404,6 +2271,162 @@
           }
           showExcelStudio.value = false;
           isPointsDirty.value = false;
+        };
+
+        const uploadImageBase64 = async (base64Data, filename = 'drawing.png') => {
+          if (!activeChecksheet.value) return;
+          isUploadingImage.value = true;
+          try {
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images/upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                image_base64: base64Data,
+                filename: filename
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              if (!activeChecksheet.value.images) {
+                activeChecksheet.value.images = [];
+              }
+              const newImg = data.image;
+              activeChecksheet.value.images.push(newImg);
+              activeSketchIdx.value = activeChecksheet.value.images.length - 1;
+
+              // Sync with parent list
+              const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
+              if (found) {
+                found.images = activeChecksheet.value.images;
+              }
+              showToast('Gambar sketsa drawing berhasil diunggah!', 'success');
+            } else {
+              showToast(data.detail || 'Gagal mengunggah gambar sketsa.', 'error');
+            }
+          } catch (e) {
+            showToast('Terjadi kesalahan jaringan saat mengunggah gambar.', 'error');
+          } finally {
+            isUploadingImage.value = false;
+          }
+        };
+
+        const handleImageDrop = async (event) => {
+          isDraggingImage.value = false;
+          if (!activeChecksheet.value) return;
+          const files = event.dataTransfer?.files;
+          if (!files || files.length === 0) return;
+          const file = files[0];
+          if (!file.type.startsWith('image/')) {
+            showToast('File yang di-drop harus berupa gambar (PNG, JPG, WEBP).', 'error');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            await uploadImageBase64(e.target.result, file.name);
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const handleImageFileSelect = async (event) => {
+          const files = event.target?.files;
+          if (!files || files.length === 0) return;
+          const file = files[0];
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            await uploadImageBase64(e.target.result, file.name);
+            event.target.value = '';
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const deleteCurrentImage = async () => {
+          if (!activeChecksheet.value || !activeChecksheet.value.images || activeChecksheet.value.images.length === 0) return;
+          const currentImg = activeChecksheet.value.images[activeSketchIdx.value];
+          if (!currentImg) return;
+
+          const imageId = typeof currentImg === 'object' ? currentImg.id : null;
+          const imagePath = typeof currentImg === 'object' ? (currentImg.image_path || currentImg.image_url) : currentImg;
+
+          if (!confirm('Hapus gambar ini dari checksheet? File dan data gambar akan dihapus permanen.')) return;
+
+          try {
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                image_id: imageId,
+                image_path: imagePath
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              activeChecksheet.value.images.splice(activeSketchIdx.value, 1);
+              if (activeSketchIdx.value >= activeChecksheet.value.images.length) {
+                activeSketchIdx.value = Math.max(0, activeChecksheet.value.images.length - 1);
+              }
+              const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
+              if (found) {
+                found.images = activeChecksheet.value.images;
+              }
+              showToast('Gambar berhasil dihapus.', 'success');
+            } else {
+              showToast(data.detail || 'Gagal menghapus gambar.', 'error');
+            }
+          } catch (e) {
+            showToast('Terjadi kesalahan jaringan saat menghapus gambar.', 'error');
+          }
+        };
+
+        const handleGlobalPaste = (event) => {
+          if (!showExcelStudio.value) return;
+          const items = (event.clipboardData || window.clipboardData)?.items;
+          if (!items) return;
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.indexOf('image') !== -1) {
+              event.preventDefault();
+              const blob = item.getAsFile();
+              if (blob) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                  await uploadImageBase64(e.target.result, `clipboard_${Date.now()}.png`);
+                };
+                reader.readAsDataURL(blob);
+              }
+              return;
+            }
+          }
+        };
+
+        const saveChecksheetMeta = async () => {
+          if (!activeChecksheet.value) return;
+          try {
+            const payload = {
+              doc_number: activeChecksheet.value.doc_number,
+              status: activeChecksheet.value.status,
+              assigned_to: activeChecksheet.value.assigned_to,
+              keterangan: activeChecksheet.value.keterangan
+            };
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+              const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
+              if (found) {
+                Object.assign(found, payload);
+              }
+              showToast('Metadata checksheet tersimpan!', 'success');
+            }
+          } catch (e) {
+            showToast('Gagal menyimpan metadata checksheet.', 'error');
+          }
+        };
+
+        const saveChecksheetAndPoints = async () => {
+          await saveChecksheetMeta();
+          await saveExcelPoints();
         };
 
         const toggleInlineEdit = () => {
@@ -2884,6 +2907,7 @@
         onMounted(() => {
           checkSavedSession();
           loadCatalogStats();
+          window.addEventListener('paste', handleGlobalPaste);
         });
 
         return {
@@ -2970,6 +2994,14 @@
           activeCol,
           sketchZoom,
           activeSketchIdx,
+          isDraggingImage,
+          isUploadingImage,
+          uploadImageBase64,
+          handleImageDrop,
+          handleImageFileSelect,
+          deleteCurrentImage,
+          saveChecksheetMeta,
+          saveChecksheetAndPoints,
           isInlineEditing,
           focusedCsIndex,
           toastMessage,

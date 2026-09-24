@@ -1,14 +1,18 @@
 """
 Checksheets API Router.
 """
-from typing import List, Optional
+import os
+import re
+import time
+import base64
+from typing import List, Optional, Union
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, update
 
 from database.connection import get_db
-from database.models import Checksheet, InspectionPoint
+from database.models import Checksheet, InspectionPoint, PartImage
 from database.crud import list_checksheets, get_checksheet_by_id
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
@@ -258,3 +262,168 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
         "updated_count": len(payload.checksheet_ids),
         "assigned_to": payload.assigned_to
     }
+
+
+class ImageUploadSchema(BaseModel):
+    image_base64: str
+    filename: Optional[str] = None
+
+
+@router.post("/{checksheet_id}/images/upload")
+async def upload_checksheet_image(
+    checksheet_id: int,
+    payload: ImageUploadSchema,
+    db: AsyncSession = Depends(get_db)
+):
+    """Upload or paste a sketch/drawing image for a checksheet."""
+    cs = await get_checksheet_by_id(db, checksheet_id)
+    if not cs:
+        raise HTTPException(status_code=404, detail="Checksheet not found")
+
+    from database.crud import clean_str
+    clean_p = clean_str(cs.part_number) or "default"
+    save_dir = os.path.join("storage", "images", clean_p)
+    os.makedirs(save_dir, exist_ok=True)
+
+    b64_str = payload.image_base64
+    ext = "png"
+    if "," in b64_str:
+        header, b64_str = b64_str.split(",", 1)
+        if "jpeg" in header or "jpg" in header:
+            ext = "jpg"
+        elif "webp" in header:
+            ext = "webp"
+
+    raw_name = payload.filename or f"sketch_{int(time.time() * 1000)}.{ext}"
+    base_name = os.path.basename(raw_name)
+    safe_name = re.sub(r"[^0-9A-Za-z_.-]", "_", base_name)
+    if not safe_name.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        safe_name = f"{safe_name}.{ext}"
+
+    target_path = os.path.join(save_dir, safe_name)
+    try:
+        data = base64.b64decode(b64_str)
+        with open(target_path, "wb") as f:
+            f.write(data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Gagal memproses file gambar: {str(e)}")
+
+    url_sub = f"/media/images/{clean_p}/{safe_name}"
+
+    existing_img = None
+    for img in cs.images:
+        if img.image_path == target_path:
+            existing_img = img
+            break
+
+    new_part_img_id = None
+    if not existing_img:
+        new_part_img = PartImage(
+            checksheet_id=cs.id,
+            image_path=target_path,
+            image_url=url_sub
+        )
+        db.add(new_part_img)
+        await db.commit()
+        await db.refresh(cs)
+        new_part_img_id = new_part_img.id
+    else:
+        new_part_img_id = existing_img.id
+
+    new_img_dict = {
+        "id": new_part_img_id,
+        "image_url": url_sub,
+        "image_path": target_path,
+        "filename": safe_name
+    }
+
+    updated_images = _build_checksheet_images(cs)
+    return {"status": "success", "images": updated_images, "image": new_img_dict}
+
+
+class DeleteImageSchema(BaseModel):
+    image_id: Optional[Union[int, str]] = None
+    filename: Optional[str] = None
+    image_path: Optional[str] = None
+
+
+@router.delete("/{checksheet_id}/images")
+async def delete_checksheet_image(
+    checksheet_id: int,
+    filename: Optional[str] = Query(None),
+    image_path: Optional[str] = Query(None),
+    payload: Optional[DeleteImageSchema] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a drawing image from DB and disk (e.g. erroneous logo extraction)."""
+    cs = await get_checksheet_by_id(db, checksheet_id)
+    if not cs:
+        raise HTTPException(status_code=404, detail="Checksheet not found")
+
+    raw_fn = payload.filename if (payload and payload.filename) else (filename if isinstance(filename, str) else None)
+    raw_ip = payload.image_path if (payload and payload.image_path) else (image_path if isinstance(image_path, str) else None)
+    target_id = str(payload.image_id) if (payload and payload.image_id is not None) else None
+
+    target_file = raw_fn
+    target_path = raw_ip
+    if not target_file and target_path:
+        target_file = os.path.basename(target_path)
+
+    if not target_file and not target_path and not target_id:
+        raise HTTPException(status_code=400, detail="Filename, image_path, or image_id is required")
+
+    deleted_count = 0
+
+    # 1. Delete from PartImage table
+    for img in list(cs.images):
+        matches = False
+        if target_id and str(img.id) == target_id:
+            matches = True
+        elif target_file and os.path.basename(img.image_path or "") == target_file:
+            matches = True
+        elif target_path and img.image_path == target_path:
+            matches = True
+
+        if matches:
+            if img.image_path and os.path.isfile(img.image_path):
+                try:
+                    os.remove(img.image_path)
+                except Exception:
+                    pass
+            await db.delete(img)
+            deleted_count += 1
+
+    # 2. Check disk locations (storage/images, extracted_images)
+    from database.crud import clean_str
+    clean_p = clean_str(cs.part_number)
+    norm_p = re.sub(r"[^0-9A-Za-z_-]", "_", cs.part_number)
+    file_stem = os.path.splitext(os.path.basename(cs.raw_file_path or ""))[0]
+    clean_file_stem = re.sub(r"^(CS\s*IQC\s*)", "", file_stem, flags=re.I).strip()
+    norm_stem = re.sub(r"[^0-9A-Za-z_-]", "_", clean_file_stem)
+
+    candidate_folders = [cs.part_number, norm_p, clean_p, clean_file_stem, norm_stem]
+
+    for c_dir in candidate_folders:
+        if not c_dir or len(c_dir) < 3:
+            continue
+        for base_dir in ["storage/images", "extracted_images"]:
+            p = os.path.join(base_dir, c_dir, target_file) if target_file else None
+            if p and os.path.isfile(p):
+                try:
+                    os.remove(p)
+                    deleted_count += 1
+                except Exception:
+                    pass
+
+    if target_path and os.path.isfile(target_path):
+        try:
+            os.remove(target_path)
+            deleted_count += 1
+        except Exception:
+            pass
+
+    await db.commit()
+    await db.refresh(cs)
+
+    updated_images = _build_checksheet_images(cs)
+    return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
