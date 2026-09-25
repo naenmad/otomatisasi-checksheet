@@ -40,6 +40,18 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
     os.makedirs(output_dir, exist_ok=True)
     extracted_paths = []
 
+    # First check if the workbook has DrawingML composite group shapes (drawings with vector annotations)
+    try:
+        from scripts.reextract_composite_drawings import render_drawingml_composite
+        composite_im = render_drawingml_composite(file_path)
+        if composite_im is not None:
+            out_file = os.path.join(output_dir, "sketch_1.webp")
+            composite_im.save(out_file, "WEBP", quality=85, method=6)
+            extracted_paths.append(os.path.abspath(out_file))
+            return extracted_paths
+    except Exception as e:
+        pass
+
     try:
         with zipfile.ZipFile(file_path, "r") as z:
             wb_xml = ET.fromstring(z.read("xl/workbook.xml"))
