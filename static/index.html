@@ -377,7 +377,7 @@
           </div>
 
           <!-- KPI Metric Cards (Interactive click filters) -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <!-- Total Checksheets -->
             <button @click="goToChecksheetsWithStatus('ALL')"
                     class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-zinc-700 text-left transition-all group">
@@ -395,6 +395,17 @@
               </div>
               <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
               <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
+            </button>
+
+            <!-- Reviewed (Siap Batch) -->
+            <button @click="goToChecksheetsWithStatus('Reviewed')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-sky-800 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Reviewed</p>
+                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-sky-400 font-mono mt-1 group-hover:text-sky-300 transition-colors">{{ countStatus('Reviewed') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Ditinjau & siap batch</p>
             </button>
 
             <!-- Belum Di Input -->
@@ -554,6 +565,7 @@
                     <td class="py-2.5 px-3">
                       <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
                             :class="cs.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                    cs.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
                                     cs.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
                                     cs.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
                                     'bg-rose-950 text-rose-300 border-rose-800'">
@@ -576,7 +588,7 @@
         <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
         <main v-show="activePage === 'checksheets'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
           <!-- Interactive Metric Filters -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <button @click="statusFilter = 'ALL'"
                     :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
                     class="p-4 rounded-xl border text-left transition-all">
@@ -594,6 +606,17 @@
               </div>
               <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
               <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
+            </button>
+
+            <button @click="statusFilter = 'Reviewed'"
+                    :class="statusFilter === 'Reviewed' ? 'border-sky-500 bg-zinc-800/80 ring-1 ring-sky-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Reviewed</p>
+                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-sky-400 font-mono mt-1">{{ countStatus('Reviewed') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Ditinjau & siap batch</p>
             </button>
 
             <button @click="statusFilter = 'Belum Di Input'"
@@ -713,6 +736,7 @@
               <select v-model="statusFilter" class="bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 rounded-lg px-2.5 py-1.5 focus:border-zinc-600 focus:outline-none">
                 <option value="ALL">Semua Status</option>
                 <option value="Checksheet Done">Checksheet Done</option>
+                <option value="Reviewed">Reviewed</option>
                 <option value="Belum Di Input">Belum Di Input</option>
                 <option value="Butuh Revisi">Butuh Revisi</option>
                 <option value="Tidak Ada Part">Tidak Ada Part</option>
@@ -855,6 +879,11 @@
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                         <span>Done</span>
+                      </span>
+                      <span v-else-if="cs.status === 'Reviewed'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-sky-950 text-sky-300 border border-sky-800 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                        <span>Reviewed</span>
                       </span>
                       <span v-else-if="cs.status === 'Belum Di Input'"
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
@@ -1210,6 +1239,81 @@
               </div>
             </div>
 
+            <!-- System Update (Git Pull) Section -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-indigo-950/80 border border-indigo-800 flex items-center justify-center text-indigo-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-bold text-zinc-100">Pembaruan Sistem (System Update)</h3>
+                      <span v-if="systemUpdateInfo.has_update" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">
+                        Update Tersedia ({{ systemUpdateInfo.behind_count }} Commit)
+                      </span>
+                      <span v-else-if="systemUpdateInfo.current_commit" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                        Versi Terkini
+                      </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">Sinkronisasi repositori otomatis melalui git pull origin main</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button @click="checkSystemUpdate(false)" :disabled="isCheckingUpdate || isUpdatingSystem"
+                          class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer">
+                    <svg v-if="isCheckingUpdate" class="animate-spin w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg v-else class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <span>{{ isCheckingUpdate ? 'Memeriksa...' : 'Cek Pembaruan' }}</span>
+                  </button>
+
+                  <button @click="triggerSystemUpdate" :disabled="isUpdatingSystem"
+                          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-2 shadow-sm cursor-pointer hover:scale-105 active:scale-95">
+                    <svg v-if="isUpdatingSystem" class="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg v-else class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>{{ isUpdatingSystem ? 'Mengunduh Pembaruan...' : 'Update Sekarang (Git Pull)' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Git Info Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
+                  <span class="text-zinc-500 text-[11px] block">Commit Lokal</span>
+                  <span class="font-mono font-bold text-zinc-200 text-xs">{{ systemUpdateInfo.current_commit || '-' }}</span>
+                  <span class="text-[10px] text-zinc-500 block mt-0.5">Branch: {{ systemUpdateInfo.current_branch || 'main' }}</span>
+                </div>
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
+                  <span class="text-zinc-500 text-[11px] block">Commit Remote</span>
+                  <span class="font-mono font-bold text-indigo-300 text-xs">{{ systemUpdateInfo.remote_commit || '-' }}</span>
+                  <span class="text-[10px] text-zinc-500 block mt-0.5">origin/main</span>
+                </div>
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
+                  <span class="text-zinc-500 text-[11px] block">Terakhir Diperiksa</span>
+                  <span class="text-zinc-300 text-xs">{{ systemUpdateInfo.checked_at || 'Belum diperiksa' }}</span>
+                  <span class="text-[10px] text-zinc-500 block mt-0.5" :class="systemUpdateInfo.behind_count > 0 ? 'text-amber-400 font-semibold' : 'text-emerald-400'">
+                    {{ systemUpdateInfo.behind_count > 0 ? `${systemUpdateInfo.behind_count} revisi baru belum diterapkan` : 'Sinkron penuh dengan server' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Commits Behind List (if any) -->
+              <div v-if="systemUpdateInfo.commits_behind && systemUpdateInfo.commits_behind.length > 0" class="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg space-y-2">
+                <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Daftar Perubahan yang Belum Di-pull:
+                </span>
+                <div class="space-y-1 max-h-36 overflow-y-auto font-mono text-[11px] text-zinc-300">
+                  <div v-for="(c, cIdx) in systemUpdateInfo.commits_behind" :key="cIdx" class="px-2.5 py-1 bg-zinc-900/80 rounded border border-zinc-800 flex items-start gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1"></span>
+                    <span class="break-words">{{ c }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Storage & Database Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
@@ -1504,10 +1608,12 @@
                   <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
                           class="px-2 py-0.5 rounded text-[10px] font-semibold border cursor-pointer focus:outline-none"
                           :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                  activeChecksheet.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
                                   activeChecksheet.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
                                   activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
                                   'bg-rose-950 text-rose-300 border-rose-800'">
                     <option value="Belum Di Input">Belum Di Input</option>
+                    <option value="Reviewed">Reviewed</option>
                     <option value="Checksheet Done">Checksheet Done</option>
                     <option value="Butuh Revisi">Butuh Revisi</option>
                     <option value="Tidak Ada Part">Tidak Ada Part</option>
@@ -1558,6 +1664,22 @@
                 <span class="hidden sm:inline">Tersimpan</span>
               </div>
 
+              <!-- Toggle Reviewed Status Button -->
+              <button @click="toggleReviewStatus"
+                      type="button"
+                      :title="activeChecksheet.status === 'Reviewed' ? 'Checksheet ini telah diverifikasi. Klik untuk membatalkan status Reviewed.' : 'Tandai checksheet ini sudah diverifikasi gambarnya dan siap dikirim batch'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      :class="activeChecksheet.status === 'Reviewed' 
+                        ? 'bg-sky-600 hover:bg-sky-500 text-white ring-2 ring-sky-400/50' 
+                        : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 hover:border-sky-500 hover:text-sky-300'">
+                <svg v-if="activeChecksheet.status === 'Reviewed'" class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ activeChecksheet.status === 'Reviewed' ? 'Status: Reviewed ✓' : 'Tandai Reviewed' }}</span>
+              </button>
 
               <!-- Save All Changes (Ctrl+S) -->
               <button @click="saveChecksheetAndPoints" :disabled="isSavingPoints"
@@ -1942,6 +2064,69 @@
         <button @click="selectedIds = []" class="text-zinc-400 hover:text-zinc-200 text-xs ml-auto cursor-pointer font-medium shrink-0">Batal</button>
       </div>
 
+      <!-- FORCED SYSTEM UPDATE BLOCKING MODAL (Cannot be dismissed until updated) -->
+      <div v-if="systemUpdateInfo && systemUpdateInfo.has_update" 
+           class="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 select-none"
+           role="dialog" aria-modal="true">
+        <div class="bg-zinc-900 border border-amber-500/80 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5 text-center relative overflow-hidden">
+          <!-- Top Glow accent -->
+          <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500"></div>
+
+          <!-- Alert Icon -->
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+            <svg class="w-8 h-8 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </div>
+
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-800 text-amber-300 text-xs font-bold uppercase tracking-wider">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <span>Pembaruan Sistem Wajib Tersedia</span>
+            </div>
+            <h2 class="text-xl font-bold text-zinc-100">Aplikasi Harus Diperbarui</h2>
+            <p class="text-xs text-zinc-400 leading-relaxed max-w-md mx-auto">
+              Terdapat <strong class="text-amber-300">{{ systemUpdateInfo.behind_count }} perubahan baru</strong> pada branch <code class="text-indigo-300 font-mono">origin/main</code>. Untuk menjaga integritas data QC dan sinkronisasi checksheet, aplikasi dikunci hingga pembaruan diterapkan.
+            </p>
+          </div>
+
+          <!-- Commits Behind Preview -->
+          <div v-if="systemUpdateInfo.commits_behind && systemUpdateInfo.commits_behind.length > 0" class="text-left bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-2 max-h-40 overflow-y-auto">
+            <span class="text-[11px] font-semibold text-zinc-400 block uppercase tracking-wider">Catatan Perubahan (Commit):</span>
+            <div class="space-y-1 font-mono text-[11px] text-zinc-300">
+              <div v-for="(c, cIdx) in systemUpdateInfo.commits_behind" :key="cIdx" class="px-2 py-1 bg-zinc-900 rounded border border-zinc-800/80 flex items-start gap-2">
+                <span class="text-amber-400 font-bold shrink-0">•</span>
+                <span class="break-words">{{ c }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error message if update failed -->
+          <div v-if="updateError" class="p-3 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs text-left">
+            <p class="font-bold">Gagal memperbarui:</p>
+            <p class="text-[11px] font-mono mt-0.5 break-words">{{ updateError }}</p>
+          </div>
+
+          <!-- Update Button -->
+          <div class="pt-2">
+            <button @click="triggerSystemUpdate" :disabled="isUpdatingSystem"
+                    class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-xl text-sm font-bold shadow-xl shadow-indigo-950/50 flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60 hover:scale-[1.02] active:scale-98">
+              <svg v-if="isUpdatingSystem" class="animate-spin w-5 h-5 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>{{ isUpdatingSystem ? 'Sedang Melakukan Git Pull...' : 'Perbarui Sistem Sekarang (Git Pull)' }}</span>
+            </button>
+            <p class="text-[11px] text-zinc-500 mt-2">
+              Halaman akan otomatis dimuat ulang setelah git pull selesai.
+            </p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -2096,6 +2281,21 @@
         const isDryRunMode = ref(false);
         const activeBatchEventSource = ref(null);
         const currentBatchId = ref('batch_initial');
+
+        // System Update & Git State
+        const systemUpdateInfo = ref({
+          has_update: false,
+          current_commit: '',
+          current_branch: 'main',
+          remote_commit: '',
+          behind_count: 0,
+          commits_behind: [],
+          checked_at: null,
+          error: null
+        });
+        const isCheckingUpdate = ref(false);
+        const isUpdatingSystem = ref(false);
+        const updateError = ref('');
 
         // Master Part Checker
         const showPartCheckerModal = ref(false);
@@ -2810,6 +3010,69 @@
           await saveExcelPoints();
         };
 
+        const toggleReviewStatus = async () => {
+          if (!activeChecksheet.value) return;
+          const isReviewed = activeChecksheet.value.status === 'Reviewed';
+          const newStatus = isReviewed ? 'Belum Di Input' : 'Reviewed';
+          activeChecksheet.value.status = newStatus;
+          await saveChecksheetMeta();
+          if (newStatus === 'Reviewed') {
+            showToast(`Part ${activeChecksheet.value.part_number} berhasil ditandai Reviewed dan siap dikirim!`, 'success');
+          } else {
+            showToast(`Status Reviewed untuk part ${activeChecksheet.value.part_number} dibatalkan.`, 'info');
+          }
+        };
+
+        const checkSystemUpdate = async (silent = false) => {
+          if (isCheckingUpdate.value || isUpdatingSystem.value) return;
+          isCheckingUpdate.value = true;
+          updateError.value = '';
+          try {
+            const res = await fetch('/api/system/update-status');
+            if (res.ok) {
+              const data = await res.json();
+              systemUpdateInfo.value = data;
+              if (!silent) {
+                if (data.has_update) {
+                  showToast(`Ditemukan ${data.behind_count} pembaruan baru dari git origin/main!`, 'warning');
+                } else if (data.error) {
+                  showToast(data.error, 'warning');
+                } else {
+                  showToast('Sistem sudah pada versi terbaru.', 'success');
+                }
+              }
+            }
+          } catch (e) {
+            if (!silent) showToast('Gagal memeriksa status pembaruan.', 'error');
+          } finally {
+            isCheckingUpdate.value = false;
+          }
+        };
+
+        const triggerSystemUpdate = async () => {
+          if (isUpdatingSystem.value) return;
+          isUpdatingSystem.value = true;
+          updateError.value = '';
+          try {
+            const res = await fetch('/api/system/update', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              showToast('Pembaruan berhasil! Memuat ulang sistem...', 'success');
+              setTimeout(() => {
+                window.location.reload();
+              }, 1200);
+            } else {
+              updateError.value = data.detail || 'Terjadi kesalahan saat git pull.';
+              showToast(updateError.value, 'error');
+              isUpdatingSystem.value = false;
+            }
+          } catch (e) {
+            updateError.value = 'Gagal menghubungi server untuk update.';
+            showToast(updateError.value, 'error');
+            isUpdatingSystem.value = false;
+          }
+        };
+
         const toggleInlineEdit = () => {
           isInlineEditing.value = !isInlineEditing.value;
           if (isInlineEditing.value && activeChecksheet.value) {
@@ -3218,22 +3481,31 @@
             }
           }
 
+          // Strict Reviewed status validation for selected parts
+          if (selectedIds.value.length > 0) {
+            const unreviewed = checksheets.value.filter(c => selectedIds.value.includes(c.id) && c.status !== 'Reviewed');
+            if (unreviewed.length > 0) {
+              showToast(`Ada ${unreviewed.length} part belum berstatus 'Reviewed'. Anda harus meninjau sketsa & data di Review & Edit lalu klik 'Tandai Reviewed' sebelum kirim batch!`, 'warning');
+              return;
+            }
+          }
+
           showBatchModal.value = true;
           if (selectedIds.value.length === 0) {
             const pending = checksheets.value.filter(c => {
-              if (c.status !== 'Belum Di Input') return false;
+              if (c.status !== 'Reviewed') return false;
               if (currentUser.value?.role === 'admin') return true;
               return c.assigned_to === currentUser.value?.name;
             });
             batchLogs.value = [
               '[*] Menyiapkan antrean otomasi Playwright (Mode Background)...',
               '[*] Belum ada part yang dipilih via checkbox tabel.',
-              `[*] Ditemukan ${pending.length} part siap kirim berstatus "Belum Di Input" milik Anda. Klik "Mulai Batch" untuk memproses antrean.`
+              `[*] Ditemukan ${pending.length} part siap kirim berstatus "Reviewed" milik Anda. Klik "Mulai Batch" untuk memproses antrean.`
             ];
           } else {
             batchLogs.value = [
               '[*] Menyiapkan antrean otomasi Playwright (Mode Background)...',
-              `[*] Terpilih ${selectedIds.value.length} part spesifik. Klik "Mulai Batch" untuk mengirim langsung ke FactoryHub.`
+              `[*] Terpilih ${selectedIds.value.length} part spesifik (Status: Reviewed). Klik "Mulai Batch" untuk mengirim langsung ke FactoryHub.`
             ];
           }
         };
@@ -3293,7 +3565,7 @@
             targetIds = [...selectedIds.value];
           } else {
             const pending = checksheets.value.filter(c => {
-              if (c.status !== 'Belum Di Input') return false;
+              if (c.status !== 'Reviewed') return false;
               if (currentUser.value?.role === 'admin') return true;
               return c.assigned_to === currentUser.value?.name;
             });
@@ -3311,9 +3583,18 @@
             }
           }
 
+          // Strict Reviewed status validation
+          const unreviewed = checksheets.value.filter(c => targetIds.includes(c.id) && c.status !== 'Reviewed');
+          if (unreviewed.length > 0) {
+            batchLogs.value.push(`[!] Ditolak: Ditemukan ${unreviewed.length} part yang belum berstatus 'Reviewed'.`);
+            showToast(`Hanya part berstatus 'Reviewed' yang dapat dikirim batch. Tinjau part di Review & Edit dan klik 'Tandai Reviewed' terlebih dahulu.`, 'error');
+            isBatchRunning.value = false;
+            return;
+          }
+
           if (!targetIds.length) {
-            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Belum Di Input" milik Anda untuk diproses.');
-            showToast('Tidak ada checksheet yang perlu disubmit.', 'warning');
+            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Reviewed" milik Anda untuk diproses.');
+            showToast('Tidak ada checksheet berstatus Reviewed yang siap dikirim.', 'warning');
             isBatchRunning.value = false;
             return;
           }
@@ -3524,6 +3805,11 @@
 
         // Keyboard handler
         window.addEventListener('keydown', (e) => {
+          if (systemUpdateInfo.value && systemUpdateInfo.value.has_update) {
+            if (e.key === 'Escape') e.preventDefault();
+            return;
+          }
+
           if (e.key === 'Escape') {
             if (showExcelStudio.value) closeExcelStudio();
             else if (previewImage.value) previewImage.value = null;
@@ -3546,7 +3832,7 @@
           // Main Table Row Navigation when on checksheets page and no modal is open
           const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
           const isInputActive = tag === 'input' || tag === 'textarea' || tag === 'select';
-          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || (showBatchModal.value && !isBatchMinimized.value) || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value;
+          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || (showBatchModal.value && !isBatchMinimized.value) || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value || (systemUpdateInfo.value && systemUpdateInfo.value.has_update);
 
           if (activePage.value === 'checksheets' && !isModalOpen && !isInputActive) {
             const list = filteredChecksheets.value;
@@ -3588,6 +3874,10 @@
           }
           checkSavedSession();
           loadCatalogStats();
+          checkSystemUpdate(true);
+          setInterval(() => {
+            checkSystemUpdate(true);
+          }, 60000);
           window.addEventListener('paste', handleGlobalPaste);
         });
 
@@ -3728,7 +4018,14 @@
           autoStandardizeAllTools,
           renumberExcelPoints,
           commonSymbols,
-          insertSymbol
+          insertSymbol,
+          systemUpdateInfo,
+          isCheckingUpdate,
+          isUpdatingSystem,
+          updateError,
+          checkSystemUpdate,
+          triggerSystemUpdate,
+          toggleReviewStatus
         };
       }
     }).mount('#app');

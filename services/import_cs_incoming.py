@@ -48,13 +48,15 @@ def extract_sheet_metadata(cell_getter, max_r: int, max_c: int, fname: str, snam
     part_no = ""
     part_name = ""
     model = ""
-    doc_no = "Form 1"
+    doc_no = "FO-45-01"
 
     customer = "PT. HPM"
     if "MMKI" in fp:
         customer = "PT. MMKI"
     elif "SIM" in fp:
         customer = "PT. SIM"
+        if "SIM YHA" in fp:
+            model = "YHA"
 
     for r in range(1, min(max_r + 1, 16)):
         for c in range(1, min(max_c + 1, 35)):
@@ -97,12 +99,6 @@ def extract_sheet_metadata(cell_getter, max_r: int, max_c: int, fname: str, snam
                             model = cv
                             break
 
-            if ("no.doc" in vl or "doc. no" in vl or "no dokumen" in vl) and doc_no == "Form 1":
-                if ":" in v:
-                    d = v.split(":", 1)[1].strip()
-                    if len(d) >= 3:
-                        doc_no = d
-
     # Fallbacks
     if not part_no:
         clean_s = re.sub(r"\(rev\)", "", sname, flags=re.I).strip()
@@ -114,9 +110,12 @@ def extract_sheet_metadata(cell_getter, max_r: int, max_c: int, fname: str, snam
             part_no = clean_fn
 
     if not model:
-        parent = os.path.basename(os.path.dirname(fp))
-        if parent and any(ch.isalnum() for ch in parent):
-            model = parent.split(" ")[0].strip("()")
+        if "SIM YHA" in fp:
+            model = "YHA"
+        else:
+            parent = os.path.basename(os.path.dirname(fp))
+            if parent and any(ch.isalnum() for ch in parent):
+                model = parent.split(" ")[0].strip("()")
 
     return {
         "part_number": part_no,
@@ -200,7 +199,11 @@ async def import_all_cs_incoming(reset_db: bool = True):
     search_pattern = "documents/CS INCOMING/**/*.xlsx"
     files = glob.glob(search_pattern, recursive=True)
     files.extend(glob.glob("documents/CS INCOMING/**/*.xls", recursive=True))
-    files = [f for f in sorted(files) if not os.path.basename(f).startswith("~$")]
+    files = [
+        f for f in sorted(files)
+        if not os.path.basename(f).startswith("~$")
+        and "/bahan/" not in f and "\\bahan\\" not in f
+    ]
 
     print(f"[*] Found {len(files)} CS INCOMING files to process.")
 

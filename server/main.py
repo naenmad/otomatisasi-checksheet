@@ -22,6 +22,7 @@ from server.routes.export import router as export_router
 from server.routes.auth import router as auth_router
 from server.routes.users import router as users_router
 from server.routes.catalog import router as catalog_router
+from server.routes.system import router as system_router
 
 
 @asynccontextmanager
@@ -59,6 +60,7 @@ app.include_router(catalog_router)
 app.include_router(upload_router)
 app.include_router(automation_router)
 app.include_router(export_router)
+app.include_router(system_router)
 
 # Mount media & static files
 if os.path.exists("storage/images"):

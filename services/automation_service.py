@@ -193,6 +193,12 @@ async def execute_batch_submission(
                 skipped_count += 1
                 continue
 
+        # Enforce that only parts marked as 'Reviewed' can be submitted in batch
+        if cs.status != "Reviewed":
+            yield f"[!] Lewati Part {cs.part_number}: Status saat ini '{cs.status}'. Batch hanya mengizinkan part berstatus 'Reviewed' (telah diverifikasi di Review & Edit).\n"
+            skipped_count += 1
+            continue
+
         runnable_checksheets.append(cs)
 
     total = len(runnable_checksheets)
