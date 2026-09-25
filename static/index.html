@@ -1295,6 +1295,11 @@
             {{ isBatchRunning ? 'Berjalan...' : 'Selesai' }}
           </span>
           <div class="flex items-center gap-1 border-l border-zinc-700/80 pl-2">
+            <button v-if="isBatchRunning" @click.stop="cancelBatchAutomation" title="Hentikan Batch" class="p-1 text-rose-400 hover:text-rose-300 rounded hover:bg-zinc-800">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
             <button @click.stop="isBatchMinimized = false" title="Perbesar" class="p-1 text-zinc-400 hover:text-zinc-100 rounded hover:bg-zinc-800">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
@@ -1322,7 +1327,7 @@
                   <span>{{ activeAutomationTarget ? ('Otomasi Part: ' + activeAutomationTarget.part_number) : 'Eksekusi Batch Otomasi FactoryHub' }}</span>
                 </h3>
                 <p class="text-[10px] text-zinc-400">
-                  {{ isDryRunMode ? 'Mode Dry-Run: Pratinjau form tanpa simpan permanen' : 'Mode Kirim: Submit resmi ke FactoryHub' }}
+                  {{ isDryRunMode ? 'Mode Dry-Run: Pratinjau form tanpa simpan permanen' : 'Mode Kirim: Background (Headless) ke FactoryHub' }}
                 </p>
               </div>
             </div>
@@ -1346,6 +1351,9 @@
               </span>
               <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
                 KIRIM RESMI
+              </span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                BACKGROUND
               </span>
             </div>
             <div class="flex items-center gap-1.5 font-mono text-[11px]">
@@ -1373,6 +1381,12 @@
               <span>Kecilkan widget</span>
             </button>
             <div class="flex gap-2">
+              <button v-if="isBatchRunning" @click="cancelBatchAutomation" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all hover:scale-105 active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                <span>Hentikan Batch</span>
+              </button>
               <button @click="closeBatchModal" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold cursor-pointer">
                 Tutup
               </button>
@@ -2080,6 +2094,8 @@
         const isBatchRunning = ref(false);
         const activeAutomationTarget = ref(null);
         const isDryRunMode = ref(false);
+        const activeBatchEventSource = ref(null);
+        const currentBatchId = ref('batch_initial');
 
         // Master Part Checker
         const showPartCheckerModal = ref(false);
@@ -3187,23 +3203,74 @@
           activeAutomationTarget.value = null;
           isDryRunMode.value = false;
           isBatchMinimized.value = false;
+
+          // Operator ownership validation
+          if (currentUser.value?.role === 'operator' && selectedIds.value.length > 0) {
+            const notMine = checksheets.value.filter(c => selectedIds.value.includes(c.id) && c.assigned_to !== currentUser.value?.name);
+            if (notMine.length > 0) {
+              const unassignedCount = notMine.filter(c => isUnassigned(c)).length;
+              if (unassignedCount > 0) {
+                showToast(`Ada ${unassignedCount} part yang belum diambil. Silakan klik tombol "Ambil Task" terlebih dahulu sebelum mengirim.`, 'warning');
+              } else {
+                showToast(`Ada ${notMine.length} part milik operator lain. Anda hanya bisa mengirim part milik Anda sendiri.`, 'error');
+              }
+              return;
+            }
+          }
+
           showBatchModal.value = true;
           if (selectedIds.value.length === 0) {
-            const pending = checksheets.value.filter(c => c.status === 'Belum Di Input');
+            const pending = checksheets.value.filter(c => {
+              if (c.status !== 'Belum Di Input') return false;
+              if (currentUser.value?.role === 'admin') return true;
+              return c.assigned_to === currentUser.value?.name;
+            });
             batchLogs.value = [
-              '[*] Menyiapkan antrean otomasi Playwright...',
+              '[*] Menyiapkan antrean otomasi Playwright (Mode Background)...',
               '[*] Belum ada part yang dipilih via checkbox tabel.',
-              `[*] Ditemukan ${pending.length} part berstatus "Belum Di Input". Klik "Mulai Batch" untuk memproses antrean.`
+              `[*] Ditemukan ${pending.length} part siap kirim berstatus "Belum Di Input" milik Anda. Klik "Mulai Batch" untuk memproses antrean.`
             ];
           } else {
             batchLogs.value = [
-              '[*] Menyiapkan antrean otomasi Playwright...',
+              '[*] Menyiapkan antrean otomasi Playwright (Mode Background)...',
               `[*] Terpilih ${selectedIds.value.length} part spesifik. Klik "Mulai Batch" untuk mengirim langsung ke FactoryHub.`
             ];
           }
         };
 
+        const cancelBatchAutomation = async () => {
+          if (!isBatchRunning.value && !isAutomating.value) return;
+          batchLogs.value.push('[!] Mengirim sinyal pembatalan ke server...');
+          try {
+            await fetch('/api/automation/batch/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ batch_id: currentBatchId.value || 'current' })
+            });
+          } catch (e) {
+            console.error(e);
+          }
+          if (activeBatchEventSource.value) {
+            activeBatchEventSource.value.close();
+            activeBatchEventSource.value = null;
+          }
+          isBatchRunning.value = false;
+          isAutomating.value = false;
+          batchLogs.value.push('[!] Batch otomasi berhasil dihentikan oleh pengguna.');
+          showToast('Batch otomasi dihentikan.', 'warning');
+          loadChecksheets();
+          scrollTerminalLogs();
+        };
+
         const closeBatchModal = () => {
+          if (isBatchRunning.value) {
+            if (confirm('Batch otomasi sedang berjalan di background. Ingin menghentikan proses sekarang?')) {
+              cancelBatchAutomation();
+            } else {
+              isBatchMinimized.value = true;
+              return;
+            }
+          }
           showBatchModal.value = false;
           isBatchMinimized.value = false;
           activeAutomationTarget.value = null;
@@ -3221,28 +3288,54 @@
           activeAutomationTarget.value = null;
           isDryRunMode.value = false;
 
-          const targetIds = selectedIds.value.length
-            ? selectedIds.value
-            : checksheets.value.filter(c => c.status === 'Belum Di Input').map(c => c.id).slice(0, 10);
+          let targetIds = [];
+          if (selectedIds.value.length > 0) {
+            targetIds = [...selectedIds.value];
+          } else {
+            const pending = checksheets.value.filter(c => {
+              if (c.status !== 'Belum Di Input') return false;
+              if (currentUser.value?.role === 'admin') return true;
+              return c.assigned_to === currentUser.value?.name;
+            });
+            targetIds = pending.map(c => c.id).slice(0, 10);
+          }
+
+          // Strict operator ownership validation
+          if (currentUser.value?.role === 'operator') {
+            const notMine = checksheets.value.filter(c => targetIds.includes(c.id) && c.assigned_to !== currentUser.value?.name);
+            if (notMine.length > 0) {
+              batchLogs.value.push(`[!] Ditolak: Ditemukan ${notMine.length} part yang bukan milik Anda.`);
+              showToast(`Ada ${notMine.length} part yang bukan milik Anda. Anda hanya bisa mengirim part yang sudah Anda ambil.`, 'error');
+              isBatchRunning.value = false;
+              return;
+            }
+          }
 
           if (!targetIds.length) {
-            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Belum Di Input" untuk diproses.');
-            showToast('Tidak ada checksheet yang perlu disubmit.', 'error');
+            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Belum Di Input" milik Anda untuk diproses.');
+            showToast('Tidak ada checksheet yang perlu disubmit.', 'warning');
             isBatchRunning.value = false;
             return;
           }
 
+          currentBatchId.value = 'batch_' + Date.now();
+          const token = localStorage.getItem('summit_token') || '';
+
           batchLogs.value = [
             `[*] Menjalankan antrean Batch Otomasi untuk ${targetIds.length} part...`,
+            '[*] Mode: Background (Headless) | Single Session Login (1x login untuk seluruh batch)',
             '[*] Menghubungkan ke layanan streaming batch Playwright...'
           ];
 
-          const evtSource = new EventSource(`/api/automation/batch/stream?ids=${targetIds.join(',')}&submit=true&headless=false`);
+          const streamUrl = `/api/automation/batch/stream?ids=${targetIds.join(',')}&submit=true&headless=true&token=${encodeURIComponent(token)}&batch_id=${currentBatchId.value}`;
+          const evtSource = new EventSource(streamUrl);
+          activeBatchEventSource.value = evtSource;
 
           evtSource.onmessage = (event) => {
             const data = event.data;
             if (data.startsWith('[DONE]')) {
               evtSource.close();
+              activeBatchEventSource.value = null;
               isBatchRunning.value = false;
               batchLogs.value.push('[✓] Seluruh antrean batch selesai diproses.');
               showToast(`Batch selesai untuk ${targetIds.length} part!`, 'success');
@@ -3256,6 +3349,7 @@
 
           evtSource.onerror = () => {
             evtSource.close();
+            activeBatchEventSource.value = null;
             isBatchRunning.value = false;
             batchLogs.value.push('[!] Koneksi batch selesai atau terputus.');
             loadChecksheets();
@@ -3265,6 +3359,13 @@
 
         const startAutomation = (id, isDryRun) => {
           const cs = checksheets.value.find(c => c.id === id) || activeChecksheet.value;
+          
+          // Operator ownership validation on single automation
+          if (currentUser.value?.role === 'operator' && cs && cs.assigned_to !== currentUser.value?.name) {
+            showToast('Part ini bukan milik Anda. Silakan ambil task terlebih dahulu.', 'error');
+            return;
+          }
+
           activeAutomationTarget.value = cs;
           isDryRunMode.value = isDryRun;
           isBatchMinimized.value = false;
@@ -3272,22 +3373,28 @@
           isBatchRunning.value = true;
           isAutomating.value = true;
 
+          currentBatchId.value = 'single_' + id + '_' + Date.now();
+          const token = localStorage.getItem('summit_token') || '';
           const modeName = isDryRun ? 'Dry-Run (Pratinjau)' : 'Kirim Resmi (Submit)';
+
           batchLogs.value = [
             `[*] Memulai Otomasi [${modeName}] untuk Part: ${cs ? cs.part_number : '#' + id}...`,
             isDryRun 
               ? '[*] Pratinjau: Playwright membuka FactoryHub dan mengisi seluruh field. Form TIDAK disubmit permanen.' 
-              : '[*] Submit: Playwright mengisi seluruh field dan menekan tombol SIMPAN di FactoryHub.',
+              : '[*] Submit: Mode background (headless) mengisi seluruh field dan menekan tombol SIMPAN di FactoryHub.',
             '[*] Menghubungkan ke browser Playwright...'
           ];
           scrollTerminalLogs();
 
-          const evtSource = new EventSource(`/api/automation/stream/${id}?submit=${!isDryRun}&headless=false`);
+          const streamUrl = `/api/automation/stream/${id}?submit=${!isDryRun}&headless=true&token=${encodeURIComponent(token)}`;
+          const evtSource = new EventSource(streamUrl);
+          activeBatchEventSource.value = evtSource;
 
           evtSource.onmessage = (event) => {
             const data = event.data;
             if (data.startsWith('[DONE]')) {
               evtSource.close();
+              activeBatchEventSource.value = null;
               isBatchRunning.value = false;
               isAutomating.value = false;
               batchLogs.value.push(`[✓] Otomasi ${modeName} selesai.`);
@@ -3311,6 +3418,7 @@
 
           evtSource.onerror = () => {
             evtSource.close();
+            activeBatchEventSource.value = null;
             isBatchRunning.value = false;
             isAutomating.value = false;
             batchLogs.value.push('[!] Koneksi live stream selesai atau terputus.');
@@ -3559,6 +3667,7 @@
           openBatchModal,
           closeBatchModal,
           startBatchAutomation,
+          cancelBatchAutomation,
           startAutomation,
           isAutomating,
           catalogStats,

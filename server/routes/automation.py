@@ -2,24 +2,67 @@
 Automation execution and SSE log streaming API router.
 Supports both single and batch execution via REST and SSE real-time streaming.
 """
+import asyncio
 from typing import List, Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from database.connection import get_db
 from database.crud import get_checksheet_by_id
-from services.automation_service import execute_checksheet_submission, execute_batch_submission
+from database.models import User
+from server.auth import verify_token
+from services.automation_service import (
+    execute_checksheet_submission,
+    execute_batch_submission,
+    cancel_batch,
+    is_batch_cancelled
+)
 
 router = APIRouter(prefix="/api/automation", tags=["Automation"])
+
+
+async def resolve_user_from_request(
+    db: AsyncSession,
+    token: Optional[str] = None,
+    authorization: Optional[str] = None
+) -> Optional[User]:
+    raw_token = token
+    if not raw_token and authorization:
+        if authorization.startswith("Bearer "):
+            raw_token = authorization.split("Bearer ", 1)[1].strip()
+    if not raw_token:
+        return None
+    payload = verify_token(raw_token)
+    if not payload:
+        return None
+    user_id = payload.get("sub")
+    if not user_id:
+        return None
+    stmt = select(User).where(User.id == user_id)
+    res = await db.execute(stmt)
+    return res.scalar_one_or_none()
 
 
 class BatchAutomationRequest(BaseModel):
     checksheet_ids: List[int]
     submit: bool = True
-    headless: bool = False
+    headless: bool = True
     browser_channel: str = "chrome"
+
+
+class CancelBatchRequest(BaseModel):
+    batch_id: Optional[str] = "current"
+
+
+@router.post("/batch/cancel")
+async def cancel_batch_route(payload: Optional[CancelBatchRequest] = None):
+    """Cancel any active batch automation immediately."""
+    b_id = payload.batch_id if (payload and payload.batch_id) else "current"
+    cancel_batch(b_id)
+    return {"status": "success", "message": f"Batalkan batch {b_id} berhasil dikirim."}
 
 
 @router.post("/submit/{checksheet_id}")
@@ -116,6 +159,7 @@ async def dry_run_checksheet(
 @router.post("/batch")
 async def run_batch_automation(
     payload: BatchAutomationRequest,
+    authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -123,6 +167,8 @@ async def run_batch_automation(
     """
     if not payload.checksheet_ids:
         raise HTTPException(status_code=400, detail="Daftar checksheet_ids tidak boleh kosong.")
+
+    req_user = await resolve_user_from_request(db, None, authorization)
 
     logs = []
     success_count = 0
@@ -133,7 +179,9 @@ async def run_batch_automation(
         session=db,
         submit=payload.submit,
         headless=payload.headless,
-        browser_channel=payload.browser_channel
+        browser_channel=payload.browser_channel,
+        batch_id="post_batch",
+        requesting_user=req_user
     ):
         clean_l = line.strip()
         if clean_l:
@@ -157,13 +205,16 @@ async def run_batch_automation(
 async def stream_automation_logs(
     checksheet_id: int,
     submit: bool = Query(True, description="Submit to FactoryHub or dry-run review"),
-    headless: bool = Query(False, description="Run browser headless or visible"),
+    headless: bool = Query(True, description="Run browser headless in background"),
     browser_channel: str = Query("chrome", description="Browser channel: chrome or msedge"),
+    token: Optional[str] = Query(None, description="Auth token"),
+    authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Execute Playwright automation and stream logs live to browser via Server-Sent Events (SSE).
     """
+    req_user = await resolve_user_from_request(db, token, authorization)
     mode_label = "SUBMIT RESMI" if submit else "DRY-RUN (UJI COBA)"
 
     async def event_generator():
@@ -173,7 +224,8 @@ async def stream_automation_logs(
             session=db,
             submit=submit,
             headless=headless,
-            browser_channel=browser_channel
+            browser_channel=browser_channel,
+            requesting_user=req_user
         ):
             safe_line = line.strip().replace("\n", " ")
             if safe_line:
@@ -185,29 +237,43 @@ async def stream_automation_logs(
 
 @router.get("/batch/stream")
 async def stream_batch_automation_logs(
+    request: Request,
     ids: str = Query(..., description="Comma-separated checksheet IDs (e.g. 1,2,3)"),
     submit: bool = Query(True, description="Submit to FactoryHub or dry-run review"),
-    headless: bool = Query(False, description="Run browser headless or visible"),
+    headless: bool = Query(True, description="Run browser headless in background"),
     browser_channel: str = Query("chrome", description="Browser channel: chrome or msedge"),
+    token: Optional[str] = Query(None, description="Auth token"),
+    authorization: Optional[str] = Header(None),
+    batch_id: str = Query("current", description="Batch session ID"),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Execute batch checksheet submission sequentially and stream logs live via SSE.
+    Execute batch checksheet submission sequentially and stream logs live via SSE
+    with single browser session, one-time login, permission checking, and instant cancellation.
     """
+    req_user = await resolve_user_from_request(db, token, authorization)
     cs_ids = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()]
 
     async def event_generator():
         yield f"data: [*] Inisialisasi Batch Otomasi untuk {len(cs_ids)} part...\n\n"
-        async for line in execute_batch_submission(
-            checksheet_ids=cs_ids,
-            session=db,
-            submit=submit,
-            headless=headless,
-            browser_channel=browser_channel
-        ):
-            safe_line = line.strip().replace("\n", " ")
-            if safe_line:
-                yield f"data: {safe_line}\n\n"
+        try:
+            async for line in execute_batch_submission(
+                checksheet_ids=cs_ids,
+                session=db,
+                submit=submit,
+                headless=headless,
+                browser_channel=browser_channel,
+                batch_id=batch_id,
+                requesting_user=req_user
+            ):
+                if await request.is_disconnected():
+                    cancel_batch(batch_id)
+                    break
+                safe_line = line.strip().replace("\n", " ")
+                if safe_line:
+                    yield f"data: {safe_line}\n\n"
+        except asyncio.CancelledError:
+            cancel_batch(batch_id)
         yield "data: [DONE] Seluruh batch otomasi selesai.\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

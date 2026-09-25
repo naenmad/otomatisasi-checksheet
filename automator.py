@@ -896,6 +896,113 @@ async def fill_checksheet_form(
         }
 
 
+async def launch_playwright_browser(
+    p,
+    headless: bool = False,
+    browser_channel: Optional[str] = None
+):
+    """Launch Playwright browser context and page with fallback order."""
+    channel = (browser_channel or os.getenv("BROWSER_CHANNEL", "chromium")).strip().lower()
+    if channel in ["edge", "ms-edge"]:
+        channel = "msedge"
+
+    browser_obj = None
+    context = None
+    page = None
+
+    # 1. Check if user configured CDP port
+    cdp_port = os.getenv("CDP_PORT", "")
+    if cdp_port:
+        try:
+            browser_obj = await p.chromium.connect_over_cdp(f"http://localhost:{cdp_port}")
+            if browser_obj.contexts:
+                context = browser_obj.contexts[0]
+            else:
+                context = await browser_obj.new_context()
+            page = await context.new_page()
+            print(f"[✓] Terhubung ke browser aktif via CDP (Port {cdp_port})!")
+            return browser_obj, context, page
+        except Exception:
+            browser_obj = None
+            context = None
+            page = None
+
+    viewport_cfg = None if not headless else {"width": 1440, "height": 900}
+
+    async def _launch_chromium_testing():
+        nonlocal browser_obj, context, page
+        print(f"[*] Menjalankan browser Chrome Testing (Chromium) (headless={headless})...")
+        browser_obj = await p.chromium.launch(
+            headless=headless,
+            args=["--start-maximized"]
+        )
+        context = await browser_obj.new_context(viewport=viewport_cfg)
+        page = await context.new_page()
+
+    async def _launch_persistent(channel_name: str, profile_dir: str, browser_label: str):
+        nonlocal context, page
+        os.makedirs(profile_dir, exist_ok=True)
+        print(f"[*] Menjalankan {browser_label} (headless={headless}, profil={profile_dir})...")
+        context = await p.chromium.launch_persistent_context(
+            user_data_dir=profile_dir,
+            channel=channel_name,
+            headless=headless,
+            args=["--start-maximized", "--no-first-run", "--no-default-browser-check"],
+            viewport=viewport_cfg
+        )
+        page = context.pages[0] if context.pages else await context.new_page()
+
+    launch_errors: List[str] = []
+
+    async def _try_launch(step_name: str, launcher):
+        try:
+            await launcher()
+            return True
+        except Exception as e:
+            launch_errors.append(f"{step_name}: {e}")
+            print(f"[!] {step_name} gagal: {e}")
+            return False
+
+    if channel == "chrome":
+        ok = await _try_launch(
+            "Google Chrome",
+            lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
+        )
+        if not ok:
+            await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
+
+    elif channel == "msedge":
+        ok = await _try_launch(
+            "Microsoft Edge",
+            lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
+        )
+        if not ok:
+            await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
+
+    else:
+        ok = await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
+        if not ok:
+            ok = await _try_launch(
+                "Google Chrome",
+                lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
+            )
+        if not ok:
+            await _try_launch(
+                "Microsoft Edge",
+                lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
+            )
+
+    if not page:
+        err_joined = " | ".join(launch_errors) if launch_errors else "Unknown launch error"
+        raise RuntimeError(
+            "Gagal menjalankan browser otomatis. "
+            "Jika ingin memakai mode 'chromium', jalankan: playwright install chromium. "
+            f"Detail: {err_joined}"
+        )
+
+    return browser_obj, context, page
+
+
 async def run_automation(
     part_or_excel: str,
     headless: bool = False,
@@ -910,107 +1017,11 @@ async def run_automation(
 ):
     """Main runner for checksheet automation with Playwright."""
     async with async_playwright() as p:
-        channel = (browser_channel or os.getenv("BROWSER_CHANNEL", "chromium")).strip().lower()
-        if channel in ["edge", "ms-edge"]:
-            channel = "msedge"
-
-        browser_obj = None
-        context = None
-        page = None
-
-        # 1. Check if user configured CDP port
-        cdp_port = os.getenv("CDP_PORT", "")
-        if cdp_port:
-            try:
-                browser_obj = await p.chromium.connect_over_cdp(f"http://localhost:{cdp_port}")
-                if browser_obj.contexts:
-                    context = browser_obj.contexts[0]
-                else:
-                    context = await browser_obj.new_context()
-                page = await context.new_page()
-                print(f"[✓] Terhubung ke browser aktif via CDP (Port {cdp_port})!")
-            except Exception:
-                browser_obj = None
-                context = None
-                page = None
-
-        # 2. Launch browser
-        if not page:
-            viewport_cfg = None if not headless else {"width": 1440, "height": 900}
-
-            async def _launch_chromium_testing():
-                nonlocal browser_obj, context, page
-                print(f"[*] Menjalankan browser Chrome Testing (Chromium) (headless={headless})...")
-                browser_obj = await p.chromium.launch(
-                    headless=headless,
-                    args=["--start-maximized"]
-                )
-                context = await browser_obj.new_context(viewport=viewport_cfg)
-                page = await context.new_page()
-
-            async def _launch_persistent(channel_name: str, profile_dir: str, browser_label: str):
-                nonlocal context, page
-                os.makedirs(profile_dir, exist_ok=True)
-                print(f"[*] Menjalankan {browser_label} (headless={headless}, profil={profile_dir})...")
-                context = await p.chromium.launch_persistent_context(
-                    user_data_dir=profile_dir,
-                    channel=channel_name,
-                    headless=headless,
-                    args=["--start-maximized", "--no-first-run", "--no-default-browser-check"],
-                    viewport=viewport_cfg
-                )
-                page = context.pages[0] if context.pages else await context.new_page()
-
-            launch_errors: List[str] = []
-
-            async def _try_launch(step_name: str, launcher):
-                try:
-                    await launcher()
-                    return True
-                except Exception as e:
-                    launch_errors.append(f"{step_name}: {e}")
-                    print(f"[!] {step_name} gagal: {e}")
-                    return False
-
-            if channel == "chrome":
-                ok = await _try_launch(
-                    "Google Chrome",
-                    lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
-                )
-                if not ok:
-                    await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
-
-            elif channel == "msedge":
-                ok = await _try_launch(
-                    "Microsoft Edge",
-                    lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
-                )
-                if not ok:
-                    await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
-
-            else:
-                # Default: Chromium / Chrome Testing.
-                # Jika browser Playwright belum terpasang, fallback ke browser sistem.
-                ok = await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
-                if not ok:
-                    ok = await _try_launch(
-                        "Google Chrome",
-                        lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
-                    )
-                if not ok:
-                    await _try_launch(
-                        "Microsoft Edge",
-                        lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
-                    )
-
-            if not page:
-                err_joined = " | ".join(launch_errors) if launch_errors else "Unknown launch error"
-                raise RuntimeError(
-                    "Gagal menjalankan browser otomatis. "
-                    "Jika ingin memakai mode 'chromium', jalankan: playwright install chromium. "
-                    f"Detail: {err_joined}"
-                )
-
+        browser_obj, context, page = await launch_playwright_browser(
+            p=p,
+            headless=headless,
+            browser_channel=browser_channel
+        )
         try:
             await login_factoryhub(page)
             result = await fill_checksheet_form(
