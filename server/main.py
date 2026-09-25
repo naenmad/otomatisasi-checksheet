@@ -86,6 +86,11 @@ async def root():
 
 @app.get("/{page:path}")
 async def serve_spa(page: str):
+    if page == "favicon.ico":
+        if os.path.exists("static/favicon.ico"):
+            return FileResponse("static/favicon.ico", media_type="image/x-icon")
+        elif os.path.exists("static/favicon.svg"):
+            return FileResponse("static/favicon.svg", media_type="image/svg+xml")
     if page.startswith(("api/", "docs", "redoc", "openapi.json", "media/", "static/")):
         return {"detail": "Not Found", "status": 404}
     index_file = "static/index.html"
