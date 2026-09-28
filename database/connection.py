@@ -66,7 +66,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+from sqlalchemy import text
+
+
 async def init_db():
-    """Create all tables in the database."""
+    """Create all tables in the database and optimize SQLite if applicable."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if "sqlite" in db_url:
+            await conn.execute(text("PRAGMA journal_mode=WAL;"))
+            await conn.execute(text("PRAGMA synchronous=NORMAL;"))
+            await conn.execute(text("PRAGMA busy_timeout=5000;"))

@@ -20,6 +20,8 @@ cs_incoming_analysis.json
 !package.json
 !package-lock.json
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 
