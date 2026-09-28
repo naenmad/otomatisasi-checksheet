@@ -866,19 +866,19 @@
 
                 <!-- Table Rows -->
                 <tbody v-else class="divide-y divide-zinc-800/60">
-                  <tr v-for="(cs, idx) in filteredChecksheets" :key="cs.id"
+                  <tr v-for="(cs, idx) in paginatedChecksheets" :key="cs.id"
                       class="transition-all duration-150 group cursor-pointer border-l-4"
                       :class="[
                         selectedIds.includes(cs.id) 
                           ? 'bg-indigo-950/45 hover:bg-indigo-900/50 border-l-indigo-500 text-zinc-100 shadow-sm' 
-                          : (focusedCsIndex === idx 
+                          : (focusedCsIndex === (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx) 
                               ? 'bg-zinc-800/60 border-l-zinc-500 text-zinc-200' 
                               : 'border-l-transparent hover:bg-zinc-800/40 text-zinc-300')
                       ]"
-                      @click="handleRowClick($event, cs, idx)"
+                      @click="handleRowClick($event, cs, (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx))"
                       @dblclick="openExcelStudio(cs)"
                       title="Klik baris untuk memilih part. Dobel-klik untuk membuka editor.">
-                    <td class="py-3 px-3 text-center select-none" @click.stop="isSelectable(cs) && (focusedCsIndex = idx, toggleSelect(cs.id))">
+                    <td class="py-3 px-3 text-center select-none" @click.stop="isSelectable(cs) && (focusedCsIndex = (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx), toggleSelect(cs.id))">
                       <button type="button"
                               :disabled="!isSelectable(cs)"
                               class="w-4 h-4 mx-auto rounded border flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed focus:outline-none"
@@ -895,7 +895,7 @@
                         </svg>
                       </button>
                     </td>
-                    <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ idx + 1 }}</td>
+                    <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx) + 1 }}</td>
                     <td class="py-3 px-3" @click.stop>
                       <div v-if="isUnassigned(cs)" class="inline-flex items-center gap-1.5">
                         <button @click.stop="claimTask(cs)"
@@ -984,6 +984,41 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Modern Pagination Toolbar -->
+            <div v-if="filteredChecksheets.length > 0"
+                 class="px-4 py-3 bg-zinc-950/80 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-zinc-300">{{ paginationInfo }}</span>
+                <span class="text-zinc-600">|</span>
+                <span class="text-zinc-500">Per halaman:</span>
+                <div class="inline-flex rounded-lg border border-zinc-800 bg-zinc-900 p-0.5">
+                  <button v-for="sz in [50, 100, 250, 'Semua']" :key="sz"
+                          @click="pageSize = sz"
+                          :class="pageSize === sz ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer">
+                    {{ sz }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Pagination Navigation Buttons -->
+              <div v-if="pageSize !== 'Semua' && totalPages > 1" class="flex items-center gap-1.5">
+                <button @click="goToPage(currentPage - 1)"
+                        :disabled="currentPage <= 1"
+                        class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-zinc-300 font-medium transition-colors cursor-pointer">
+                  ← Prev
+                </button>
+                <span class="px-2 font-mono text-zinc-300 font-semibold">
+                  {{ currentPage }} / {{ totalPages }}
+                </span>
+                <button @click="goToPage(currentPage + 1)"
+                        :disabled="currentPage >= totalPages"
+                        class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-zinc-300 font-medium transition-colors cursor-pointer">
+                  Next →
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -2983,10 +3018,44 @@
           });
         });
 
+        // Table Pagination for Maximum Rendering Performance
+        const pageSize = ref(50);
+        const currentPage = ref(1);
+
+        const totalPages = computed(() => {
+          if (pageSize.value === 'Semua') return 1;
+          const sz = parseInt(pageSize.value, 10) || 50;
+          return Math.max(1, Math.ceil(filteredChecksheets.value.length / sz));
+        });
+
+        const paginatedChecksheets = computed(() => {
+          if (pageSize.value === 'Semua') return filteredChecksheets.value;
+          const sz = parseInt(pageSize.value, 10) || 50;
+          const start = (currentPage.value - 1) * sz;
+          return filteredChecksheets.value.slice(start, start + sz);
+        });
+
+        const paginationInfo = computed(() => {
+          const total = filteredChecksheets.value.length;
+          if (total === 0) return '0 part';
+          if (pageSize.value === 'Semua') return `Menampilkan seluruh ${total} part`;
+          const sz = parseInt(pageSize.value, 10) || 50;
+          const start = (currentPage.value - 1) * sz + 1;
+          const end = Math.min(start + sz - 1, total);
+          return `Menampilkan ${start}-${end} dari ${total} part`;
+        });
+
+        const goToPage = (p) => {
+          if (p >= 1 && p <= totalPages.value) {
+            currentPage.value = p;
+          }
+        };
+
         const resetFilters = () => {
           searchQuery.value = '';
           statusFilter.value = 'ALL';
           activeTeam.value = currentUser.value?.role === 'operator' ? currentUser.value.name : 'Semua';
+          currentPage.value = 1;
         };
 
         const selectedUnassignedCount = computed(() => {
@@ -4880,6 +4949,10 @@
           }
         });
 
+        watch([searchQuery, statusFilter, activeTeam, pageSize], () => {
+          currentPage.value = 1;
+        });
+
         watch([activePage, showExcelStudio, activeChecksheet, focusedCsIndex], () => {
           if (showExcelStudio.value && activeChecksheet.value?.part_number) {
             document.title = activeChecksheet.value.part_number;
@@ -4967,6 +5040,12 @@
           showAssignDropdown,
           startDirectBatchAutomation,
           filteredChecksheets,
+          paginatedChecksheets,
+          pageSize,
+          currentPage,
+          totalPages,
+          paginationInfo,
+          goToPage,
           selectedIds,
           isAllSelected,
           isPartiallySelected,

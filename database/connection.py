@@ -41,12 +41,17 @@ elif "postgresql" in db_url:
     ssl_context.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_context
 
-engine = create_async_engine(
-    db_url,
-    echo=False,
-    connect_args=connect_args,
-    pool_pre_ping=True
-)
+engine_kwargs = {
+    "echo": False,
+    "connect_args": connect_args,
+    "pool_pre_ping": True,
+}
+if "postgresql" in db_url:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+    engine_kwargs["pool_recycle"] = 1800
+
+engine = create_async_engine(db_url, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
