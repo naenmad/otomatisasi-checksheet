@@ -396,6 +396,55 @@
             </div>
           </div>
 
+          <!-- Admin Daily Report Presentation Generator Card (Admin Only) -->
+          <div v-if="currentUser && currentUser.role === 'admin'"
+               class="bg-gradient-to-r from-indigo-950/60 via-zinc-900 to-zinc-900 border border-indigo-500/40 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg shadow-indigo-950/20">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shrink-0 text-white shadow-md shadow-indigo-900/40">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                    Daily Report Presentation (.PPTX)
+                  </h3>
+                  <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-indigo-950 text-indigo-300 border border-indigo-700/80 uppercase">
+                    Admin QC Exclusive
+                  </span>
+                </div>
+                <p class="text-xs text-zinc-400 mt-1 max-w-xl">
+                  Generate slide presentasi rekap harian checksheet 16:9. Slide awal menampilkan Overview eksekutif, disusul rincian submisi setiap operator secara terpisah.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 shrink-0">
+              <div class="flex items-center gap-2 bg-zinc-950/90 border border-zinc-700/80 rounded-xl px-3.5 py-2 shadow-inner">
+                <span class="text-[11px] font-medium text-zinc-400 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  Tanggal:
+                </span>
+                <input type="date" v-model="dailyReportDate"
+                       class="bg-transparent text-xs text-zinc-100 focus:outline-none font-mono cursor-pointer"
+                       title="Pilih tanggal laporan harian untuk diexport" />
+              </div>
+
+              <button @click="downloadDailyReportPpt" :disabled="isDownloadingPpt"
+                      class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-950/50 cursor-pointer active:scale-95">
+                <svg v-if="isDownloadingPpt" class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="w-4 h-4 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>{{ isDownloadingPpt ? 'Menyiapkan Slide PPT...' : 'Download PPT Daily Report' }}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- KPI Metric Cards (Interactive click filters) -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <!-- Total Checksheets -->
@@ -2728,6 +2777,17 @@
         const isAuditing = ref(false);
         const isIngestingImages = ref(false);
 
+        // Daily Report Presentation (.PPTX) State
+        const getLocalDateStr = () => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        const dailyReportDate = ref(getLocalDateStr());
+        const isDownloadingPpt = ref(false);
+
         // Drawer & Lightbox
         const activeChecksheet = ref(null);
         const drawerTab = ref('points');
@@ -4361,6 +4421,41 @@
           }
         };
 
+        const downloadDailyReportPpt = async () => {
+          if (!dailyReportDate.value) {
+            showToast('Pilih tanggal laporan terlebih dahulu', 'error');
+            return;
+          }
+          isDownloadingPpt.value = true;
+          try {
+            const url = `/api/export/daily-report-ppt?date=${encodeURIComponent(dailyReportDate.value)}`;
+            const resp = await fetch(url);
+            if (!resp.ok) {
+              let errMsg = 'Gagal generate PowerPoint';
+              try {
+                const err = await resp.json();
+                errMsg = err.detail || errMsg;
+              } catch (_) {}
+              throw new Error(errMsg);
+            }
+            const blob = await resp.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `DAILY_REPORT_CHECKSHEET_${dailyReportDate.value.replace(/-/g, '')}.pptx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+            showToast(`Daily Report PPTX (${dailyReportDate.value}) berhasil diunduh!`, 'success');
+          } catch (e) {
+            console.error('Error downloading PPT:', e);
+            showToast(e.message || 'Gagal download PPT Daily Report', 'error');
+          } finally {
+            isDownloadingPpt.value = false;
+          }
+        };
+
         const runAuditFactoryHub = async () => {
           if (!confirm("Jalankan audit & rekonsiliasi dua arah dengan FactoryHub? Sistem akan memeriksa 30 halaman template master, menyinkronkan template yang aktif, mendeteksi template yang terhapus, dan otomatis menyelaraskan status ke Google Sheet.")) {
             return;
@@ -5067,6 +5162,9 @@
           batchAssign,
           isSyncing,
           syncGoogleSheet,
+          dailyReportDate,
+          isDownloadingPpt,
+          downloadDailyReportPpt,
           isAuditing,
           runAuditFactoryHub,
           isIngestingImages,

@@ -4,6 +4,7 @@ Supports 3 Worksheets: Overview, Data Master, and Log.
 """
 import io
 import os
+from typing import Optional
 from datetime import datetime
 from collections import Counter
 import openpyxl
@@ -424,3 +425,43 @@ async def sync_to_google_sheet(
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal sync ke Google Spreadsheet: {str(e)}")
+
+
+@router.get("/daily-report-ppt")
+async def export_daily_report_pptx(
+    date_str: Optional[str] = Query(None, alias="date", description="Target report date in YYYY-MM-DD format"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Generate and download Daily Report presentation (.pptx) for management:
+    - Slide 1: Overview with daily submissions count, points, and per-operator summary
+    - Slide 2+: Individual operator details (excluding admins, operators only)
+    """
+    from datetime import timedelta, date as dt_date
+    from services.presentation_service import generate_daily_report_pptx
+
+    target_date: dt_date
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format tanggal tidak valid. Gunakan format YYYY-MM-DD (contoh: 2026-09-28).")
+    else:
+        # Default to today in WIB (UTC+7)
+        target_date = (datetime.utcnow() + timedelta(hours=7)).date()
+
+    try:
+        ppt_stream = await generate_daily_report_pptx(target_date=target_date, session=db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal men-generate PowerPoint: {str(e)}")
+
+    filename = f"DAILY_REPORT_CHECKSHEET_{target_date.strftime('%Y%m%d')}.pptx"
+    return StreamingResponse(
+        ppt_stream,
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+

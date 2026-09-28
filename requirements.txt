@@ -13,3 +13,4 @@ aiosqlite>=0.20.0
 pydantic>=2.6.0
 python-multipart>=0.0.9
 orjson>=3.10.0
+python-pptx>=1.0.0
