@@ -33,11 +33,75 @@ KNOWN_LOGO_DIMENSIONS = {
 }
 
 
+import struct
+
+
+def decode_emf_bytes(data: bytes):
+    """Safely extract embedded bitmap/jpeg/png from EMF format."""
+    if not Image or not data:
+        return None
+    # 1. Scan for embedded JPEG
+    j_start = data.find(b'\xff\xd8\xff')
+    if j_start != -1:
+        j_end = data.find(b'\xff\xd9', j_start)
+        if j_end != -1:
+            try:
+                return Image.open(io.BytesIO(data[j_start:j_end+2]))
+            except Exception:
+                pass
+
+    # 2. Scan for embedded PNG
+    p_start = data.find(b'\x89PNG\r\n\x1a\n')
+    if p_start != -1:
+        p_end = data.find(b'IEND', p_start)
+        if p_end != -1:
+            try:
+                return Image.open(io.BytesIO(data[p_start:p_end+8]))
+            except Exception:
+                pass
+
+    # 3. Parse EMF records for EMR_STRETCHDIBITS (81) and EMR_BITBLT (76)
+    offset = 0
+    while offset + 8 <= len(data):
+        rec_type, rec_size = struct.unpack('<II', data[offset:offset+8])
+        if rec_size < 8 or offset + rec_size > len(data):
+            break
+        rec_data = data[offset:offset+rec_size]
+
+        if rec_type == 81 and rec_size >= 64:  # EMR_STRETCHDIBITS
+            off_bmi, cb_bmi, off_bits, cb_bits = struct.unpack('<IIII', rec_data[48:64])
+            if off_bmi + cb_bmi <= rec_size and off_bits + cb_bits <= rec_size and cb_bmi > 0 and cb_bits > 0:
+                bmi = rec_data[off_bmi:off_bmi+cb_bmi]
+                bits = rec_data[off_bits:off_bits+cb_bits]
+                bmp_header = struct.pack('<2sIHHI', b'BM', 14 + len(bmi) + len(bits), 0, 0, 14 + len(bmi))
+                try:
+                    return Image.open(io.BytesIO(bmp_header + bmi + bits))
+                except Exception:
+                    pass
+
+        elif rec_type == 76 and rec_size >= 100:  # EMR_BITBLT
+            off_bmi, cb_bmi, off_bits, cb_bits = struct.unpack('<IIII', rec_data[84:100])
+            if off_bmi + cb_bmi <= rec_size and off_bits + cb_bits <= rec_size and cb_bmi > 0 and cb_bits > 0:
+                bmi = rec_data[off_bmi:off_bmi+cb_bmi]
+                bits = rec_data[off_bits:off_bits+cb_bits]
+                bmp_header = struct.pack('<2sIHHI', b'BM', 14 + len(bmi) + len(bits), 0, 0, 14 + len(bmi))
+                try:
+                    return Image.open(io.BytesIO(bmp_header + bmi + bits))
+                except Exception:
+                    pass
+
+        offset += rec_size
+
+    return None
+
+
 def decode_image_bytes(raw_data: bytes, ext: str):
-    """Safely decode image bytes from PNG, JPEG, WEBP, or WDP (JPEG-XR)."""
+    """Safely decode image bytes from PNG, JPEG, WEBP, WDP (JPEG-XR), or EMF/WMF."""
     if not Image:
         return None
     ext = ext.lower().lstrip(".")
+    if ext in ("emf", "wmf"):
+        return decode_emf_bytes(raw_data)
     if ext in ("wdp", "jxr", "hdp"):
         if imagecodecs:
             try:
@@ -129,9 +193,9 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                             f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
                             f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
 
-                            # 3. File type check (exclude vector stamp formats like EMF/WMF)
+                            # 3. File type check (supports raster and EMF/WMF with embedded bitmaps)
                             ext = media_file.lower().split(".")[-1]
-                            if ext not in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp"):
+                            if ext not in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp", "emf", "wmf"):
                                 continue
 
                             # 4. Check file size
@@ -146,14 +210,15 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                             # 5. Check image dimensions with PIL
                             is_logo = False
                             im = decode_image_bytes(data, ext)
-                            if im:
-                                w, h = im.size
-                                if (w, h) in KNOWN_LOGO_DIMENSIONS:
-                                    is_logo = True
-                                elif w < 80 or h < 40:
-                                    is_logo = True
-                                elif f_r <= 5 and (w < 480 and h < 220):
-                                    is_logo = True
+                            if not im:
+                                continue
+                            w, h = im.size
+                            if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                                is_logo = True
+                            elif w < 80 or h < 40:
+                                is_logo = True
+                            elif f_r <= 5 and (w < 480 and h < 220):
+                                is_logo = True
 
                             if is_logo:
                                 continue
@@ -166,7 +231,7 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
             if not anchored_sketches:
                 for n in z.namelist():
                     ext = n.lower().split(".")[-1]
-                    if "media/" in n and ext in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp"):
+                    if "media/" in n and ext in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp", "emf", "wmf"):
                         data = z.read(n)
                         if len(data) < 2000:
                             continue
@@ -365,7 +430,7 @@ def extract_sheet_images(
                 continue
 
             ext = media_file.lower().split(".")[-1]
-            if ext in ("emf", "wmf", "bin"):
+            if ext in ("bin",):
                 continue
 
             from_c = child.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}from")
@@ -377,17 +442,19 @@ def extract_sheet_images(
                 continue
 
             im = decode_image_bytes(raw_data, ext)
-            if im:
-                w, h = im.size
-                if (w, h) in KNOWN_LOGO_DIMENSIONS:
-                    continue
-                if w < 80 or h < 40:
-                    continue
-                if f_r <= 5 and f_c <= 5 and (w < 480 and h < 220):
-                    continue
+            if not im:
+                continue
+
+            w, h = im.size
+            if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                continue
+            if w < 80 or h < 40:
+                continue
+            if f_r <= 5 and f_c <= 5 and (w < 480 and h < 220):
+                continue
 
             seen_media.add(media_file)
-            valid_media_list.append((media_file, ext, raw_data))
+            valid_media_list.append((media_file, ext, raw_data, im))
 
         # Clean existing image files in output_dir
         for old_f in os.listdir(output_dir):
@@ -398,8 +465,7 @@ def extract_sheet_images(
                     pass
 
         # Write converted sketches
-        for idx, (m_path, ext, raw_bytes) in enumerate(valid_media_list, start=1):
-            im = decode_image_bytes(raw_bytes, ext)
+        for idx, (m_path, ext, raw_bytes, im) in enumerate(valid_media_list, start=1):
             if im:
                 try:
                     if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
