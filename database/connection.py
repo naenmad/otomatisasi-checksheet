@@ -20,6 +20,11 @@ if raw_url:
         db_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     else:
         db_url = raw_url
+
+    # Auto-route Supabase pooler to Transaction Mode (Port 6543) instead of Session Mode (Port 5432)
+    # to avoid EMAXCONNSESSION max 15 clients limit
+    if "pooler.supabase.com:5432" in db_url:
+        db_url = db_url.replace(":5432", ":6543")
 else:
     # Local SQLite fallback
     os.makedirs("storage", exist_ok=True)
@@ -40,6 +45,9 @@ elif "postgresql" in db_url:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_context
+    # Transaction pooler (PgBouncer) requires disabling asyncpg prepared statement cache
+    connect_args["statement_cache_size"] = 0
+    connect_args["prepared_statement_cache_size"] = 0
 
 engine_kwargs = {
     "echo": False,
@@ -47,9 +55,9 @@ engine_kwargs = {
     "pool_pre_ping": True,
 }
 if "postgresql" in db_url:
-    engine_kwargs["pool_size"] = 10
-    engine_kwargs["max_overflow"] = 20
-    engine_kwargs["pool_recycle"] = 1800
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 10
+    engine_kwargs["pool_recycle"] = 300
 
 engine = create_async_engine(db_url, **engine_kwargs)
 
