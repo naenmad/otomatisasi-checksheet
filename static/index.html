@@ -1996,6 +1996,8 @@
                 <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="transition-transform duration-100 origin-center" :style="{ transform: `scale(${sketchZoom})` }">
                   <img :src="typeof activeChecksheet.images[activeSketchIdx] === 'string' ? activeChecksheet.images[activeSketchIdx] : (activeChecksheet.images[activeSketchIdx].image_url || activeChecksheet.images[activeSketchIdx].image_path)"
                        :alt="'Sketsa ' + activeChecksheet.part_number"
+                       loading="lazy"
+                       decoding="async"
                        :class="studioPanelMode === 'image-focus' ? 'max-h-[68vh]' : 'max-h-[44vh]'"
                        class="max-w-full object-contain rounded-lg border border-zinc-800 shadow-md">
                 </div>
@@ -2042,7 +2044,7 @@
                         @click="activeSketchIdx = idx"
                         :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-zinc-800 opacity-60 hover:opacity-100'"
                         class="h-12 w-16 rounded border bg-zinc-900 overflow-hidden shrink-0 transition-all cursor-pointer">
-                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" class="w-full h-full object-cover">
+                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" loading="lazy" decoding="async" class="w-full h-full object-cover">
                 </button>
                 <!-- Add image button in strip -->
                 <button @click="$refs.imageFileInput.click()" title="Tambah gambar lain"

@@ -11,6 +11,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -51,6 +52,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enable GZip compression for ultra-fast payload delivery (HTML, JSON, static assets)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include API Routers
 app.include_router(auth_router)
