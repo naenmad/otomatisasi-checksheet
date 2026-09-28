@@ -22,17 +22,18 @@ async def main():
     apply_mode = "--apply" in sys.argv
 
     async with AsyncSessionLocal() as session:
-        # Get all checksheet IDs that have appearance-type items with combined standards
+        # 1. Get all checksheet IDs that need row expansion:
+        # - Has 'appearance', 'app', 'function', 'fungsi' in inspection_item
+        # - Has combined standard in appearance
         result = await session.execute(text("""
             SELECT DISTINCT checksheet_id FROM inspection_points 
-            WHERE LOWER(inspection_item) IN ('appearance', 'app', 'surface')
-            AND standard != '-' AND standard != ''
-            AND (standard LIKE '%,%' OR standard LIKE '%No %')
+            WHERE LOWER(inspection_item) IN ('appearance', 'app', 'surface', 'function', 'fungsi')
+               OR (standard LIKE '%,%' AND standard LIKE '%No %')
             ORDER BY checksheet_id
         """))
         affected_cs_ids = [r[0] for r in result.fetchall()]
 
-        print(f"Checksheets with combined appearance rows: {len(affected_cs_ids)}")
+        print(f"Checksheets to check for expansion/category swap: {len(affected_cs_ids)}")
         print(f"Mode: {'APPLY' if apply_mode else 'DRY-RUN'}")
         print("=" * 80)
 
@@ -62,15 +63,25 @@ async def main():
             # Run expand_points
             new_points = TextNormalizer.expand_points(old_points)
 
-            # Check if anything changed
+            # Check if points changed (either row count changed OR items/standards changed)
+            changed = False
             if len(new_points) != len(old_points):
-                old_items = [p["inspection_item"] for p in old_points]
-                new_items = [p["inspection_item"] for p in new_points]
+                changed = True
+            else:
+                for old_p, new_p in zip(old_points, new_points):
+                    if (old_p["inspection_item"] != new_p["inspection_item"] or 
+                        old_p["standard"] != new_p["standard"] or 
+                        old_p["method"] != new_p["method"]):
+                        changed = True
+                        break
 
+            if changed:
                 print(f"\n[CS #{cs_id}] {len(old_points)} rows -> {len(new_points)} rows")
                 for i, pt in enumerate(new_points):
-                    marker = "  " if i < len(old_points) and i < len(new_items) and (i < len(old_items) and old_items[i] == new_items[i]) else "+"
-                    print(f"  {marker} #{pt['item_no']:>2s} {pt['inspection_item']:30s} {pt['standard'][:40]}")
+                    old_desc = f"{old_points[i]['inspection_item']} | {old_points[i]['standard']}" if i < len(old_points) else "(new)"
+                    new_desc = f"{pt['inspection_item']} | {pt['standard']} | {pt['method']}"
+                    marker = "  " if i < len(old_points) and old_desc == f"{pt['inspection_item']} | {pt['standard']}" else "~"
+                    print(f"  {marker} #{pt['item_no']:>2s} {new_desc}")
 
                 total_split += 1
                 total_new_rows += len(new_points) - len(old_points)
@@ -96,31 +107,35 @@ async def main():
                             "idx": idx,
                         })
 
-        # Also normalize all remaining non-appearance items (labels, methods)
+        # Also normalize all remaining inspection points (labels, standards, methods)
         print("\n" + "=" * 80)
-        print("Normalizing remaining inspection points (labels + methods)...")
+        print("Normalizing all inspection points (labels + standards + methods)...")
 
         result = await session.execute(text(
             "SELECT id, inspection_item, standard, method FROM inspection_points ORDER BY id"
         ))
         all_rows = result.fetchall()
         label_fixes = 0
+        std_fixes = 0
         method_fixes = 0
 
         for row_id, old_item, old_std, old_method in all_rows:
             new_item = TextNormalizer.normalize_item(old_item)
             new_method = FuzzyToolNormalizer.normalize(old_method)
+            new_std = TextNormalizer.normalize_standard(old_std, new_item)
 
-            if new_item != old_item or new_method != old_method:
+            if new_item != old_item or new_method != old_method or new_std != old_std:
                 if new_item != old_item:
                     label_fixes += 1
+                if new_std != old_std:
+                    std_fixes += 1
                 if new_method != old_method:
                     method_fixes += 1
 
                 if apply_mode:
                     await session.execute(text(
-                        "UPDATE inspection_points SET inspection_item = :item, method = :method WHERE id = :id"
-                    ), {"item": new_item, "method": new_method, "id": row_id})
+                        "UPDATE inspection_points SET inspection_item = :item, standard = :std, method = :method WHERE id = :id"
+                    ), {"item": new_item, "std": new_std, "method": new_method, "id": row_id})
 
         if apply_mode:
             await session.commit()
@@ -130,10 +145,11 @@ async def main():
             print("Run with --apply to write changes.")
 
         print(f"\nSummary:")
-        print(f"  Checksheets split:     {total_split}")
-        print(f"  New rows added:        {total_new_rows}")
-        print(f"  Label fixes:           {label_fixes}")
-        print(f"  Method fixes:          {method_fixes}")
+        print(f"  Checksheets expanded/swapped: {total_split}")
+        print(f"  New rows added:               {total_new_rows}")
+        print(f"  Label fixes:                  {label_fixes}")
+        print(f"  Standard fixes:               {std_fixes}")
+        print(f"  Method fixes:                 {method_fixes}")
 
 
 if __name__ == "__main__":

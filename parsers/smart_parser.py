@@ -255,12 +255,40 @@ class TextNormalizer:
         return cls._title_case(cleaned)
 
     @classmethod
+    def is_qualitative_item(cls, item_label: str) -> bool:
+        """Check if an item label represents a qualitative / pass-fail check."""
+        if not item_label:
+            return False
+        lower = item_label.lower().strip()
+        if lower.startswith("no ") or lower.startswith("tidak "):
+            return True
+        if lower in (
+            "profile ok", "sesuai sample", "hole complete",
+            "welding not perforate", "welding tidak keropos",
+            "non destructive test", "ndt",
+            "nut ok", "nut smooth", "nut center", "nut position", "bolt smooth",
+            "go / no go", "go/no go", "packing", "marking -67l- jelas"
+        ):
+            return True
+        for kw in cls.DEFECT_KEYWORDS:
+            if kw in lower and lower not in ("thickness", "coating thickness", "dimension"):
+                return True
+        return False
+
+    @classmethod
     def normalize_standard(cls, standard: str, item_label: str = "") -> str:
         """
         Normalize standard text. For appearance-type items, clean up verbose
         defect descriptions into a concise comma-separated format.
+        For qualitative / defect items with empty or '-' standard, return 'OK / NG'.
         """
         if not standard or standard.strip() in ("-", ""):
+            if item_label:
+                item_lower = item_label.lower().strip()
+                if item_lower == "profile ok":
+                    return "Sesuai Sample"
+                if cls.is_qualitative_item(item_label):
+                    return "OK / NG"
             return standard or "-"
 
         cleaned = re.sub(r"\s+", " ", str(standard)).strip()
@@ -420,8 +448,10 @@ class TextNormalizer:
         def _title_word(w: str) -> str:
             if w.startswith("[") or w.startswith("("):
                 return w
-            if w.upper() in ("OK", "NG", "NO", "MAX", "MIN", "PC", "MM"):
+            if w.upper() in ("OK", "NG", "MAX", "MIN", "PC", "MM"):
                 return w.upper()
+            if w.upper() == "NO":
+                return "No"
             if "/" in w:
                 return "/".join(_title_word(p) for p in w.split("/"))
             return w.capitalize()
@@ -454,23 +484,34 @@ class TextNormalizer:
     @classmethod
     def expand_points(cls, points: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """
-        Expand a list of inspection points, splitting combined appearance rows
-        into individual defect check rows.
+        Expand a list of inspection points:
+        1. Split combined appearance rows into individual defect check rows
+        2. Swap category items (Function, Appearance) where standard is the real item name
+        3. Standard for defect checks = "OK / NG"
 
         Example:
             Input:  [{"inspection_item": "Appearance", "standard": "No crack, dented, scratch"}]
-            Output: [{"inspection_item": "No Crack", "standard": "-", "method": "Visual"},
-                     {"inspection_item": "No Dent",  "standard": "-", "method": "Visual"},
-                     {"inspection_item": "No Scratch","standard": "-", "method": "Visual"}]
+            Output: [{"inspection_item": "No Crack",  "standard": "OK / NG", "method": "Visual"},
+                     {"inspection_item": "No Dent",   "standard": "OK / NG", "method": "Visual"},
+                     {"inspection_item": "No Scratch", "standard": "OK / NG", "method": "Visual"}]
+
+            Input:  [{"inspection_item": "Function", "standard": "Non destructive test", "method": "Hammering"}]
+            Output: [{"inspection_item": "Non Destructive Test", "standard": "OK / NG", "method": "Hammering"}]
         """
         expanded = []
         for pt in points:
             normalized = cls.normalize_point(pt)
             item_lower = normalized.get("inspection_item", "").lower()
+            std = normalized.get("standard", "").strip()
+            method = normalized.get("method", "Visual")
 
-            # Check if this is an appearance item with combined defects
+            # --- Category: Appearance / App / Surface ---
+            # Standard contains defect list -> split into individual rows
             if item_lower in ("appearance", "app", "surface"):
-                std = normalized.get("standard", "")
+                if item_lower == "surface" and (re.search(r'[\d±]', std) or method in ("Tapper Gg", "Tapper Gauge", "Feeler Gg", "Feeler Gauge")):
+                    expanded.append(normalized)
+                    continue
+
                 split_rows = cls._split_appearance_to_rows(std)
                 if split_rows:
                     for split_item, split_std in split_rows:
@@ -482,6 +523,26 @@ class TextNormalizer:
                             "master_data": normalized.get("master_data", ""),
                         })
                     continue
+
+            # --- Category: Function / Fungsi ---
+            # Standard contains the real inspection item name
+            # e.g. Function | "Non destructive test" | Hammering
+            #   -> Non Destructive Test | OK / NG | Hammering
+            if item_lower in ("function", "fungsi"):
+                if std and std != "-" and not re.match(r'^[\d\.±\+\-\s\/]+$', std):
+                    # Standard is text, not a measurement -> swap to item name
+                    # Handle comma-separated function checks
+                    sub_items = cls._split_function_to_rows(std, method)
+                    if sub_items:
+                        for sub_item, sub_std, sub_method in sub_items:
+                            expanded.append({
+                                "item_no": normalized.get("item_no", ""),
+                                "inspection_item": sub_item,
+                                "standard": sub_std,
+                                "method": sub_method,
+                                "master_data": normalized.get("master_data", ""),
+                            })
+                        continue
 
             expanded.append(normalized)
 
@@ -495,13 +556,7 @@ class TextNormalizer:
     def _split_appearance_to_rows(cls, standard: str) -> Optional[List[Tuple[str, str]]]:
         """
         Split a combined appearance standard into individual (item_name, standard) tuples.
-
-        Input:  "No Crack, No Dent, No Scratch, No Over Cutting, Profile OK"
-        Output: [("No Crack", "-"), ("No Dent", "-"), ("No Scratch", "-"),
-                 ("No Over Cutting", "-"), ("Profile OK", "Sesuai Sample")]
-
-        Also handles raw unprocessed text like:
-            "No crack, dented, scratch,over cutting, profil part OK ( sesuai sample)"
+        Standard for defect checks = "OK / NG".
         """
         if not standard or standard.strip() in ("-", ""):
             return None
@@ -513,22 +568,20 @@ class TextNormalizer:
         if not normalized:
             return None
 
-        # Handle coating prefix: "Painting: No Bubble, No Peeling, ..."
+        # Handle coating prefix
         coating_prefix = ""
         coating_match = re.match(r"^(Painting|Plating|Coating):\s*(.+)$", normalized)
         if coating_match:
             coating_prefix = coating_match.group(1)
             normalized = coating_match.group(2).strip()
 
-        # Split by comma
         parts = [p.strip() for p in normalized.split(",") if p.strip()]
 
         if len(parts) <= 1:
-            # Single item, don't split — keep as one row
             item_name = parts[0] if parts else normalized
             if coating_prefix:
                 item_name = f"{coating_prefix}: {item_name}"
-            return [(item_name, "-")]
+            return [(item_name, "OK / NG")]
 
         rows = []
         for part in parts:
@@ -537,31 +590,99 @@ class TextNormalizer:
                 continue
 
             item_name = part
-            std_val = "-"
+            std_val = "OK / NG"
 
-            # Add coating prefix if present
             if coating_prefix:
                 item_name = f"No {part.replace('No ', '')}" if part.startswith("No ") else part
                 item_name = f"{coating_prefix}: {item_name}"
 
-            # Special handling for certain items
             if "profile ok" in part.lower():
                 item_name = "Profile OK"
                 std_val = "Sesuai Sample"
             elif "sesuai sample" in part.lower():
                 item_name = "Sesuai Sample"
-                std_val = "-"
+                std_val = "OK / NG"
             elif "hole complete" in part.lower():
                 item_name = "Hole Complete"
-                std_val = "-"
+                std_val = "OK / NG"
             elif "welding" in part.lower():
                 item_name = part
-                std_val = "-"
+                std_val = "OK / NG"
             elif "max harmful" in part.lower():
                 item_name = "Burr"
                 std_val = "Max Harmful"
 
             rows.append((item_name, std_val))
+
+        return rows if rows else None
+
+    @classmethod
+    def _split_function_to_rows(cls, standard: str, method: str) -> Optional[List[Tuple[str, str, str]]]:
+        """
+        Split function/category standard into individual (item_name, standard, method) tuples.
+        Handles comma-separated items and known function check names.
+
+        Input:  "Nut tidak seret, tidak rusak, Nut Center,"
+        Output: [("Nut Smooth", "OK / NG", "Bolt"),
+                 ("Nut OK", "OK / NG", "Bolt"),
+                 ("Nut Center", "OK / NG", "Bolt")]
+        """
+        if not standard or standard.strip() in ("-", ""):
+            return None
+
+        cleaned = re.sub(r"\s+", " ", str(standard)).strip().rstrip(",;.")
+
+        # Known function item mappings
+        func_aliases = {
+            "non destuctive tes": "Non Destructive Test",
+            "non destructive test": "Non Destructive Test",
+            "non destructive tes": "Non Destructive Test",
+            "ndt": "Non Destructive Test",
+            "nut tidak seret": "Nut Smooth",
+            "tidak seret": "Nut Smooth",
+            "nut tidak rusak": "Nut OK",
+            "tidak rusak": "Nut OK",
+            "ulir tidak rusak": "Nut OK",
+            "bolt masuk masksimal": "Bolt Smooth",
+            "bolt masuk maksimal": "Bolt Smooth",
+            "nut center": "Nut Center",
+            "nut position": "Nut Position",
+            "posisi nut center": "Nut Center",
+            "go / no go": "Go / No Go",
+            "go/no go": "Go / No Go",
+            "tidak keropos": "Welding Tidak Keropos",
+            "welding tidak keropos": "Welding Tidak Keropos",
+        }
+
+        # Split by comma
+        parts = [p.strip() for p in cleaned.split(",") if p.strip()]
+
+        rows = []
+        for part in parts:
+            part_lower = part.lower().strip()
+            if not part_lower:
+                continue
+
+            # Look up in function aliases
+            item_name = None
+            for alias, canonical in func_aliases.items():
+                if alias in part_lower:
+                    item_name = canonical
+                    break
+
+            if not item_name:
+                # Use as-is with title case
+                item_name = cls._title_case(part)
+
+            # Assign proper method if missing or generic
+            sub_method = method
+            if not sub_method or sub_method.lower() in ("visual", "-", ""):
+                if item_name == "Non Destructive Test":
+                    sub_method = "Hammering"
+                elif any(k in item_name.lower() for k in ("nut", "bolt", "ulir")):
+                    sub_method = "Bolt"
+
+            rows.append((item_name, "OK / NG", sub_method))
 
         return rows if rows else None
 
