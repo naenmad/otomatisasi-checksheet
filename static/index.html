@@ -18,6 +18,12 @@
   <style>
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
+    /* Pastikan input tabel, toleransi dan data teknis menggunakan font Inter dengan tabular-nums */
+    /* sehingga angka 0 (nol) bulat bersih TANPA garis miring, membedakannya secara tegas dari simbol diameter Ø */
+    input, textarea, select, .tabular-nums, #excel-grid-container input, #excel-grid-container textarea {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      font-variant-numeric: tabular-nums;
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
@@ -2242,7 +2248,7 @@
                           type="button"
                           @mousedown.prevent="insertSymbol(sym.char)"
                           :title="sym.title"
-                          class="h-7 min-w-[28px] px-2 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-200 hover:text-white border border-zinc-700/80 hover:border-indigo-500 text-xs font-mono font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer select-none">
+                          class="h-7 min-w-[30px] px-2.5 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-200 hover:text-white border border-zinc-700/80 hover:border-indigo-500 text-xs font-semibold transition-all shadow-sm flex items-center justify-center cursor-pointer select-none">
                     {{ sym.char }}
                   </button>
                 </div>
@@ -2295,7 +2301,7 @@
                                  @focus="setActiveCell(rIdx, 0, $event.target)"
                                  @keydown="handleGridKeydown($event, rIdx, 0)"
                                  @paste="handleExcelPaste($event, rIdx, 0)"
-                                 class="w-full h-full px-1 py-2.5 bg-transparent text-center font-mono font-bold text-zinc-300 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
+                                 class="w-full h-full px-1 py-2.5 bg-transparent text-center font-bold text-zinc-300 tabular-nums focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs">
                         </div>
                       </td>
 
@@ -2320,7 +2326,7 @@
                                   @focus="setActiveCell(rIdx, 2, $event.target)"
                                   @keydown="handleGridKeydown($event, rIdx, 2)"
                                   @paste="handleExcelPaste($event, rIdx, 2)"
-                                  class="w-full h-full px-3 py-2.5 bg-transparent font-mono text-zinc-200 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
+                                  class="w-full h-full px-3 py-2.5 bg-transparent text-zinc-200 placeholder-zinc-600 tabular-nums focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
 
                       <!-- Col 3: Method / Alat Ukur (Combobox with dropdown & auto-normalization) -->
@@ -3815,8 +3821,7 @@
         const lastFocusedInput = ref(null);
 
         const commonSymbols = [
-          { char: 'ø', title: 'Diameter (ø)' },
-          { char: '⌀', title: 'Diameter Simbol Teknik (⌀)' },
+          { char: 'Ø', title: 'Diameter Standar (Ø)' },
           { char: '±', title: 'Plus-Minus Toleransi (±)' },
           { char: '≤', title: 'Kurang Dari atau Sama Dengan (≤)' },
           { char: '≥', title: 'Lebih Dari atau Sama Dengan (≥)' },
@@ -4060,6 +4065,10 @@
 
           if (method) {
             method = normalizeToolName(method);
+          }
+
+          if (standard) {
+            standard = standard.replace(/[ø⌀]/g, 'Ø');
           }
 
           return {
@@ -4320,6 +4329,11 @@
           if (!activeChecksheet.value) return;
           isSavingPoints.value = true;
           try {
+            // Auto-normalize diameter symbols across all rows
+            excelPoints.value.forEach(p => {
+              if (p.standard) p.standard = p.standard.replace(/[ø⌀]/g, 'Ø');
+            });
+
             const payload = {
               points: excelPoints.value.map((p, idx) => ({
                 item_no: p.item_no || String(idx + 1),

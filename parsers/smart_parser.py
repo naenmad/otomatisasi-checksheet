@@ -716,7 +716,7 @@ class SemanticStandardParser:
 
         # Complete upper & lower tolerance in one string e.g. "0 + 2.0 / - 0", "5 +0.2/-0.3"
         "complete_two_sided": re.compile(
-            r"^([Øø]?\s*\d+(?:\.\d+)?)\s*[\+]+\s*(\d+(?:\.\d+)?)\s*\/\s*[\-]+\s*(\d+(?:\.\d+)?)$"
+            r"^([Øø⌀]?\s*\d+(?:\.\d+)?)\s*[\+]+\s*(\d+(?:\.\d+)?)\s*\/\s*[\-]+\s*(\d+(?:\.\d+)?)$"
         ),
 
         # Upper tolerance token e.g. "+ 0", "+ 0.5", "+ 1.4", "+ 2.0", "+0.2"
@@ -726,7 +726,7 @@ class SemanticStandardParser:
         "lower_tol": re.compile(r"^\-\s*(\d+(?:\.\d+)?)$"),
 
         # Number with upper tolerance e.g. "5 + 0", "0 + 0.5", "5 + 1.4"
-        "nominal_with_upper": re.compile(r"^([Øø]?\s*\d+(?:\.\d+)?)\s*\+\s*(\d+(?:\.\d+)?)$"),
+        "nominal_with_upper": re.compile(r"^([Øø⌀]?\s*\d+(?:\.\d+)?)\s*\+\s*(\d+(?:\.\d+)?)$"),
 
         # Qualitative criteria e.g. "NO CRACK / NECK", "NO DEFORM", "NO BURR = 0.3 mm", "OK / NG"
         "qualitative": re.compile(
@@ -735,7 +735,7 @@ class SemanticStandardParser:
         ),
 
         # Pure nominal number e.g. "5", "0", "18", "138 POINT", "1 POINT"
-        "pure_nominal": re.compile(r"^([Øø]?\s*\d+(?:\.\d+)?(?:\s*POINT[S]?)?)$", re.IGNORECASE),
+        "pure_nominal": re.compile(r"^([Øø⌀]?\s*\d+(?:\.\d+)?(?:\s*POINT[S]?)?)$", re.IGNORECASE),
     }
 
     @classmethod
@@ -769,6 +769,7 @@ class SemanticStandardParser:
         """
         consumed_next = False
         base = str(base_std or "").replace("\r\n", "\n").replace("\n", " ").strip()
+        base = re.sub(r"[ø⌀]", "Ø", base)
         base = re.sub(r"\s+", " ", base)
 
         extras = [str(t).strip() for t in (row_extra_tokens or []) if t and str(t).strip()]
@@ -776,7 +777,7 @@ class SemanticStandardParser:
 
         # Check for multiline in base cell e.g. "5\n+0\n-1.4"
         multiline_match = re.match(
-            r"^([Øø]?\s*\d+(?:\.\d+)?)\s*\+\s*(\d+(?:\.\d+)?)\s*[\-\/]\s*(\d+(?:\.\d+)?)$",
+            r"^([Øø⌀]?\s*\d+(?:\.\d+)?)\s*\+\s*(\d+(?:\.\d+)?)\s*[\-\/]\s*(\d+(?:\.\d+)?)$",
             base
         )
         if multiline_match:
