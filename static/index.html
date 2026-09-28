@@ -3777,7 +3777,7 @@
         const deleteExcelRow = (index) => {
           if (excelPoints.value.length <= 1) {
             excelPoints.value[0] = {
-              item_no: '1',
+              item_no: excelPoints.value[0]?.item_no || '1',
               inspection_item: '',
               standard: '-',
               method: 'Visual',
@@ -3785,7 +3785,6 @@
             };
           } else {
             excelPoints.value.splice(index, 1);
-            renumberExcelPoints();
           }
           isPointsDirty.value = true;
         };
@@ -4123,9 +4122,6 @@
             if (rIdx < totalRows - 1) {
               activeRow.value = rIdx + 1;
               focusCell(rIdx + 1, cIdx, prefix);
-            } else {
-              addExcelRow();
-              Vue.nextTick(() => focusCell(excelPoints.value.length - 1, cIdx, prefix));
             }
           } else if (event.key === 'ArrowLeft') {
             const el = event.target;
@@ -4663,29 +4659,30 @@
         const deleteTargetItem = ref(null);
         const isDeleting = ref(false);
 
-        const deleteSingleChecksheet = (cs) => {
-          if (!cs) return;
+        const deleteSingleChecksheet = async (cs) => {
+          if (!cs || isDeleting.value) return;
           deleteTargetType.value = 'single';
           deleteTargetItem.value = cs;
-          showDeleteConfirmModal.value = true;
+          await executeConfirmedDelete();
         };
 
-        const confirmBulkDelete = () => {
-          if (!selectedIds.value || selectedIds.value.length === 0) {
+        const confirmBulkDelete = async () => {
+          if (!selectedIds.value || selectedIds.value.length === 0 || isDeleting.value) {
             alert('Pilih setidaknya satu checksheet untuk dihapus.');
             return;
           }
           deleteTargetType.value = 'bulk';
           deleteTargetItem.value = null;
-          showDeleteConfirmModal.value = true;
+          await executeConfirmedDelete();
         };
 
-        const deleteChecksheetFromStudio = () => {
+        const deleteChecksheetFromStudio = async () => {
           if (!activeChecksheet.value) return;
-          deleteSingleChecksheet(activeChecksheet.value);
+          await deleteSingleChecksheet(activeChecksheet.value);
         };
 
         const executeConfirmedDelete = async () => {
+          if (isDeleting.value) return;
           isDeleting.value = true;
           try {
             if (deleteTargetType.value === 'single') {
