@@ -451,6 +451,120 @@ class TextNormalizer:
 
         return result
 
+    @classmethod
+    def expand_points(cls, points: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """
+        Expand a list of inspection points, splitting combined appearance rows
+        into individual defect check rows.
+
+        Example:
+            Input:  [{"inspection_item": "Appearance", "standard": "No crack, dented, scratch"}]
+            Output: [{"inspection_item": "No Crack", "standard": "-", "method": "Visual"},
+                     {"inspection_item": "No Dent",  "standard": "-", "method": "Visual"},
+                     {"inspection_item": "No Scratch","standard": "-", "method": "Visual"}]
+        """
+        expanded = []
+        for pt in points:
+            normalized = cls.normalize_point(pt)
+            item_lower = normalized.get("inspection_item", "").lower()
+
+            # Check if this is an appearance item with combined defects
+            if item_lower in ("appearance", "app", "surface"):
+                std = normalized.get("standard", "")
+                split_rows = cls._split_appearance_to_rows(std)
+                if split_rows:
+                    for split_item, split_std in split_rows:
+                        expanded.append({
+                            "item_no": normalized.get("item_no", ""),
+                            "inspection_item": split_item,
+                            "standard": split_std,
+                            "method": "Visual",
+                            "master_data": normalized.get("master_data", ""),
+                        })
+                    continue
+
+            expanded.append(normalized)
+
+        # Re-number item_no sequentially
+        for idx, pt in enumerate(expanded):
+            pt["item_no"] = str(idx + 1)
+
+        return expanded
+
+    @classmethod
+    def _split_appearance_to_rows(cls, standard: str) -> Optional[List[Tuple[str, str]]]:
+        """
+        Split a combined appearance standard into individual (item_name, standard) tuples.
+
+        Input:  "No Crack, No Dent, No Scratch, No Over Cutting, Profile OK"
+        Output: [("No Crack", "-"), ("No Dent", "-"), ("No Scratch", "-"),
+                 ("No Over Cutting", "-"), ("Profile OK", "Sesuai Sample")]
+
+        Also handles raw unprocessed text like:
+            "No crack, dented, scratch,over cutting, profil part OK ( sesuai sample)"
+        """
+        if not standard or standard.strip() in ("-", ""):
+            return None
+
+        cleaned = re.sub(r"\s+", " ", str(standard)).strip()
+
+        # First normalize the standard text to get clean defect names
+        normalized = cls._normalize_appearance_standard(cleaned)
+        if not normalized:
+            return None
+
+        # Handle coating prefix: "Painting: No Bubble, No Peeling, ..."
+        coating_prefix = ""
+        coating_match = re.match(r"^(Painting|Plating|Coating):\s*(.+)$", normalized)
+        if coating_match:
+            coating_prefix = coating_match.group(1)
+            normalized = coating_match.group(2).strip()
+
+        # Split by comma
+        parts = [p.strip() for p in normalized.split(",") if p.strip()]
+
+        if len(parts) <= 1:
+            # Single item, don't split — keep as one row
+            item_name = parts[0] if parts else normalized
+            if coating_prefix:
+                item_name = f"{coating_prefix}: {item_name}"
+            return [(item_name, "-")]
+
+        rows = []
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+
+            item_name = part
+            std_val = "-"
+
+            # Add coating prefix if present
+            if coating_prefix:
+                item_name = f"No {part.replace('No ', '')}" if part.startswith("No ") else part
+                item_name = f"{coating_prefix}: {item_name}"
+
+            # Special handling for certain items
+            if "profile ok" in part.lower():
+                item_name = "Profile OK"
+                std_val = "Sesuai Sample"
+            elif "sesuai sample" in part.lower():
+                item_name = "Sesuai Sample"
+                std_val = "-"
+            elif "hole complete" in part.lower():
+                item_name = "Hole Complete"
+                std_val = "-"
+            elif "welding" in part.lower():
+                item_name = part
+                std_val = "-"
+            elif "max harmful" in part.lower():
+                item_name = "Burr"
+                std_val = "Max Harmful"
+
+            rows.append((item_name, std_val))
+
+        return rows if rows else None
+
 
 
 class SemanticStandardParser:

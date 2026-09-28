@@ -85,8 +85,10 @@ async def create_checksheet(
         if existing:
             await session.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == target.id))
 
-        for idx, pt in enumerate(points):
-            pt = TextNormalizer.normalize_point(pt)
+        # Normalize + expand (splits combined appearance rows into individual defect checks)
+        expanded_points = TextNormalizer.expand_points(points)
+
+        for idx, pt in enumerate(expanded_points):
             ip = InspectionPoint(
                 checksheet_id=target.id,
                 item_no=pt.get("item_no") or str(idx + 1),
