@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Summit FactoryHub: Quality Checksheet Suite</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
   <link rel="shortcut icon" href="/static/favicon.ico">
@@ -2630,7 +2633,7 @@
   </div>
 
   <script>
-    const { createApp, ref, computed, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted, watch } = Vue;
 
     createApp({
       setup() {
@@ -3045,6 +3048,7 @@
         const handleRowClick = (event, cs, idx) => {
           if (event.target.closest('button') || event.target.closest('a') || event.target.closest('input') || event.target.closest('select')) return;
           focusedCsIndex.value = idx;
+          activeChecksheet.value = cs;
           if (isSelectable(cs)) {
             toggleSelect(cs.id);
           }
@@ -4875,6 +4879,21 @@
             }
           }
         });
+
+        watch([activePage, showExcelStudio, activeChecksheet, focusedCsIndex], () => {
+          if (showExcelStudio.value && activeChecksheet.value?.part_number) {
+            document.title = activeChecksheet.value.part_number;
+          } else if (activePage.value === 'checksheets') {
+            if (activeChecksheet.value?.part_number) {
+              document.title = activeChecksheet.value.part_number;
+            } else {
+              const focused = filteredChecksheets.value[focusedCsIndex.value];
+              document.title = focused?.part_number || 'Checksheets';
+            }
+          } else {
+            document.title = 'Summit FactoryHub: Quality Checksheet Suite';
+          }
+        }, { immediate: true });
 
         onMounted(() => {
           window.addEventListener('popstate', () => {

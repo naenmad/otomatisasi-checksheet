@@ -176,56 +176,61 @@ def extract_excel_images(file_path: str, output_dir: Optional[str] = None, part_
                         d_rels = ET.fromstring(z.read(d_rel_path))
                         media_map = {}
                         for d_r in d_rels.findall("{http://schemas.openxmlformats.org/package/2006/relationships}Relationship"):
-                            if "image" in d_r.attrib.get("Type", ""):
-                                media_map[d_r.attrib["Id"]] = d_r.attrib["Target"].replace("../", "xl/")
+                            rel_type = d_r.attrib.get("Type", "").lower()
+                            if any(k in rel_type for k in ("image", "hdphoto", "picture")):
+                                t = d_r.attrib.get("Target", "").replace("../", "xl/")
+                                if not t.startswith("xl/"):
+                                    t = "xl/" + t.lstrip("/")
+                                media_map[d_r.attrib["Id"]] = t
 
                         d_xml = ET.fromstring(z.read(d_path))
                         for child in d_xml:
-                            blip = child.find(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip")
-                            if blip is None:
-                                continue
-                            embed = blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed")
-                            media_file = media_map.get(embed)
-                            if not media_file or media_file not in z.namelist():
-                                continue
+                            for blip in child.findall(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip"):
+                                embed = (
+                                    blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed")
+                                    or blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}link")
+                                )
+                                media_file = media_map.get(embed)
+                                if not media_file or media_file not in z.namelist():
+                                    continue
 
-                            from_c = child.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}from")
-                            f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
-                            f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
+                                from_c = child.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}from")
+                                f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
+                                f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
 
-                            # 3. File type check (supports raster and EMF/WMF with embedded bitmaps)
-                            ext = media_file.lower().split(".")[-1]
-                            if ext not in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp", "emf", "wmf"):
-                                continue
+                                # 3. File type check (supports raster and EMF/WMF with embedded bitmaps)
+                                ext = media_file.lower().split(".")[-1]
+                                if ext not in ("png", "jpg", "jpeg", "webp", "wdp", "jxr", "hdp", "emf", "wmf"):
+                                    continue
 
-                            # 4. Check file size
-                            data = z.read(media_file)
-                            if len(data) < 1500:
-                                continue
+                                # 4. Check file size
+                                data = z.read(media_file)
+                                if len(data) < 1500:
+                                    continue
 
-                            # Header logo filter: top 4 rows and left 4 columns unconditionally
-                            if f_r <= 4 and f_c <= 4:
-                                continue
+                                # Header logo filter: top 4 rows and left 4 columns unconditionally
+                                if f_r <= 4 and f_c <= 4:
+                                    continue
 
-                            # 5. Check image dimensions with PIL
-                            is_logo = False
-                            im = decode_image_bytes(data, ext)
-                            if not im:
-                                continue
-                            w, h = im.size
-                            if (w, h) in KNOWN_LOGO_DIMENSIONS:
-                                is_logo = True
-                            elif w < 80 or h < 40:
-                                is_logo = True
-                            elif f_r <= 5 and (w < 480 and h < 220):
-                                is_logo = True
+                                # 5. Check image dimensions with PIL
+                                is_logo = False
+                                im = decode_image_bytes(data, ext)
+                                if not im:
+                                    continue
+                                w, h = im.size
+                                if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                                    is_logo = True
+                                elif w < 80 or h < 40:
+                                    is_logo = True
+                                elif f_r <= 4 and f_c <= 4 and (w < 480 and h < 220):
+                                    is_logo = True
 
-                            if is_logo:
-                                continue
+                                if is_logo:
+                                    continue
 
-                            if media_file not in seen_media:
-                                seen_media.add(media_file)
-                                anchored_sketches.append(media_file)
+                                if media_file not in seen_media:
+                                    seen_media.add(media_file)
+                                    anchored_sketches.append(media_file)
 
             # Fallback: if no anchored sketches identified, look directly at xl/media/
             if not anchored_sketches:
@@ -409,52 +414,56 @@ def extract_sheet_images(
         if drel_file in z_obj.namelist():
             drels = ET.fromstring(z_obj.read(drel_file))
             for rel in drels.findall("pr:Relationship", ns):
-                if "image" in rel.attrib.get("Type", ""):
+                rel_type = rel.attrib.get("Type", "").lower()
+                if any(k in rel_type for k in ("image", "hdphoto", "picture")):
                     t = rel.attrib.get("Target", "").replace("../", "xl/")
-                    media_map[rel.attrib["Id"]] = t if t.startswith("xl/") else "xl/" + t
+                    if not t.startswith("xl/"):
+                        t = "xl/" + t.lstrip("/")
+                    media_map[rel.attrib["Id"]] = t
 
         dxml = ET.fromstring(z_obj.read(drawing_target))
         seen_media = set()
         valid_media_list = []
 
         for child in dxml:
-            blip = child.find(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip")
-            if blip is None:
-                continue
-            embed = blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed")
-            media_file = media_map.get(embed)
-            if not media_file or media_file not in z_obj.namelist():
-                continue
+            for blip in child.findall(".//{http://schemas.openxmlformats.org/drawingml/2006/main}blip"):
+                embed = (
+                    blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed")
+                    or blip.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}link")
+                )
+                media_file = media_map.get(embed)
+                if not media_file or media_file not in z_obj.namelist():
+                    continue
 
-            if media_file in seen_media:
-                continue
+                if media_file in seen_media:
+                    continue
 
-            ext = media_file.lower().split(".")[-1]
-            if ext in ("bin",):
-                continue
+                ext = media_file.lower().split(".")[-1]
+                if ext in ("bin",):
+                    continue
 
-            from_c = child.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}from")
-            f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
-            f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
+                from_c = child.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}from")
+                f_r = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}row").text) + 1 if from_c is not None else 1
+                f_c = int(from_c.find("{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}col").text) + 1 if from_c is not None else 1
 
-            raw_data = z_obj.read(media_file)
-            if len(raw_data) < 1500:
-                continue
+                raw_data = z_obj.read(media_file)
+                if len(raw_data) < 1500:
+                    continue
 
-            im = decode_image_bytes(raw_data, ext)
-            if not im:
-                continue
+                im = decode_image_bytes(raw_data, ext)
+                if not im:
+                    continue
 
-            w, h = im.size
-            if (w, h) in KNOWN_LOGO_DIMENSIONS:
-                continue
-            if w < 80 or h < 40:
-                continue
-            if f_r <= 5 and f_c <= 5 and (w < 480 and h < 220):
-                continue
+                w, h = im.size
+                if (w, h) in KNOWN_LOGO_DIMENSIONS:
+                    continue
+                if w < 80 or h < 40:
+                    continue
+                if f_r <= 4 and f_c <= 4 and (w < 480 and h < 220):
+                    continue
 
-            seen_media.add(media_file)
-            valid_media_list.append((media_file, ext, raw_data, im))
+                seen_media.add(media_file)
+                valid_media_list.append((media_file, ext, raw_data, im))
 
         # Clean existing image files in output_dir
         for old_f in os.listdir(output_dir):

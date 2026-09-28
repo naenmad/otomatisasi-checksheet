@@ -77,7 +77,7 @@ if os.path.exists("static"):
 async def root():
     index_file = "static/index.html"
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     return {
         "app": "Summit FactoryHub Checksheet Automation API",
         "version": "2.0.0",
@@ -97,7 +97,7 @@ async def serve_spa(page: str):
         return {"detail": "Not Found", "status": 404}
     index_file = "static/index.html"
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     return {"detail": "SPA index file not found", "status": 404}
 
 
