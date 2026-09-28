@@ -354,6 +354,7 @@ class TextNormalizer:
             "twist": "Twist",
             "deformation": "Deformation",
             "spatter": "Spatter",
+            "spater": "Spatter",
             "bubble": "Bubble",
             "buble": "Bubble",
             "mengelupas": "Peeling",
@@ -378,6 +379,12 @@ class TextNormalizer:
         for part in parts:
             part = part.strip()
             if not part:
+                continue
+
+            # Check for Qty Hole
+            qh_match = re.search(r"qty\s*hole\s*[:=]?\s*(\d+)", part)
+            if qh_match:
+                extra_notes.append(f"Qty Hole: {qh_match.group(1)}")
                 continue
 
             # Check "no ..." or "tidak ..."  
@@ -579,6 +586,9 @@ class TextNormalizer:
 
         if len(parts) <= 1:
             item_name = parts[0] if parts else normalized
+            if "qty hole" in item_name.lower():
+                qh_m = re.search(r"qty\s*hole\s*[:=]?\s*(\d+)", item_name, re.IGNORECASE)
+                return [("Qty Hole", qh_m.group(1) if qh_m else item_name)]
             if coating_prefix:
                 item_name = f"{coating_prefix}: {item_name}"
             return [(item_name, "OK / NG")]
@@ -596,7 +606,11 @@ class TextNormalizer:
                 item_name = f"No {part.replace('No ', '')}" if part.startswith("No ") else part
                 item_name = f"{coating_prefix}: {item_name}"
 
-            if "profile ok" in part.lower():
+            if "qty hole" in part.lower():
+                qh_m = re.search(r"qty\s*hole\s*[:=]?\s*(\d+)", part, re.IGNORECASE)
+                item_name = "Qty Hole"
+                std_val = qh_m.group(1) if qh_m else part
+            elif "profile ok" in part.lower():
                 item_name = "Profile OK"
                 std_val = "Sesuai Sample"
             elif "sesuai sample" in part.lower():
