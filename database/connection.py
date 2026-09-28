@@ -66,7 +66,20 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-from sqlalchemy import text
+from sqlalchemy import text, event
+
+
+@event.listens_for(engine.sync_engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if "sqlite" in db_url:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
+        cursor.execute("PRAGMA cache_size=-64000")
+        cursor.execute("PRAGMA mmap_size=268435456")
+        cursor.execute("PRAGMA temp_store=MEMORY")
+        cursor.close()
 
 
 async def init_db():
@@ -77,3 +90,6 @@ async def init_db():
             await conn.execute(text("PRAGMA journal_mode=WAL;"))
             await conn.execute(text("PRAGMA synchronous=NORMAL;"))
             await conn.execute(text("PRAGMA busy_timeout=5000;"))
+            await conn.execute(text("PRAGMA cache_size=-64000;"))
+            await conn.execute(text("PRAGMA mmap_size=268435456;"))
+            await conn.execute(text("PRAGMA temp_store=MEMORY;"))

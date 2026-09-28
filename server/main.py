@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, ORJSONResponse
 
 from database.connection import init_db
 from server.routes.checksheets import router as checksheets_router
@@ -41,6 +41,7 @@ app = FastAPI(
     title="Summit FactoryHub Checksheet Automation",
     description="Sistem Kolaborasi Otomasi Checksheet Tim (Zul, Iqbal, Rama, Yogi)",
     version="2.0.0",
+    default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
 

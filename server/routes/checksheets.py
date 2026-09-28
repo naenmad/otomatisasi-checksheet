@@ -4,8 +4,9 @@ Checksheets API Router.
 import os
 import re
 import time
+import asyncio
 import base64
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,26 @@ from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQu
 from database.crud import list_checksheets, get_checksheet_by_id
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
+
+# Ultra-fast in-memory cache with immediate invalidation on write/mutation
+_checksheets_cache: Dict[str, Any] = {
+    "data": None,
+    "timestamp": 0.0,
+    "lock": None
+}
+CACHE_TTL = 30.0  # seconds
+
+
+def get_cache_lock():
+    if _checksheets_cache["lock"] is None:
+        _checksheets_cache["lock"] = asyncio.Lock()
+    return _checksheets_cache["lock"]
+
+
+def invalidate_checksheets_cache():
+    """Wipe in-memory cache so subsequent reads immediately fetch latest database state."""
+    _checksheets_cache["data"] = None
+    _checksheets_cache["timestamp"] = 0.0
 
 
 class InspectionPointSchema(BaseModel):
@@ -49,32 +70,73 @@ async def get_checksheets(
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
 ):
-    items = await list_checksheets(
-        session=db,
-        assigned_to=assigned_to,
-        status=status,
-        search=search,
-        limit=limit,
-        offset=offset
-    )
-    return [
-        {
-            "id": cs.id,
-            "part_number": cs.part_number,
-            "part_name": cs.part_name,
-            "model": cs.model,
-            "customer": cs.customer,
-            "doc_number": cs.doc_number,
-            "status": cs.status,
-            "assigned_to": cs.assigned_to,
-            "keterangan": cs.keterangan,
-            "points_count": len(cs.inspection_points),
-            "images_count": len(cs.images),
-            "factoryhub_url": cs.factoryhub_url,
-            "updated_at": cs.updated_at.isoformat() if cs.updated_at else None
-        }
-        for cs in items
-    ]
+    now = time.time()
+    cached = _checksheets_cache["data"]
+    if cached is not None and (now - _checksheets_cache["timestamp"] < CACHE_TTL):
+        raw_list = cached
+    else:
+        async with get_cache_lock():
+            if _checksheets_cache["data"] is not None and (time.time() - _checksheets_cache["timestamp"] < CACHE_TTL):
+                raw_list = _checksheets_cache["data"]
+            else:
+                items = await list_checksheets(
+                    session=db,
+                    assigned_to=None,
+                    status=None,
+                    search=None,
+                    limit=2000,
+                    offset=0
+                )
+                raw_list = [
+                    {
+                        "id": cs.id,
+                        "part_number": cs.part_number,
+                        "part_name": cs.part_name,
+                        "model": cs.model,
+                        "customer": cs.customer,
+                        "doc_number": cs.doc_number,
+                        "status": cs.status,
+                        "assigned_to": cs.assigned_to,
+                        "keterangan": cs.keterangan,
+                        "points_count": len(cs.inspection_points),
+                        "images_count": len(cs.images),
+                        "factoryhub_url": cs.factoryhub_url,
+                        "updated_at": cs.updated_at.isoformat() if cs.updated_at else None
+                    }
+                    for cs in items
+                ]
+                _checksheets_cache["data"] = raw_list
+                _checksheets_cache["timestamp"] = time.time()
+
+    filtered = raw_list
+    if assigned_to and assigned_to.upper() != "ALL":
+        if assigned_to.upper() in ("UNASSIGNED", "BELUM DITUGASKAN"):
+            filtered = [
+                c for c in filtered 
+                if not c.get("assigned_to") or c.get("assigned_to") in ("Unassigned", "Belum Ditugaskan")
+            ]
+        else:
+            filtered = [c for c in filtered if c.get("assigned_to") == assigned_to]
+
+    if status and status.upper() != "ALL":
+        st_clean = status.strip().lower()
+        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
+            filtered = [c for c in filtered if (c.get("status") or "") in ("Belum Di Input", "Belum di review")]
+        elif st_clean in ("checksheet done", "checksheet_done"):
+            filtered = [c for c in filtered if (c.get("status") or "").lower() == "checksheet done"]
+        else:
+            filtered = [c for c in filtered if (c.get("status") or "").lower() == status.lower()]
+
+    if search:
+        s_lower = search.lower().strip()
+        filtered = [
+            c for c in filtered
+            if s_lower in (c.get("part_number") or "").lower()
+            or s_lower in (c.get("part_name") or "").lower()
+            or s_lower in (c.get("model") or "").lower()
+        ]
+
+    return filtered[offset:offset + limit]
 
 
 @router.get("/{checksheet_id}")
@@ -215,6 +277,7 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
 
     await db.commit()
     await db.refresh(cs)
+    invalidate_checksheets_cache()
 
     from services.google_sheets_service import trigger_background_sheet_sync
     if status_changed or assign_changed:
@@ -238,6 +301,7 @@ async def claim_checksheet_task(checksheet_id: int, payload: ClaimTaskSchema, db
     cs.assigned_to = payload.operator_name
     await db.commit()
     await db.refresh(cs)
+    invalidate_checksheets_cache()
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
@@ -272,6 +336,7 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
         db.add(ip)
 
     await db.commit()
+    invalidate_checksheets_cache()
     return {"status": "success", "updated_points": len(payload.points)}
 
 
@@ -290,6 +355,7 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     )
     await db.execute(stmt)
     await db.commit()
+    invalidate_checksheets_cache()
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
@@ -366,6 +432,7 @@ async def upload_checksheet_image(
         db.add(new_part_img)
         await db.commit()
         await db.refresh(cs)
+        invalidate_checksheets_cache()
         new_part_img_id = new_part_img.id
     else:
         new_part_img_id = existing_img.id
@@ -464,6 +531,7 @@ async def delete_checksheet_image(
 
     await db.commit()
     await db.refresh(cs)
+    invalidate_checksheets_cache()
 
     updated_images = _build_checksheet_images(cs)
     return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
@@ -563,6 +631,7 @@ async def create_checksheet_manual(
 
     await db.commit()
     await db.refresh(new_cs)
+    invalidate_checksheets_cache()
 
     await log_activity(
         session=db,
@@ -595,6 +664,7 @@ async def delete_checksheet_endpoint(
     await db.execute(delete(SubmissionQueue).where(SubmissionQueue.checksheet_id == checksheet_id))
     await db.execute(delete(Checksheet).where(Checksheet.id == checksheet_id))
     await db.commit()
+    invalidate_checksheets_cache()
 
     from database.crud import log_activity
     await log_activity(
@@ -632,6 +702,7 @@ async def bulk_delete_checksheets(
     res = await db.execute(delete(Checksheet).where(Checksheet.id.in_(target_ids)))
     deleted_count = res.rowcount if hasattr(res, "rowcount") else len(target_ids)
     await db.commit()
+    invalidate_checksheets_cache()
 
     from database.crud import log_activity
     await log_activity(
