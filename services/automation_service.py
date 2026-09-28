@@ -3,6 +3,7 @@ Automation service that triggers Playwright form filling using database inspecti
 and streams log output in real-time via async generator (for SSE/WebSocket).
 """
 import os
+import re
 import asyncio
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
