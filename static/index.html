@@ -3491,8 +3491,6 @@
           const imageId = typeof currentImg === 'object' ? currentImg.id : null;
           const imagePath = typeof currentImg === 'object' ? (currentImg.image_path || currentImg.image_url) : currentImg;
 
-          if (!confirm('Hapus gambar ini dari checksheet? File dan data gambar akan dihapus permanen.')) return;
-
           try {
             const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images`, {
               method: 'DELETE',
