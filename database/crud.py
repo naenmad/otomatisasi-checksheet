@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User, Checksheet, InspectionPoint, PartImage, SubmissionQueue, ActivityLog
+from parsers.smart_parser import TextNormalizer
 
 
 def clean_str(s: str) -> str:
@@ -55,8 +56,9 @@ async def create_checksheet(
         existing.customer = customer or existing.customer
         existing.doc_number = doc_number or existing.doc_number
         existing.template_type = template_type or existing.template_type
-        if status != "DRAFT" or existing.status == "DRAFT":
-            existing.status = status
+        if existing.status != "Reviewed":
+            if status != "DRAFT" or existing.status == "DRAFT":
+                existing.status = status
         if keterangan:
             existing.keterangan = keterangan
         target = existing
@@ -84,6 +86,7 @@ async def create_checksheet(
             await session.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == target.id))
 
         for idx, pt in enumerate(points):
+            pt = TextNormalizer.normalize_point(pt)
             ip = InspectionPoint(
                 checksheet_id=target.id,
                 item_no=pt.get("item_no") or str(idx + 1),
@@ -97,6 +100,9 @@ async def create_checksheet(
 
     # Add images
     if images:
+        if existing:
+            await session.execute(delete(PartImage).where(PartImage.checksheet_id == target.id))
+
         for img_idx, img_path in enumerate(images):
             pimg = PartImage(
                 checksheet_id=target.id,
@@ -131,7 +137,13 @@ async def list_checksheets(
         else:
             query = query.where(Checksheet.assigned_to == assigned_to)
     if status and status.upper() != "ALL":
-        query = query.where(Checksheet.status == status)
+        st_clean = status.strip().lower()
+        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
+            query = query.where(Checksheet.status.in_(["Belum Di Input", "Belum di review"]))
+        elif st_clean in ("checksheet done", "checksheet_done"):
+            query = query.where(Checksheet.status.ilike("Checksheet Done"))
+        else:
+            query = query.where(Checksheet.status.ilike(status))
     if search:
         search_pattern = f"%{search}%"
         query = query.where(

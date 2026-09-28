@@ -275,6 +275,139 @@ async def export_excel(
     )
 
 
+@router.get("/excel/tidak-ada-part")
+async def export_excel_tidak_ada_part(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Download Excel report dedicated to checksheets with status 'Tidak Ada Part'
+    (parts not yet registered in FactoryHub Master Part), complete with customer breakdowns.
+    """
+    checksheets = await list_checksheets(session=db, limit=2000)
+    no_part_list = [cs for cs in checksheets if cs.status == "Tidak Ada Part"]
+    no_part_list.sort(key=lambda x: (x.customer or "", x.part_number or ""))
+
+    wb = openpyxl.Workbook()
+    header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+    navy_dark = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    zebra_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+
+    title_font = Font(name="Segoe UI", size=14, bold=True, color="FFFFFF")
+    subtitle_font = Font(name="Segoe UI", size=9, italic=True, color="64748B")
+    section_font = Font(name="Segoe UI", size=11, bold=True, color="0F172A")
+    header_font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+    bold_data_font = Font(name="Segoe UI", size=9, bold=True, color="1E293B")
+    data_font = Font(name="Segoe UI", size=9, color="334155")
+    badge_rose_font = Font(name="Segoe UI", size=9, bold=True, color="991B1B")
+
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    # Sheet 1: Ringkasan
+    ws_summary = wb.active
+    ws_summary.title = "Ringkasan"
+    ws_summary.views.sheetView[0].showGridLines = True
+    ws_summary.merge_cells("A1:F1")
+    t_cell = ws_summary.cell(1, 1, "DAFTAR PART YANG BELUM TERDAFTAR DI FACTORYHUB MASTER PART")
+    t_cell.font = title_font
+    t_cell.fill = navy_dark
+    t_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws_summary.row_dimensions[1].height = 34
+    ws_summary.cell(2, 1, f"Tanggal Generate: {datetime.now().strftime('%d %B %Y %H:%M:%S')}").font = subtitle_font
+
+    ws_summary.cell(4, 1, "1. METRIK RINGKASAN").font = section_font
+    for idx, h in enumerate(["Indikator", "Nilai", "Satuan", "Keterangan"], 1):
+        c = ws_summary.cell(5, idx, h)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center")
+    ws_summary.row_dimensions[5].height = 22
+
+    total_all = len(checksheets)
+    total_no_part = len(no_part_list)
+    total_pts = sum(len(cs.inspection_points) if cs.inspection_points else 0 for cs in no_part_list)
+
+    m_rows = [
+        ("Total Part Belum Ada di FactoryHub", total_no_part, "Part", "Memerlukan registrasi master part di FactoryHub"),
+        ("Total Part di Database Sistem", total_all, "Part", "Akumulasi seluruh part dalam database"),
+        ("Persentase Belum Terdaftar", f"{(total_no_part / total_all * 100):.1f}%" if total_all else "0%", "Persen", "Rasio part drawing yang belum ada di portal"),
+        ("Total Titik Ukur Terdokumentasi", total_pts, "Titik", "Poin inspeksi yang sudah siap diinput setelah didaftarkan"),
+    ]
+    for r_idx, (ind, val, sat, ket) in enumerate(m_rows, 6):
+        for c_idx, val_txt in enumerate([ind, val, sat, ket], 1):
+            cell = ws_summary.cell(r_idx, c_idx, val_txt)
+            cell.font = bold_data_font if c_idx == 2 else data_font
+            cell.border = thin_border
+            if c_idx in [2, 3]:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        ws_summary.row_dimensions[r_idx].height = 19
+
+    for col_idx in range(1, 7):
+        ws_summary.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = [6, 22, 24, 15, 18, 35][col_idx - 1]
+
+    # Helper for populating sheets
+    def populate(ws, items, title):
+        ws.title = title
+        ws.views.sheetView[0].showGridLines = True
+        headers = ["No", "Customer", "Part Number", "Part Name", "Model", "Doc Number", "Jumlah Titik Ukur", "Status Checksheet", "Keterangan / FactoryHub", "Penanggung Jawab", "File Sumber"]
+        ws.append(headers)
+        ws.row_dimensions[1].height = 24
+        for c_idx in range(1, len(headers) + 1):
+            c = ws.cell(1, c_idx)
+            c.fill = header_fill
+            c.font = header_font
+            c.alignment = Alignment(horizontal="center", vertical="center")
+
+        for r_idx, cs in enumerate(items, 2):
+            is_zebra = (r_idx % 2 == 1)
+            raw_file = os.path.basename(cs.raw_file_path) if cs.raw_file_path else "-"
+            assigned = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Belum Ditugaskan"
+            row_data = [r_idx - 1, cs.customer or "-", cs.part_number or "-", cs.part_name or "-", cs.model or "-", cs.doc_number or "-", len(cs.inspection_points) if cs.inspection_points else 0, cs.status or "Tidak Ada Part", cs.keterangan or "Part belum terdaftar di Master Part FactoryHub", assigned, raw_file]
+            ws.append(row_data)
+            ws.row_dimensions[r_idx].height = 19
+            for col_idx in range(1, len(row_data) + 1):
+                cell = ws.cell(r_idx, col_idx)
+                cell.font = data_font
+                cell.border = thin_border
+                if is_zebra:
+                    cell.fill = zebra_fill
+                if col_idx in [1, 2, 5, 6, 7, 8, 10]:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                elif col_idx == 3:
+                    cell.font = bold_data_font
+                if col_idx == 8:
+                    cell.font = badge_rose_font
+
+        widths = [6, 14, 28, 34, 12, 14, 16, 18, 42, 22, 38]
+        for idx, w in enumerate(widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+        ws.auto_filter.ref = f"A1:{openpyxl.utils.get_column_letter(len(headers))}{len(items) + 1}"
+
+    ws_all = wb.create_sheet(f"Semua Part ({len(no_part_list)})")
+    populate(ws_all, no_part_list, f"Semua Part ({len(no_part_list)})")
+
+    for cust_name in ["PT. HPM", "PT. MMKI", "PT. SIM", "PT. TMMIN", "PT. IAMI"]:
+        c_items = [cs for cs in no_part_list if (cs.customer or "").strip().upper() == cust_name.upper()]
+        if c_items:
+            clean_name = cust_name.replace("PT. ", "")
+            ws_c = wb.create_sheet(f"{clean_name} ({len(c_items)})")
+            populate(ws_c, c_items, f"{clean_name} ({len(c_items)})")
+
+    out_stream = io.BytesIO()
+    wb.save(out_stream)
+    out_stream.seek(0)
+    dl_filename = f"PART_BELUM_ADA_FACTORYHUB_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        out_stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={dl_filename}"}
+    )
+
+
 @router.post("/sync-google-sheet")
 @router.post("/sheet/sync")
 async def sync_to_google_sheet(

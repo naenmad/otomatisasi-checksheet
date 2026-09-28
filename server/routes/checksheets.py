@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, update
 
 from database.connection import get_db
-from database.models import Checksheet, InspectionPoint, PartImage
+from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQueue
 from database.crud import list_checksheets, get_checksheet_by_id
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
@@ -499,4 +499,152 @@ async def reconcile_status_endpoint(
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reconciliation audit failed: {str(e)}")
+
+
+class PointItemManualSchema(BaseModel):
+    item_no: Optional[str] = "1"
+    inspection_item: str
+    standard: Optional[str] = "-"
+    method: Optional[str] = "Visual"
+    master_data: Optional[str] = ""
+
+
+class CreateChecksheetManualSchema(BaseModel):
+    part_number: str
+    part_name: Optional[str] = ""
+    model: Optional[str] = "-"
+    customer: Optional[str] = "PT. HPM"
+    doc_number: Optional[str] = "FO-45-01"
+    assigned_to: Optional[str] = "Unassigned"
+    status: Optional[str] = "Belum di review"
+    keterangan: Optional[str] = "Ditambahkan manual oleh admin"
+    points: Optional[List[PointItemManualSchema]] = []
+
+
+@router.post("/manual")
+async def create_checksheet_manual(
+    payload: CreateChecksheetManualSchema,
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new checksheet manually with optional inspection points."""
+    pn = payload.part_number.strip()
+    if not pn:
+        raise HTTPException(status_code=400, detail="Part number tidak boleh kosong.")
+
+    from database.crud import clean_str, log_activity
+    c_clean = clean_str(pn)
+
+    new_cs = Checksheet(
+        part_number=pn,
+        clean_part_number=c_clean,
+        part_name=payload.part_name or "",
+        model=payload.model or "-",
+        customer=payload.customer or "PT. HPM",
+        doc_number=payload.doc_number or "FO-45-01",
+        status=payload.status or "Belum di review",
+        assigned_to=payload.assigned_to or "Unassigned",
+        keterangan=payload.keterangan or "Ditambahkan manual oleh admin",
+    )
+    db.add(new_cs)
+    await db.flush()
+
+    if payload.points:
+        for idx, pt in enumerate(payload.points):
+            ip = InspectionPoint(
+                checksheet_id=new_cs.id,
+                item_no=pt.item_no or str(idx + 1),
+                inspection_item=pt.inspection_item,
+                standard=pt.standard or "-",
+                method=pt.method or "Visual",
+                master_data=pt.master_data or "",
+                order_index=idx
+            )
+            db.add(ip)
+
+    await db.commit()
+    await db.refresh(new_cs)
+
+    await log_activity(
+        session=db,
+        action="CREATE CHECKSHEET",
+        part_number=new_cs.part_number,
+        operator=payload.assigned_to or "Admin",
+        status="SUCCESS",
+        details=f"Part baru berhasil ditambahkan manual dengan {len(payload.points or [])} poin"
+    )
+
+    from services.google_sheets_service import trigger_background_sheet_sync
+    trigger_background_sheet_sync()
+
+    return {"status": "success", "id": new_cs.id, "part_number": new_cs.part_number}
+
+
+@router.delete("/{checksheet_id}")
+async def delete_checksheet_endpoint(
+    checksheet_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a checksheet and its associated inspection points, images, and queue entries."""
+    cs = await get_checksheet_by_id(db, checksheet_id)
+    if not cs:
+        raise HTTPException(status_code=404, detail="Checksheet not found")
+
+    pn = cs.part_number
+    await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == checksheet_id))
+    await db.execute(delete(PartImage).where(PartImage.checksheet_id == checksheet_id))
+    await db.execute(delete(SubmissionQueue).where(SubmissionQueue.checksheet_id == checksheet_id))
+    await db.execute(delete(Checksheet).where(Checksheet.id == checksheet_id))
+    await db.commit()
+
+    from database.crud import log_activity
+    await log_activity(
+        session=db,
+        action="DELETE CHECKSHEET",
+        part_number=pn,
+        operator="Admin",
+        status="SUCCESS",
+        details=f"Checksheet #{checksheet_id} ({pn}) berhasil dihapus dari database"
+    )
+
+    from services.google_sheets_service import trigger_background_sheet_sync
+    trigger_background_sheet_sync()
+
+    return {"status": "success", "deleted_id": checksheet_id, "part_number": pn}
+
+
+class BulkDeleteSchema(BaseModel):
+    checksheet_ids: List[int]
+
+
+@router.post("/bulk-delete")
+async def bulk_delete_checksheets(
+    payload: BulkDeleteSchema,
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete multiple checksheets at once."""
+    if not payload.checksheet_ids:
+        return {"status": "success", "deleted_count": 0}
+
+    target_ids = payload.checksheet_ids
+    await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id.in_(target_ids)))
+    await db.execute(delete(PartImage).where(PartImage.checksheet_id.in_(target_ids)))
+    await db.execute(delete(SubmissionQueue).where(SubmissionQueue.checksheet_id.in_(target_ids)))
+    res = await db.execute(delete(Checksheet).where(Checksheet.id.in_(target_ids)))
+    deleted_count = res.rowcount if hasattr(res, "rowcount") else len(target_ids)
+    await db.commit()
+
+    from database.crud import log_activity
+    await log_activity(
+        session=db,
+        action="BULK DELETE",
+        part_number=f"{deleted_count} Part",
+        operator="Admin",
+        status="SUCCESS",
+        details=f"Bulk delete berhasil menghapus {deleted_count} checksheet"
+    )
+
+    from services.google_sheets_service import trigger_background_sheet_sync
+    trigger_background_sheet_sync()
+
+    return {"status": "success", "deleted_count": deleted_count}
 

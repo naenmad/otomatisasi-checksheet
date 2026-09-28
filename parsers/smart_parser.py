@@ -8,7 +8,8 @@ Components:
 1. SemanticStandardParser: Decomposes and reconstructs nominals and tolerances
    (e.g., combining upper '+ 0' and lower '- 1.4' into '5 + 0 / - 1.4').
 2. FuzzyToolNormalizer: Standardizes inspection methods and tools (typo-tolerant).
-3. SpatialBlockDetector: Identifies item-to-subitem relationships (e.g. APPEARANCE
+3. TextNormalizer: Standardizes inspection item labels and appearance descriptions.
+4. SpatialBlockDetector: Identifies item-to-subitem relationships (e.g. APPEARANCE
    criteria and NUT POSITION coordinates) across merged or blank cells.
 """
 
@@ -38,9 +39,15 @@ class FuzzyToolNormalizer:
         "Height Gauge",
         "Micrometer",
         "Dial Indicator",
+        "Hammering",
+        "Bolt",
     ]
 
     ALIASES = {
+        "hammering": "Hammering",
+        "hammer": "Hammering",
+        "palu": "Hammering",
+        "hammer test": "Hammering",
         "steel ruler": "Steelrule",
         "steelrule": "Steelrule",
         "steel rule": "Steelrule",
@@ -74,6 +81,11 @@ class FuzzyToolNormalizer:
         "torque": "Torque Wrench",
         "caliper": "Caliper",
         "jangka sorong": "Caliper",
+        "bolt": "Bolt",
+        "bolt m6": "Bolt M6",
+        "bolt m8": "Bolt M8",
+        "bolt m10": "Bolt M10",
+        "baut": "Bolt",
     }
 
     @classmethod
@@ -104,6 +116,341 @@ class FuzzyToolNormalizer:
 
         # Fallback to cleaned original text (preserve custom instruments)
         return cleaned
+
+
+class TextNormalizer:
+    """
+    Standardizes inspection item labels and appearance descriptions.
+    Handles inconsistent casing, typos, abbreviations, trailing punctuation,
+    and verbose appearance criteria text.
+    """
+
+    # ── Inspection Item Label Mapping ──
+    # key = lowercased input, value = canonical output
+    ITEM_ALIASES = {
+        # Appearance variants
+        "app": "Appearance",
+        "appearance": "Appearance",
+        "surface": "Surface",
+        # Thickness
+        "thickness": "Thickness",
+        "coating thickness": "Coating Thickness",
+        # Dimension / Qty / Hole
+        "qty hole": "Qty Hole",
+        "qty hole": "Qty Hole",
+        "jumlah hole": "Qty Hole",
+        "hole": "Hole",
+        "hole slot": "Hole Slot",
+        "diameter hole": "Diameter Hole",
+        "dimensi hole": "Diameter Hole",
+        "dimensi": "Dimension",
+        "dimention": "Dimension",
+        "distance": "Distance",
+        "length": "Length",
+        "width": "Width",
+        "panjang total": "Total Length",
+        "radius": "Radius",
+        # Burr
+        "burry": "Burr",
+        "burr": "Burr",
+        "height of burr": "Height of Burr",
+        # Appearance defect checks
+        "no rust": "No Rust",
+        "no scratch": "No Scratch",
+        "no wave": "No Wave",
+        "no spatter": "No Spatter",
+        "no crack": "No Crack",
+        "no dent": "No Dent",
+        "tidak crack": "No Crack",
+        "tidak dent": "No Dent",
+        "tidak over cutting": "No Over Cutting",
+        "tidak rusty": "No Rust",
+        "tidak karat": "No Rust",
+        # Function / Packing
+        "function": "Function",
+        "fungsi": "Function",
+        "packing": "Packing",
+        "packing \"ok\"": "Packing",
+        # Material
+        "material": "Material",
+        "spec. material": "Spec. Material",
+        "warna": "Color",
+        "zn plating": "Zn Plating",
+        "plastic coating": "Plastic Coating",
+        # Weld / Structural
+        "non desctructive test": "Non Destructive Test",
+        "non destructive test": "Non Destructive Test",
+        "identification mark": "Identification Mark",
+        # Nut
+        "nut center": "Nut Center",
+        "nut tidak rusak": "Nut OK",
+        "nut tidak seret": "Nut Smooth",
+        # Trim
+        "trim line": "Trim Line",
+        # Flange
+        "flange height": "Flange Height",
+    }
+
+    # Numbered item pattern: "1. TOTAL COMPONEN", "10. NECK / CRACK"
+    NUMBERED_ITEM_RE = re.compile(r"^\d+\.\s*(.+)$")
+
+    # Common appearance defect keywords for standard normalization
+    DEFECT_KEYWORDS = [
+        "crack", "dent", "dented", "scratch", "rusty", "rust",
+        "over cutting", "overcutting", "neck", "burr", "burrs",
+        "wave", "wrinkle", "twist", "deformation", "spatter",
+        "karat", "bubble", "buble", "mengelupas", "belang",
+    ]
+
+    @classmethod
+    def normalize_item(cls, item: str) -> str:
+        """Normalize an inspection_item label to canonical form."""
+        if not item:
+            return ""
+
+        # Clean whitespace and trailing punctuation
+        cleaned = re.sub(r"\s+", " ", str(item)).strip()
+        cleaned = cleaned.rstrip(",;.")
+
+        if not cleaned:
+            return ""
+
+        lower = cleaned.lower().strip()
+
+        # Direct alias
+        if lower in cls.ITEM_ALIASES:
+            return cls.ITEM_ALIASES[lower]
+
+        # Handle numbered items: "1. TOTAL COMPONEN" -> strip number
+        num_match = cls.NUMBERED_ITEM_RE.match(cleaned)
+        if num_match:
+            inner = num_match.group(1).strip()
+            inner_lower = inner.lower()
+            if inner_lower in cls.ITEM_ALIASES:
+                return cls.ITEM_ALIASES[inner_lower]
+            return cls._title_case(inner)
+
+        # Handle Flange variants: "Flangeb", "Flange a", "Flange c"
+        flange_match = re.match(r"^flange\s*([a-z])$", lower)
+        if flange_match:
+            return f"Flange {flange_match.group(1).upper()}"
+
+        # Handle NUT POSITION with brackets
+        if "nut position" in lower:
+            return cleaned.upper()
+
+        # Handle HOLE DATUM
+        if "hole datum" in lower:
+            return cleaned.upper()
+
+        # Handle DATUM SURFACE
+        if "datum surface" in lower:
+            return cleaned.upper()
+
+        # Single character garbage ('d', 'L')
+        if len(cleaned) <= 1:
+            return cleaned.upper()
+
+        # Fallback: smart title case
+        return cls._title_case(cleaned)
+
+    @classmethod
+    def normalize_standard(cls, standard: str, item_label: str = "") -> str:
+        """
+        Normalize standard text. For appearance-type items, clean up verbose
+        defect descriptions into a concise comma-separated format.
+        """
+        if not standard or standard.strip() in ("-", ""):
+            return standard or "-"
+
+        cleaned = re.sub(r"\s+", " ", str(standard)).strip()
+
+        # Only apply appearance normalization when appropriate:
+        # 1. Item is explicitly appearance-type
+        # 2. Standard starts with defect-check phrasing (No X, Tidak X, etc.)
+        item_lower = item_label.lower() if item_label else ""
+        is_appearance = item_lower in ("appearance", "app", "surface")
+        lower_std = cleaned.lower()
+
+        # Check if the standard text starts with defect-check patterns
+        starts_with_defect_check = bool(re.match(
+            r"^(?:no\s+|tidak\s+|part\s+tidak|painting\s+|plating\s+|coating\s+)",
+            lower_std
+        ))
+
+        if is_appearance or starts_with_defect_check:
+            normalized = cls._normalize_appearance_standard(cleaned)
+            if normalized:
+                return normalized
+
+        # Fix comma-decimal inconsistency: "0,55" -> "0.55", "1,6" -> "1.6"
+        cleaned = re.sub(r"(\d),(\d)", r"\1.\2", cleaned)
+
+        # Fix missing space before ±
+        cleaned = re.sub(r"(\d)±", r"\1 ±", cleaned)
+
+        return cleaned
+
+    @classmethod
+    def _normalize_appearance_standard(cls, text: str) -> str:
+        """
+        Parse verbose appearance criteria and produce a clean, standardized form.
+        
+        Input examples:
+            "No crack, dented, scratch,over cutting, profil part OK ( sesuai sample)"
+            "No Rust, No Scratch, No Wrinkle, No Dented, No Crack, No Neck."
+            "Painting tidak buble,mengelupas,scratch,dented,belang"
+            "tidak dented, scratch, tidak karat"
+        
+        Output: "No Crack, No Dent, No Scratch, No Over Cutting, Profile OK"
+        """
+        lower = text.lower().strip().rstrip(".")
+
+        # Defect-type normalization map: raw -> canonical
+        defect_map = {
+            "crack": "Crack",
+            "dented": "Dent",
+            "dent": "Dent",
+            "scratch": "Scratch",
+            "over cutting": "Over Cutting",
+            "overcutting": "Over Cutting",
+            "rusty": "Rust",
+            "rust": "Rust",
+            "karat": "Rust",
+            "neck": "Neck",
+            "burr": "Burr",
+            "burrs": "Burr",
+            "burry": "Burr",
+            "wave": "Wave",
+            "wrinkle": "Wrinkle",
+            "twist": "Twist",
+            "deformation": "Deformation",
+            "spatter": "Spatter",
+            "bubble": "Bubble",
+            "buble": "Bubble",
+            "mengelupas": "Peeling",
+            "belang": "Uneven",
+            "keropos": "Porosity",
+        }
+
+        found_defects = []
+        extra_notes = []
+
+        # Check for coating/painting/plating prefix
+        coating_prefix = ""
+        coating_match = re.match(r"^(painting|plating|coating)\s+(tidak\s+)?", lower)
+        if coating_match:
+            coating_prefix = coating_match.group(1).title()
+            lower = lower[coating_match.end():]
+
+        # Split by comma, semicolon, or "dan"/"and"
+        parts = re.split(r"[,;]+|\s+dan\s+|\s+and\s+", lower)
+
+        no_prefix_active = False
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+
+            # Check "no ..." or "tidak ..."  
+            no_match = re.match(r"^(?:no|tidak)\s+(.+)$", part)
+            if no_match:
+                no_prefix_active = True
+                part = no_match.group(1).strip()
+
+            # Try to match known defects
+            matched = False
+            for raw_defect, canonical in defect_map.items():
+                if raw_defect in part:
+                    if canonical not in found_defects:
+                        found_defects.append(canonical)
+                    matched = True
+                    break
+
+            if not matched:
+                # Handle special phrases
+                if "profil" in part and "ok" in part:
+                    extra_notes.append("Profile OK")
+                elif "sesuai sample" in part:
+                    if "Profile OK" not in extra_notes:
+                        extra_notes.append("Sesuai Sample")
+                elif "ok" in part and "ng" in part:
+                    extra_notes.append("OK / NG")
+                elif "harmful" in part:
+                    if "Burr" not in found_defects:
+                        found_defects.append("Burr")
+                    extra_notes.append("Max Harmful")
+                elif "hole complete" in part or "hole" in part and "complete" in part:
+                    extra_notes.append("Hole Complete")
+                elif "welding" in part and "not" in part and "perforate" in part:
+                    extra_notes.append("Welding Not Perforate")
+                elif "marking" in part:
+                    # Keep marking notes as-is with proper casing
+                    extra_notes.append(part.strip().title())
+                elif len(part) > 2 and not part.isspace():
+                    # Unknown clause, keep it
+                    no_prefix_active = False
+                    continue
+
+        if not found_defects and not extra_notes:
+            return ""  # Can't normalize, return empty so caller keeps original
+
+        # Build output
+        result_parts = []
+
+        for defect in found_defects:
+            result_parts.append(f"No {defect}")
+
+        result_parts.extend(extra_notes)
+
+        output = ", ".join(result_parts)
+        if coating_prefix:
+            output = f"{coating_prefix}: {output}"
+
+        return output
+
+    @classmethod
+    def _title_case(cls, text: str) -> str:
+        """Smart title case that preserves known abbreviations and mixed-case part numbers."""
+        # If already all-caps and short, keep it (likely an abbreviation)
+        if text.isupper() and len(text) <= 6:
+            return text
+
+        # Preserve content in brackets
+        def _title_word(w: str) -> str:
+            if w.startswith("[") or w.startswith("("):
+                return w
+            if w.upper() in ("OK", "NG", "NO", "MAX", "MIN", "PC", "MM"):
+                return w.upper()
+            if "/" in w:
+                return "/".join(_title_word(p) for p in w.split("/"))
+            return w.capitalize()
+
+        words = text.split()
+        return " ".join(_title_word(w) for w in words)
+
+    @classmethod
+    def normalize_point(cls, point: Dict[str, str]) -> Dict[str, str]:
+        """
+        Apply all normalizations to an inspection point dict.
+        Call this before saving to database for consistent data.
+        """
+        result = dict(point)
+
+        # Normalize inspection item label
+        raw_item = result.get("inspection_item", "")
+        result["inspection_item"] = cls.normalize_item(raw_item)
+
+        # Normalize method (via FuzzyToolNormalizer)
+        raw_method = result.get("method", "")
+        result["method"] = FuzzyToolNormalizer.normalize(raw_method)
+
+        # Normalize standard (appearance cleaning)
+        raw_std = result.get("standard", "")
+        result["standard"] = cls.normalize_standard(raw_std, result["inspection_item"])
+
+        return result
+
 
 
 class SemanticStandardParser:

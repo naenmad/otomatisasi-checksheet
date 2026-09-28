@@ -2822,3 +2822,8 @@ textarea#search-input-area:focus {
         grid-template-columns: 1fr;
     }
 }
+
+.vertical-lr-text {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}

@@ -12329,10 +12329,10 @@
       "has_template": true,
       "template_info": {
         "part_number": "65750T86 K000H1",
-        "type": "GENERAL",
+        "type": "ACCURACY",
         "part_name": "C/MBR COMP,RR FLR",
-        "items_count": "95 Items",
-        "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
+        "items_count": "68 Items",
+        "doc_number": "Form 1\nREV: 00",
         "status": "PENDING APPROVAL",
         "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/164/edit",
         "clean_number": "65750T86K000H1"
@@ -22337,10 +22337,10 @@
     },
     {
       "part_number": "65750T86 K000H1",
-      "type": "GENERAL",
+      "type": "ACCURACY",
       "part_name": "C/MBR COMP,RR FLR",
-      "items_count": "95 Items",
-      "doc_number": "form 4.6-02 - 3rd edition\nREV: 00",
+      "items_count": "68 Items",
+      "doc_number": "Form 1\nREV: 00",
       "status": "PENDING APPROVAL",
       "edit_url": "https://factoryhub.summitadyawinsa.co.id/quality/checksheet-master/164/edit",
       "clean_number": "65750T86K000H1"

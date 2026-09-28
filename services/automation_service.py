@@ -107,13 +107,24 @@ async def execute_checksheet_submission(
         final_url = result.get("final_url", "")
         status = result.get("status", "unknown")
 
+        # Ensure link points to specific template edit page (/checksheet-master/{id}/edit) rather than generic index
+        resolved_url = final_url
+        if not resolved_url or not re.search(r"/checksheet-master/\d+/edit", resolved_url):
+            if cs.factoryhub_url and re.search(r"/checksheet-master/\d+/edit", cs.factoryhub_url):
+                resolved_url = cs.factoryhub_url
+            else:
+                from services.parser_service import match_catalog_status
+                cat_match = match_catalog_status(cs.part_number)
+                if cat_match and cat_match.get("edit_url"):
+                    resolved_url = cat_match["edit_url"]
+
         if status == "submitted":
-            yield f"[✓] Sukses submit ke FactoryHub: {final_url}\n"
+            yield f"[✓] Sukses submit ke FactoryHub: {resolved_url}\n"
             await update_checksheet_status(
                 session=session,
                 checksheet_id=checksheet_id,
                 status="Checksheet Done",
-                factoryhub_url=final_url,
+                factoryhub_url=resolved_url,
                 keterangan="Selesai diinput via Web Otomasi"
             )
             await log_activity(
@@ -123,7 +134,7 @@ async def execute_checksheet_submission(
                 operator=cs.assigned_to or "Operator",
                 status="SUCCESS",
                 details=f"Berhasil submit form dengan {len(cs.inspection_points)} poin inspeksi",
-                link=final_url
+                link=resolved_url
             )
             from services.google_sheets_service import trigger_background_sheet_sync
             trigger_background_sheet_sync()
@@ -285,13 +296,24 @@ async def execute_batch_submission(
                     status = result.get("status", "unknown")
                     final_url = result.get("final_url", "")
 
+                    # Ensure link points to specific template edit page (/checksheet-master/{id}/edit) rather than generic index
+                    resolved_url = final_url
+                    if not resolved_url or not re.search(r"/checksheet-master/\d+/edit", resolved_url):
+                        if cs.factoryhub_url and re.search(r"/checksheet-master/\d+/edit", cs.factoryhub_url):
+                            resolved_url = cs.factoryhub_url
+                        else:
+                            from services.parser_service import match_catalog_status
+                            cat_match = match_catalog_status(cs.part_number)
+                            if cat_match and cat_match.get("edit_url"):
+                                resolved_url = cat_match["edit_url"]
+
                     if status == "submitted":
-                        yield f"[✓] Sukses submit {cs.part_number} ke FactoryHub: {final_url}\n"
+                        yield f"[✓] Sukses submit {cs.part_number} ke FactoryHub: {resolved_url}\n"
                         await update_checksheet_status(
                             session=session,
                             checksheet_id=cs.id,
                             status="Checksheet Done",
-                            factoryhub_url=final_url,
+                            factoryhub_url=resolved_url,
                             keterangan="Selesai diinput via Batch Otomasi"
                         )
                         await log_activity(
@@ -301,7 +323,7 @@ async def execute_batch_submission(
                             operator=cs.assigned_to or (requesting_user.name if requesting_user else "Operator"),
                             status="SUCCESS",
                             details=f"Batch submit berhasil ({len(points_payload)} poin)",
-                            link=final_url
+                            link=resolved_url
                         )
                         success_count += 1
                         submitted_any = True

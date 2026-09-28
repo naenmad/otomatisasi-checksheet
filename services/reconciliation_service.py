@@ -154,6 +154,15 @@ async def run_factoryhub_reconciliation(
         c_num = cs.clean_part_number
         fh_match = fh_map.get(c_num)
 
+        # Also check sub-parts if part_number contains / or ,
+        if not fh_match and cs.part_number and ("/" in cs.part_number or "," in cs.part_number):
+            sub_parts = [p.strip() for p in re.split(r'[/,]', cs.part_number) if p.strip()]
+            for sp in sub_parts:
+                sp_clean = clean_str(sp)
+                if sp_clean in fh_map:
+                    fh_match = fh_map[sp_clean]
+                    break
+
         # Check if part exists on FactoryHub
         if fh_match:
             # Case 1: Exists on FactoryHub, but DB status is NOT 'Checksheet Done'
