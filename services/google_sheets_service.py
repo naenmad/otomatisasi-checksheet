@@ -220,87 +220,123 @@ async def sync_all_checksheets_to_sheet(sheet_url: Optional[str] = None) -> Dict
         ("Log", log_tsv),
     ]
 
-    async with async_playwright() as p:
-        # Launch browser with Chrome channel or default chromium
-        try:
-            browser = await p.chromium.launch(headless=True, channel="chrome")
-        except Exception:
-            browser = await p.chromium.launch(headless=True)
+    global _sync_running, _sync_pending
+    if _sync_running:
+        _sync_pending = True
+        return {"status": "queued", "message": "Sinkronisasi sedang berjalan, antrian diperbarui."}
 
-        context = await browser.new_context(viewport={"width": 1400, "height": 900})
-        await context.grant_permissions(["clipboard-read", "clipboard-write"])
-        page = await context.new_page()
+    _sync_running = True
+    try:
+        async with async_playwright() as p:
+            launch_args = ["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"]
+            try:
+                browser = await p.chromium.launch(headless=True, channel="chrome", args=launch_args)
+            except Exception:
+                browser = await p.chromium.launch(headless=True, args=launch_args)
 
-        try:
-            await page.goto(target_url, wait_until="domcontentloaded")
-            await page.wait_for_timeout(4000)
-            await page.keyboard.press("Escape")
+            context = await browser.new_context(viewport={"width": 1400, "height": 900})
+            await context.grant_permissions(["clipboard-read", "clipboard-write"])
+            page = await context.new_page()
 
-            synced_tabs = []
+            try:
+                await page.goto(target_url, wait_until="domcontentloaded", timeout=45000)
+                await page.wait_for_timeout(3000)
+                await page.keyboard.press("Escape")
 
-            for tab_name, tsv_content in tab_data_map:
-                tab_locator = page.locator(".docs-sheet-tab", has_text=tab_name).first
-                if await tab_locator.count() > 0:
-                    print(f"[*] Mengarahkan ke tab '{tab_name}'...")
-                    await tab_locator.click()
-                    await page.wait_for_timeout(1200)
+                synced_tabs = []
 
-                    # Clear formula or focus
-                    await page.keyboard.press("Escape")
-                    # For Log tab, clear previous rows so old stale entries are wiped completely
-                    if tab_name == "Log":
+                for tab_name, tsv_content in tab_data_map:
+                    tab_locator = page.locator(".docs-sheet-tab", has_text=tab_name).first
+                    if await tab_locator.count() > 0:
+                        print(f"[*] Mengarahkan ke tab '{tab_name}'...")
+                        await tab_locator.click()
+                        await page.wait_for_timeout(1000)
+
+                        # Clear formula or focus
+                        await page.keyboard.press("Escape")
+                        # For Log tab, clear previous rows so old stale entries are wiped completely
+                        if tab_name == "Log":
+                            name_box = page.locator("#t-name-box")
+                            if await name_box.count() > 0:
+                                await name_box.click()
+                                await name_box.fill("A2:L500")
+                                await page.keyboard.press("Enter")
+                                await page.wait_for_timeout(400)
+                                await page.keyboard.press("Delete")
+                                await page.wait_for_timeout(300)
+
+                        # Jump to cell A1 via Name Box
                         name_box = page.locator("#t-name-box")
                         if await name_box.count() > 0:
                             await name_box.click()
-                            await name_box.fill("A2:L500")
+                            await name_box.fill("A1")
                             await page.keyboard.press("Enter")
-                            await page.wait_for_timeout(500)
-                            await page.keyboard.press("Delete")
                             await page.wait_for_timeout(400)
 
-                    # Jump to cell A1 via Name Box
-                    name_box = page.locator("#t-name-box")
-                    if await name_box.count() > 0:
-                        await name_box.click()
-                        await name_box.fill("A1")
-                        await page.keyboard.press("Enter")
-                        await page.wait_for_timeout(500)
+                        # Copy TSV to clipboard and paste
+                        await page.evaluate("(text) => navigator.clipboard.writeText(text)", tsv_content)
+                        await page.wait_for_timeout(300)
+                        await page.keyboard.press("ControlOrMeta+v")
+                        await page.wait_for_timeout(2000)
+                        synced_tabs.append(tab_name)
+                        print(f"[✓] Berhasil sinkronisasi tab '{tab_name}'")
+                    else:
+                        print(f"[!] Tab '{tab_name}' tidak ditemukan, melewati tab ini.")
 
-                    # Copy TSV to clipboard and paste
-                    await page.evaluate("(text) => navigator.clipboard.writeText(text)", tsv_content)
-                    await page.wait_for_timeout(300)
-                    await page.keyboard.press("ControlOrMeta+v")
-                    await page.wait_for_timeout(3000)
-                    synced_tabs.append(tab_name)
-                    print(f"[✓] Berhasil sinkronisasi tab '{tab_name}'")
-                else:
-                    print(f"[!] Tab '{tab_name}' tidak ditemukan, melewati tab ini.")
+                # Return focus to Overview tab so it is the default visible sheet
+                overview_tab = page.locator(".docs-sheet-tab", has_text="Overview").first
+                if await overview_tab.count() > 0:
+                    await overview_tab.click()
+                    await page.wait_for_timeout(800)
 
-            # Return focus to Overview tab so it is the default visible sheet
-            overview_tab = page.locator(".docs-sheet-tab", has_text="Overview").first
-            if await overview_tab.count() > 0:
-                await overview_tab.click()
-                await page.wait_for_timeout(1000)
+                print(f"[✓] Selesai! Berhasil sinkronisasi 3 sheet: {synced_tabs}")
+                return {
+                    "status": "success",
+                    "synced_count": len(checksheets),
+                    "synced_tabs": synced_tabs,
+                    "sheet_url": target_url,
+                    "synced_at": datetime.now().isoformat()
+                }
+            finally:
+                await context.close()
+                await browser.close()
+    except Exception as e:
+        print(f"[Warning] Gagal sinkronisasi Google Sheets: {e}")
+        return {"status": "error", "message": str(e)}
+    finally:
+        _sync_running = False
+        if _sync_pending:
+            _sync_pending = False
+            asyncio.create_task(sync_all_checksheets_to_sheet(sheet_url))
 
-            print(f"[✓] Selesai! Berhasil sinkronisasi 3 sheet: {synced_tabs}")
-            return {
-                "status": "success",
-                "synced_count": len(checksheets),
-                "synced_tabs": synced_tabs,
-                "sheet_url": target_url,
-                "synced_at": datetime.now().isoformat()
-            }
-        finally:
-            await browser.close()
+
+_sync_running = False
+_sync_pending = False
+_debounce_task: Optional[asyncio.Task] = None
+
+
+async def _debounced_sync():
+    """Wait for quiet period before actually syncing."""
+    try:
+        await asyncio.sleep(5.0)
+        await sync_all_checksheets_to_sheet()
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        print(f"[Warning] Debounced sync error: {e}")
 
 
 def trigger_background_sheet_sync():
-    """Trigger background sync task without blocking request flow."""
+    """Trigger debounced background sync task so rapid edits don't spawn multiple browsers."""
+    global _debounce_task
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            asyncio.create_task(sync_all_checksheets_to_sheet())
+            if _debounce_task and not _debounce_task.done():
+                _debounce_task.cancel()
+            _debounce_task = asyncio.create_task(_debounced_sync())
         else:
             asyncio.run(sync_all_checksheets_to_sheet())
     except Exception as e:
         print(f"[Warning] Gagal memicu background sheet sync: {e}")
+
