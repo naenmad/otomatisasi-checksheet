@@ -721,7 +721,7 @@ async def fill_checksheet_form(
             if similar:
                 print("\n Part yang mirip ditemukan di FactoryHub:")
                 for s in similar:
-                    print(f"   • {s}")
+                    print(f"   * {s}")
 
             print("\n [INFO] Di portal FactoryHub, Template Name bersifat read-only")
             print("        dan HANYA bisa dibuat jika Part Number sudah didaftarkan")
@@ -962,7 +962,7 @@ async def launch_playwright_browser(
             else:
                 context = await browser_obj.new_context()
             page = await context.new_page()
-            print(f"[✓] Terhubung ke browser aktif via CDP (Port {cdp_port})!")
+            print(f"[+] Terhubung ke browser aktif via CDP (Port {cdp_port})!")
             return browser_obj, context, page
         except Exception:
             browser_obj = None
@@ -1086,9 +1086,9 @@ async def run_automation(
                 mode = result.get("mode", "CREATE")
                 btn = result.get("button_text", "Save Template")
                 print("\n" + "="*60)
-                print(f" [✓] MODE {mode}: SEMUA FORM DAN {item_count} INSPECTION POINTS TELAH TERISI LENGKAP!")
-                print(" [✓] Jendela browser terbuka di layar Anda.")
-                print(f" [✓] Silakan periksa/review langsung dan klik '{btn}' sendiri.")
+                print(f" [+] MODE {mode}: SEMUA FORM DAN {item_count} INSPECTION POINTS TELAH TERISI LENGKAP!")
+                print(" [+] Jendela browser terbuka di layar Anda.")
+                print(f" [+] Silakan periksa/review langsung dan klik '{btn}' sendiri.")
                 print(" [*] Sistem akan otomatis mendeteksi saat Anda mengklik simpan di browser.")
                 print("="*60)
 
@@ -1111,7 +1111,7 @@ async def run_automation(
                                 break
                             curr_url = page.url
                             if curr_url != start_url and ("/create" not in curr_url and "/edit" not in curr_url):
-                                print(f"\n[✓] Terdeteksi submit di browser! Halaman beralih ke: {curr_url}")
+                                print(f"\n[+] Terdeteksi submit di browser! Halaman beralih ke: {curr_url}")
                                 submitted_by_user = True
                                 break
                         except Exception:
@@ -1129,7 +1129,7 @@ async def run_automation(
                                 break
                             curr_url = page.url
                             if curr_url != start_url and ("/create" not in curr_url and "/edit" not in curr_url):
-                                print(f"\n[✓] Terdeteksi submit di browser! Form berhasil disimpan. URL: {curr_url}")
+                                print(f"\n[+] Terdeteksi submit di browser! Form berhasil disimpan. URL: {curr_url}")
                                 submitted_by_user = True
                                 try:
                                     await page.wait_for_load_state("networkidle", timeout=4000)

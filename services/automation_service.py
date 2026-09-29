@@ -12,6 +12,7 @@ from playwright.async_api import async_playwright
 from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity
 from database.models import User
 from automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
+from version import get_full_banner
 
 # Registry of active batch cancellation requests
 ACTIVE_BATCH_CANCELLATIONS: set = set()
@@ -55,6 +56,7 @@ async def execute_checksheet_submission(
             yield f"[ERROR] Ditolak: Part {cs.part_number} bukan tugas Anda (Pemilik: '{owner_str}'). Hanya pemilik task atau Admin yang dapat mengirim part ini.\n"
             return
 
+    yield f"[*] {get_full_banner()}\n"
     yield f"[*] Memulai otomatisasi untuk Part: {cs.part_number} ({cs.part_name})\n"
     yield f"[*] Model: {cs.model} | Customer: {cs.customer} | Doc No: {cs.doc_number}\n"
     yield f"[*] Total Inspection Points: {len(cs.inspection_points)}\n"
@@ -218,8 +220,11 @@ async def execute_batch_submission(
         yield f"[!] Tidak ada checksheet yang dapat diproses (seluruh part dilewati karena bukan milik Anda atau tidak ditemukan).\n"
         return
 
+    yield f"==================================================\n"
+    yield f"[*] {get_full_banner()}\n"
     yield f"[*] Memulai batch submission untuk {total} checksheet...\n"
     yield f"[*] Mode: {'Background (Headless)' if headless else 'Layar Aktif (Visible)'} | Browser: {browser_channel.upper()}\n"
+    yield f"==================================================\n"
 
     success_count = 0
     fail_count = 0

@@ -4694,8 +4694,10 @@
 
           currentBatchId.value = 'batch_' + Date.now();
           const token = localStorage.getItem('summit_token') || '';
+          const verBanner = systemUpdateInfo.value?.banner || 'Summit Automation Engine v1.5.0';
 
           batchLogs.value = [
+            `[*] ${verBanner}`,
             `[*] Menjalankan antrean Batch Otomasi untuk ${targetIds.length} part...`,
             '[*] Mode: Background (Headless) | Single Session Login (1x login untuk seluruh batch)',
             '[*] Menghubungkan ke layanan streaming batch Playwright...'
@@ -4750,8 +4752,10 @@
           currentBatchId.value = 'single_' + id + '_' + Date.now();
           const token = localStorage.getItem('summit_token') || '';
           const modeName = isDryRun ? 'Dry-Run (Pratinjau)' : 'Kirim Resmi (Submit)';
+          const verBanner = systemUpdateInfo.value?.banner || 'Summit Automation Engine v1.5.0';
 
           batchLogs.value = [
+            `[*] ${verBanner}`,
             `[*] Memulai Otomasi [${modeName}] untuk Part: ${cs ? cs.part_number : '#' + id}...`,
             isDryRun 
               ? '[*] Pratinjau: Playwright membuka FactoryHub dan mengisi seluruh field. Form TIDAK disubmit permanen.' 
