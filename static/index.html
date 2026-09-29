@@ -2221,6 +2221,15 @@
                     <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     <span>Standarkan Alat Ukur</span>
                   </button>
+
+                  <!-- Manual Renumber Button (Only runs when explicitly clicked) -->
+                  <button @click="renumberExcelPoints(); isPointsDirty = true; showToast('Nomor baris diurutkan 1..' + excelPoints.length, 'info')"
+                          type="button"
+                          title="Urutkan ulang nomor baris dari 1 sampai akhir secara berurutan (hanya jika Anda ingin menyusun nomor ulang)"
+                          class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 border border-zinc-700/80 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+                    <span>Urutkan No (1..{{ excelPoints.length }})</span>
+                  </button>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -3457,9 +3466,8 @@
           if (sourceIdx !== null && sourceIdx !== targetIdx && sourceIdx >= 0 && targetIdx >= 0) {
             const movedItem = excelPoints.value.splice(sourceIdx, 1)[0];
             excelPoints.value.splice(targetIdx, 0, movedItem);
-            renumberExcelPoints();
             isPointsDirty.value = true;
-            showToast(`Urutan baris dipindahkan ke #${targetIdx + 1}`, 'success');
+            showToast(`Urutan baris dipindahkan ke posisi #${targetIdx + 1}`, 'success');
           }
           draggedRowIndex.value = null;
           dragOverIndex.value = null;
@@ -3471,15 +3479,21 @@
         };
 
         const insertExcelRowAfter = (rIdx) => {
+          const prevNo = excelPoints.value[rIdx]?.item_no;
+          let nextNo = '';
+          if (prevNo && /^\d+$/.test(prevNo.trim())) {
+            nextNo = String(parseInt(prevNo.trim(), 10) + 1);
+          } else {
+            nextNo = String(rIdx + 2);
+          }
           const newRow = {
-            item_no: String(rIdx + 2),
+            item_no: nextNo,
             inspection_item: '',
             standard: '-',
             method: 'Visual',
             master_data: ''
           };
           excelPoints.value.splice(rIdx + 1, 0, newRow);
-          renumberExcelPoints();
           isPointsDirty.value = true;
           activeRow.value = rIdx + 1;
           activeCol.value = 1;
@@ -3489,9 +3503,18 @@
 
         const addMultipleExcelRows = (count = 5) => {
           const startLen = excelPoints.value.length;
+          let lastNum = 0;
+          if (startLen > 0) {
+            const lastVal = excelPoints.value[startLen - 1]?.item_no;
+            if (lastVal && /^\d+$/.test(lastVal.trim())) {
+              lastNum = parseInt(lastVal.trim(), 10);
+            } else {
+              lastNum = startLen;
+            }
+          }
           for (let i = 0; i < count; i++) {
             excelPoints.value.push({
-              item_no: String(startLen + i + 1),
+              item_no: String(lastNum + i + 1),
               inspection_item: '',
               standard: '-',
               method: 'Visual',
@@ -3892,8 +3915,27 @@
         };
 
         const addExcelRow = (index = -1) => {
+          let nextNo = '';
+          if (index >= 0) {
+            const prevNo = excelPoints.value[index]?.item_no;
+            if (prevNo && /^\d+$/.test(prevNo.trim())) {
+              nextNo = String(parseInt(prevNo.trim(), 10) + 1);
+            } else {
+              nextNo = String(index + 2);
+            }
+          } else if (excelPoints.value.length > 0) {
+            const lastNo = excelPoints.value[excelPoints.value.length - 1]?.item_no;
+            if (lastNo && /^\d+$/.test(lastNo.trim())) {
+              nextNo = String(parseInt(lastNo.trim(), 10) + 1);
+            } else {
+              nextNo = String(excelPoints.value.length + 1);
+            }
+          } else {
+            nextNo = '1';
+          }
+
           const newRow = {
-            item_no: String(excelPoints.value.length + 1),
+            item_no: nextNo,
             inspection_item: '',
             standard: '-',
             method: 'Visual',
@@ -3901,7 +3943,6 @@
           };
           if (index >= 0) {
             excelPoints.value.splice(index + 1, 0, newRow);
-            renumberExcelPoints();
             activeRow.value = index + 1;
           } else {
             excelPoints.value.push(newRow);
@@ -4092,7 +4133,6 @@
 
           if (mode === 'replace') {
             excelPoints.value = matrix.map((cells, idx) => mapSpreadsheetRowToPoint(cells, idx, 0));
-            renumberExcelPoints();
             activeRow.value = 0;
             activeCol.value = 1;
             isPointsDirty.value = true;
@@ -4104,7 +4144,6 @@
             const startIdx = excelPoints.value.length;
             const newPoints = matrix.map((cells, idx) => mapSpreadsheetRowToPoint(cells, startIdx + idx, 0));
             excelPoints.value.push(...newPoints);
-            renumberExcelPoints();
             activeRow.value = startIdx;
             activeCol.value = 1;
             isPointsDirty.value = true;
@@ -4230,7 +4269,6 @@
               const copy = JSON.parse(JSON.stringify(curr));
               copy.id = null;
               excelPoints.value.splice(rIdx + 1, 0, copy);
-              renumberExcelPoints();
               activeRow.value = rIdx + 1;
               focusCell(rIdx + 1, cIdx, prefix);
               showToast('Baris berhasil diduplikasi (Ctrl+D)', 'info');
