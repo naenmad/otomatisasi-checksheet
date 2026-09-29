@@ -313,6 +313,16 @@
 
           <!-- Global Action Buttons -->
           <div class="flex items-center gap-2">
+            <!-- Hard Refresh Button -->
+            <button @click="triggerHardRefresh"
+                    class="px-2.5 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Bersihkan cache browser dan muat ulang halaman versi terbaru (Hard Refresh / Ctrl+F5)">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span class="hidden xl:inline">Hard Refresh</span>
+            </button>
+
             <!-- Google Sheet Sync -->
             <div class="flex items-center gap-1">
               <button @click="syncGoogleSheet" :disabled="isSyncing"
@@ -2115,7 +2125,12 @@
                   <button @click="deleteCurrentImage" title="Hapus gambar ini (misal logo PT yang salah ekstrak)"
                           class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    <span>Hapus Gambar</span>
+                    <span>Hapus Gambar Ini</span>
+                  </button>
+                  <button @click="deleteAllImages" title="Hapus seluruh sketsa gambar pada checksheet part ini sekaligus"
+                          class="px-2 py-1 bg-red-950 hover:bg-red-900 text-red-200 border border-red-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors shadow-sm">
+                    <svg class="w-3 h-3 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16M10 11v6m4-6v6"/></svg>
+                    <span>Hapus Semua Gambar</span>
                   </button>
                 </div>
 
@@ -2140,6 +2155,12 @@
                 <button @click="$refs.imageFileInput.click()" title="Tambah gambar lain"
                         class="h-12 w-12 rounded border border-dashed border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-xs">
                   <span class="text-base font-bold">+</span>
+                </button>
+                <!-- Quick Delete All in strip if multiple -->
+                <button v-if="activeChecksheet.images.length > 1" @click="deleteAllImages" title="Hapus seluruh gambar checksheet ini"
+                        class="h-12 px-2 rounded border border-red-900/60 bg-red-950/30 hover:bg-red-950 text-red-400 hover:text-red-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-[10px] font-semibold gap-0.5">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <span>Hapus Semua</span>
                 </button>
               </div>
 
@@ -2661,6 +2682,46 @@
         </div>
       </transition>
 
+      <!-- FLOATING VERSION UPDATE REMINDER BANNER -->
+      <transition name="fade">
+        <div v-if="hasNewServerVersion && !isUpdateReminderDismissed && !showExcelStudio"
+             class="fixed top-4 inset-x-0 z-[99999] flex justify-center px-4 pointer-events-none">
+          <div class="pointer-events-auto bg-gradient-to-r from-zinc-900 via-indigo-950 to-zinc-900 border-2 border-indigo-500/90 rounded-2xl p-4 shadow-2xl shadow-indigo-950/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl w-full backdrop-blur-xl">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shrink-0">
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white uppercase tracking-wider">Pembaruan Sistem Tersedia!</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                    {{ newServerVersionInfo.commit || 'Revisi Baru' }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-zinc-300 mt-0.5">
+                  Server telah dimutakhirkan. Muat ulang halaman (Hard Refresh) untuk mengaktifkan kode & fitur terbaru.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button @click="triggerHardRefresh"
+                      class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-900/50 cursor-pointer flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Hard Refresh Sekarang</span>
+              </button>
+              <button @click="isUpdateReminderDismissed = true"
+                      class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-medium cursor-pointer border border-zinc-700 transition-colors">
+                Nanti
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <!-- SYSTEM UPDATE MODAL (Dismissable & never interrupts active editing) -->
       <div v-if="isAutoUpdateEnabled && !isUpdateModalDismissed && systemUpdateInfo && systemUpdateInfo.has_update && !showExcelStudio && !isInlineEditing && !isPointsDirty" 
            class="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none"
@@ -2908,8 +2969,13 @@
 
         // System Update & Git State
         const savedAutoUpdate = localStorage.getItem('summit_auto_update_enabled');
-        const isAutoUpdateEnabled = ref(savedAutoUpdate === null ? false : savedAutoUpdate === 'true');
+        const isAutoUpdateEnabled = ref(savedAutoUpdate === null ? true : savedAutoUpdate === 'true');
         const isUpdateModalDismissed = ref(false);
+        const currentClientCommit = ref('');
+        const currentClientBootTime = ref(0);
+        const hasNewServerVersion = ref(false);
+        const newServerVersionInfo = ref({});
+        const isUpdateReminderDismissed = ref(false);
         const systemUpdateInfo = ref({
           has_update: false,
           current_commit: '',
@@ -3697,6 +3763,35 @@
           }
         };
 
+        const deleteAllImages = async () => {
+          if (!activeChecksheet.value || !activeChecksheet.value.images || activeChecksheet.value.images.length === 0) return;
+          const count = activeChecksheet.value.images.length;
+          const partNo = activeChecksheet.value.part_number;
+          if (!confirm(`Hapus seluruh ${count} gambar sketsa untuk part ${partNo}? Tindakan ini akan menghapus semua file gambar part ini dari database.`)) {
+            return;
+          }
+
+          try {
+            const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images/all`, {
+              method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              activeChecksheet.value.images = [];
+              activeSketchIdx.value = 0;
+              const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
+              if (found) {
+                found.images = [];
+              }
+              showToast(data.message || 'Seluruh gambar sketsa berhasil dihapus.', 'success');
+            } else {
+              showToast(data.detail || 'Gagal menghapus seluruh gambar.', 'error');
+            }
+          } catch (e) {
+            showToast('Terjadi kesalahan jaringan saat menghapus semua gambar.', 'error');
+          }
+        };
+
         const handleGlobalPaste = (event) => {
           if (!showExcelStudio.value) return;
           const items = (event.clipboardData || window.clipboardData)?.items;
@@ -3822,9 +3917,9 @@
             const res = await fetch('/api/system/update', { method: 'POST' });
             const data = await res.json();
             if (res.ok && data.status === 'success') {
-              showToast('Pembaruan berhasil! Memuat ulang sistem...', 'success');
+              showToast('Pembaruan berhasil! Melakukan hard refresh sistem...', 'success');
               setTimeout(() => {
-                window.location.reload();
+                triggerHardRefresh();
               }, 1200);
             } else {
               updateError.value = data.detail || 'Terjadi kesalahan saat git pull.';
@@ -3836,6 +3931,50 @@
             showToast(updateError.value, 'error');
             isUpdatingSystem.value = false;
           }
+        };
+
+        const triggerHardRefresh = () => {
+          showToast('Membersihkan cache browser & memuat ulang versi terbaru...', 'info');
+          try {
+            if ('caches' in window) {
+              caches.keys().then(keys => {
+                keys.forEach(k => caches.delete(k));
+              });
+            }
+          } catch (e) {}
+          setTimeout(() => {
+            const u = new URL(window.location.href);
+            u.searchParams.set('_v', Date.now().toString());
+            window.location.href = u.toString();
+          }, 350);
+        };
+
+        const checkServerVersionPoll = async () => {
+          try {
+            const res = await fetch('/api/system/version', { cache: 'no-store' });
+            if (res.ok) {
+              const data = await res.json();
+              if (!currentClientCommit.value) {
+                currentClientCommit.value = data.commit || '';
+                currentClientBootTime.value = data.boot_time || 0;
+                if (data.banner) {
+                  systemUpdateInfo.value = {
+                    ...systemUpdateInfo.value,
+                    banner: data.banner,
+                    current_commit: data.commit,
+                    version: data.version
+                  };
+                }
+              } else {
+                const commitChanged = data.commit && data.commit !== 'release' && data.commit !== currentClientCommit.value;
+                const serverRestarted = data.boot_time && currentClientBootTime.value && data.boot_time > currentClientBootTime.value;
+                if (commitChanged || serverRestarted) {
+                  hasNewServerVersion.value = true;
+                  newServerVersionInfo.value = data;
+                }
+              }
+            }
+          } catch (e) {}
         };
 
         const toggleInlineEdit = () => {
@@ -5151,6 +5290,8 @@
           }
           checkSavedSession();
           loadCatalogStats();
+          checkServerVersionPoll();
+          setInterval(checkServerVersionPoll, 25000);
           if (isAutoUpdateEnabled.value) {
             checkSystemUpdate(true);
           }
@@ -5351,7 +5492,13 @@
           deleteSingleChecksheet,
           confirmBulkDelete,
           deleteChecksheetFromStudio,
-          executeConfirmedDelete
+          executeConfirmedDelete,
+          deleteAllImages,
+          triggerHardRefresh,
+          checkServerVersionPoll,
+          hasNewServerVersion,
+          newServerVersionInfo,
+          isUpdateReminderDismissed
         };
       }
     }).mount('#app');

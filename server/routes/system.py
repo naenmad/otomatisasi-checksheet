@@ -29,12 +29,13 @@ def run_git_cmd(args: list) -> str:
 @router.get("/version")
 def get_system_version():
     """Return application version, git commit, and banner."""
-    from version import VERSION, APP_NAME, get_git_commit, get_git_date, get_full_banner
+    from version import VERSION, APP_NAME, SERVER_BOOT_TIME, get_git_commit, get_git_date, get_full_banner
     return {
         "app_name": APP_NAME,
         "version": VERSION,
         "commit": get_git_commit(),
         "date": get_git_date(),
+        "boot_time": SERVER_BOOT_TIME,
         "banner": get_full_banner()
     }
 

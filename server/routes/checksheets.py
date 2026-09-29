@@ -537,6 +537,38 @@ async def delete_checksheet_image(
     return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
 
 
+@router.delete("/{checksheet_id}/images/all")
+async def delete_all_checksheet_images(
+    checksheet_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete ALL drawing images for this checksheet from DB and disk."""
+    cs = await get_checksheet_by_id(db, checksheet_id)
+    if not cs:
+        raise HTTPException(status_code=404, detail="Checksheet not found")
+
+    deleted_count = 0
+    for img in list(cs.images):
+        if img.image_path and os.path.isfile(img.image_path):
+            try:
+                os.remove(img.image_path)
+            except Exception:
+                pass
+        await db.delete(img)
+        deleted_count += 1
+
+    await db.commit()
+    await db.refresh(cs)
+    invalidate_checksheets_cache()
+
+    return {
+        "status": "success",
+        "message": f"Semua gambar ({deleted_count} gambar) berhasil dihapus.",
+        "deleted_count": deleted_count,
+        "images": []
+    }
+
+
 @router.post("/sync-images")
 async def sync_images_endpoint(db: AsyncSession = Depends(get_db)):
     """

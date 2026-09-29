@@ -3,9 +3,11 @@ version.py - Version and Build metadata for Otomatisasi Checksheet.
 """
 import os
 import subprocess
+import time
 
 VERSION = "1.5.0"
 APP_NAME = "Summit Automation Engine"
+SERVER_BOOT_TIME = int(time.time())
 
 
 def get_git_commit() -> str:

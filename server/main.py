@@ -67,6 +67,16 @@ app.include_router(automation_router)
 app.include_router(export_router)
 app.include_router(system_router)
 
+class NoCacheStaticFiles(StaticFiles):
+    """StaticFiles subclass that enforces Cache-Control: no-cache on all served assets."""
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
 # Mount media & static files
 if os.path.exists("storage/images"):
     app.mount("/media/images", StaticFiles(directory="storage/images"), name="images")
@@ -75,7 +85,18 @@ if os.path.exists("extracted_images"):
     app.mount("/media/extracted", StaticFiles(directory="extracted_images"), name="extracted")
 
 if os.path.exists("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+    app.mount("/static", NoCacheStaticFiles(directory="static"), name="static")
+
+
+@app.middleware("http")
+async def add_cache_busting_headers(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.startswith("/static") or path.endswith((".html", ".js", ".css")):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 
 @app.get("/")
