@@ -94,8 +94,16 @@ def get_update_status():
 
 @router.post("/update")
 def execute_system_update():
-    """Pull latest code from origin/main."""
+    """Pull latest code from origin/main, auto-stashing any dirty local changes to prevent merge aborts."""
     try:
+        # Check if working directory is dirty (e.g. CRLF line endings on Windows or accidental edits)
+        try:
+            status_output = run_git_cmd(["status", "--porcelain"])
+            if status_output:
+                run_git_cmd(["stash", "push", "-m", f"auto-stash-{datetime.now().strftime('%Y%m%d%H%M%S')}"])
+        except Exception:
+            pass
+
         output = run_git_cmd(["pull", "origin", "main"])
         new_commit = run_git_cmd(["rev-parse", "--short", "HEAD"])
         return {
