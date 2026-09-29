@@ -3421,12 +3421,30 @@
                 count++;
               }
             }
+            if (p.inspection_item) {
+              const itemLower = p.inspection_item.trim().toLowerCase();
+              if (itemLower === 'burr' || itemLower === 'burrs' || /^burr[ys]?\s+max/i.test(itemLower)) {
+                if (p.inspection_item !== 'Burry') {
+                  p.inspection_item = 'Burry';
+                  count++;
+                }
+              }
+            }
+            if (p.standard) {
+              const stdLower = p.standard.trim().toLowerCase();
+              if (/^(?:burry\s+|burrs\s+|burr\s+)?(?:max\.?\s*:?\s*0[.,]3(?:\s*mm)?|0[.,]3\s*max|<=?\s*0[.,]3(?:\s*mm)?|≤\s*0[.,]3(?:\s*mm)?)$/i.test(stdLower)) {
+                if (p.standard !== '≤ 0.3 mm') {
+                  p.standard = '≤ 0.3 mm';
+                  count++;
+                }
+              }
+            }
           });
           if (count > 0) {
             isPointsDirty.value = true;
-            showToast(`${count} nama alat ukur berhasil distandarkan!`, 'success');
+            showToast(`${count} data (alat ukur, Burry, ≤ 0.3 mm) berhasil distandarkan!`, 'success');
           } else {
-            showToast('Semua alat ukur sudah sesuai format standar.', 'success');
+            showToast('Semua alat ukur dan item sudah sesuai format standar.', 'success');
           }
         };
 

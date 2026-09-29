@@ -151,8 +151,12 @@ class TextNormalizer:
         "panjang total": "Total Length",
         "radius": "Radius",
         # Burr
-        "burry": "Burr",
-        "burr": "Burr",
+        "burry": "Burry",
+        "burr": "Burry",
+        "burrs": "Burry",
+        "burry max 0.3": "Burry",
+        "burry max. : 0.3mm": "Burry",
+        "burrs max 0,3 mm": "Burry",
         "height of burr": "Height of Burr",
         # Appearance defect checks
         "no rust": "No Rust",
@@ -314,6 +318,11 @@ class TextNormalizer:
         # Fix comma-decimal inconsistency: "0,55" -> "0.55", "1,6" -> "1.6"
         cleaned = re.sub(r"(\d),(\d)", r"\1.\2", cleaned)
 
+        # Standardize max 0.3 mm variations -> "≤ 0.3 mm"
+        cleaned_lower = cleaned.lower().strip()
+        if re.search(r"^(?:burry\s+|burrs\s+|burr\s+)?(?:max\.?\s*:?\s*0\.3(?:\s*mm)?|0\.3\s*max|<=?\s*0\.3(?:\s*mm)?|≤\s*0\.3(?:\s*mm)?)$", cleaned_lower):
+            return "≤ 0.3 mm"
+
         # Fix missing space before ±
         cleaned = re.sub(r"(\d)±", r"\1 ±", cleaned)
 
@@ -346,9 +355,9 @@ class TextNormalizer:
             "rust": "Rust",
             "karat": "Rust",
             "neck": "Neck",
-            "burr": "Burr",
-            "burrs": "Burr",
-            "burry": "Burr",
+            "burr": "Burry",
+            "burrs": "Burry",
+            "burry": "Burry",
             "wave": "Wave",
             "wrinkle": "Wrinkle",
             "twist": "Twist",
@@ -412,8 +421,8 @@ class TextNormalizer:
                 elif "ok" in part and "ng" in part:
                     extra_notes.append("OK / NG")
                 elif "harmful" in part:
-                    if "Burr" not in found_defects:
-                        found_defects.append("Burr")
+                    if "Burry" not in found_defects:
+                        found_defects.append("Burry")
                     extra_notes.append("Max Harmful")
                 elif "hole complete" in part or "hole" in part and "complete" in part:
                     extra_notes.append("Hole Complete")
@@ -623,7 +632,7 @@ class TextNormalizer:
                 item_name = part
                 std_val = "OK / NG"
             elif "max harmful" in part.lower():
-                item_name = "Burr"
+                item_name = "Burry"
                 std_val = "Max Harmful"
 
             rows.append((item_name, std_val))
