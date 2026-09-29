@@ -2108,10 +2108,16 @@
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                   </div>
                   <p class="text-xs font-semibold text-zinc-300">Belum ada gambar sketsa</p>
-                  <p class="text-[11px] text-zinc-500 mt-1 max-w-xs">Tarik file gambar ke sini, tekan <strong>Ctrl+V</strong> untuk paste, atau klik tombol di bawah</p>
-                  <button @click="$refs.imageFileInput.click()" type="button" class="mt-3 px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors">
-                    Pilih File Gambar
-                  </button>
+                  <p class="text-[11px] text-zinc-500 mt-1 max-w-xs">Tarik file gambar ke sini, tekan <strong>Ctrl+V</strong> / <strong>Cmd+V</strong>, atau klik tombol di bawah</p>
+                  <div class="mt-3 flex items-center gap-2">
+                    <button @click="$refs.imageFileInput.click()" type="button" class="px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors">
+                      Pilih File Gambar
+                    </button>
+                    <button @click="pasteImageFromClipboard" type="button" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-colors" title="Paste gambar dari clipboard (tanpa perlu tekan Ctrl+V / Cmd+V)">
+                      <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                      <span>Paste Gambar</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Floating Actions on Top Right of Image -->
@@ -2121,6 +2127,11 @@
                           class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                     <span>Ganti / Tambah</span>
+                  </button>
+                  <button @click="pasteImageFromClipboard" title="Paste gambar dari clipboard (Cmd+V / Ctrl+V)"
+                          class="px-2 py-1 bg-indigo-950/90 hover:bg-indigo-900 text-indigo-300 border border-indigo-800/80 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
+                    <svg class="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <span>Paste Gambar</span>
                   </button>
                   <button @click="deleteCurrentImage" title="Hapus gambar ini (misal logo PT yang salah ekstrak)"
                           class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
@@ -2155,6 +2166,12 @@
                 <button @click="$refs.imageFileInput.click()" title="Tambah gambar lain"
                         class="h-12 w-12 rounded border border-dashed border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-xs">
                   <span class="text-base font-bold">+</span>
+                </button>
+                <!-- Paste image button in strip -->
+                <button @click="pasteImageFromClipboard" title="Paste gambar dari clipboard (Cmd+V / Ctrl+V)"
+                        class="h-12 px-2.5 rounded border border-indigo-800/80 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-[10px] font-semibold gap-0.5">
+                  <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  <span>Paste</span>
                 </button>
                 <!-- Quick Delete All in strip if multiple -->
                 <button v-if="activeChecksheet.images.length > 1" @click="deleteAllImages" title="Hapus seluruh gambar checksheet ini"
@@ -3765,11 +3782,6 @@
 
         const deleteAllImages = async () => {
           if (!activeChecksheet.value || !activeChecksheet.value.images || activeChecksheet.value.images.length === 0) return;
-          const count = activeChecksheet.value.images.length;
-          const partNo = activeChecksheet.value.part_number;
-          if (!confirm(`Hapus seluruh ${count} gambar sketsa untuk part ${partNo}? Tindakan ini akan menghapus semua file gambar part ini dari database.`)) {
-            return;
-          }
 
           try {
             const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images/all`, {
@@ -3783,7 +3795,7 @@
               if (found) {
                 found.images = [];
               }
-              showToast(data.message || 'Seluruh gambar sketsa berhasil dihapus.', 'success');
+              showToast('Semua gambar berhasil dihapus langsung.', 'success');
             } else {
               showToast(data.detail || 'Gagal menghapus seluruh gambar.', 'error');
             }
@@ -3792,8 +3804,49 @@
           }
         };
 
+        const pasteImageFromClipboard = async () => {
+          if (!activeChecksheet.value) {
+            showToast('Buka checksheet terlebih dahulu untuk menempel gambar.', 'warning');
+            return;
+          }
+
+          if (!navigator.clipboard || !navigator.clipboard.read) {
+            showToast('Browser tidak mendukung tombol baca clipboard. Silakan gunakan Ctrl+V / Cmd+V.', 'warning');
+            return;
+          }
+
+          try {
+            const items = await navigator.clipboard.read();
+            let foundImage = false;
+
+            for (const item of items) {
+              const imageType = item.types.find(t => t.startsWith('image/'));
+              if (imageType) {
+                foundImage = true;
+                const blob = await item.getType(imageType);
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                  await uploadImageBase64(e.target.result, `clipboard_${Date.now()}.png`);
+                };
+                reader.readAsDataURL(blob);
+                break;
+              }
+            }
+
+            if (!foundImage) {
+              showToast('Tidak ada gambar di clipboard. Silakan copy gambar / screenshot terlebih dahulu.', 'warning');
+            }
+          } catch (err) {
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+              showToast('Izin clipboard browser ditolak. Silakan izinkan akses atau gunakan shortcut Ctrl+V / Cmd+V.', 'warning');
+            } else {
+              showToast('Gagal membaca clipboard: ' + err.message, 'error');
+            }
+          }
+        };
+
         const handleGlobalPaste = (event) => {
-          if (!showExcelStudio.value) return;
+          if (!showExcelStudio.value && !activeChecksheet.value) return;
           const items = (event.clipboardData || window.clipboardData)?.items;
           if (!items) return;
           for (let i = 0; i < items.length; i++) {
@@ -5494,6 +5547,7 @@
           deleteChecksheetFromStudio,
           executeConfirmedDelete,
           deleteAllImages,
+          pasteImageFromClipboard,
           triggerHardRefresh,
           checkServerVersionPoll,
           hasNewServerVersion,
