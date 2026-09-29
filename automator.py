@@ -92,6 +92,7 @@ def standardize_part_number(s: str) -> str:
     val = str(s).strip().upper()
     val = re.sub(r"\s*-\s*", "-", val)
     val = re.sub(r"\s+", " ", val)
+    val = val.strip("-_ /.,")
     return val
 
 
@@ -103,16 +104,28 @@ async def find_existing_template(page: Page, part_no: str) -> Optional[Dict[str,
     Returns dict with editUrl, templateName, partNumber if found, else None.
     """
     clean_target = re.sub(r"[^A-Za-z0-9]", "", part_no or "").upper()
-    print(f"[*] Memeriksa apakah template untuk '{part_no}' (clean: {clean_target}) sudah pernah dibuat sebelumnya...")
+    clean_pn = standardize_part_number(part_no)
+    print(f"[*] Memeriksa apakah template untuk '{part_no}' (clean: {clean_pn}) sudah pernah dibuat sebelumnya...")
 
     # Candidates to query via server-side search
-    candidates = [clean_target]
-    if part_no and part_no.strip() not in candidates:
-        candidates.append(part_no.strip())
+    # IMPORTANT: FactoryHub uses SQL LIKE, so the hyphenated part number (clean_pn) MUST be queried first!
+    candidates = []
+    if clean_pn:
+        candidates.append(clean_pn)
+    if clean_target and clean_target not in candidates:
+        candidates.append(clean_target)
 
-    prefix_match = re.match(r"^([A-Z0-9]{5,8})", clean_target)
-    if prefix_match:
-        pref = prefix_match.group(1)
+    # Prefix with hyphen if available (e.g. 68124-3M0)
+    if "-" in clean_pn:
+        tokens = clean_pn.split("-")
+        if len(tokens) >= 2:
+            dash_pref = f"{tokens[0]}-{tokens[1]}"
+            if dash_pref not in candidates:
+                candidates.append(dash_pref)
+        if tokens[0] not in candidates:
+            candidates.append(tokens[0])
+    elif len(clean_pn) >= 5:
+        pref = clean_pn[:5]
         if pref not in candidates:
             candidates.append(pref)
 
@@ -632,7 +645,17 @@ async def fill_checksheet_form(
                     const optTextClean = cleanStr(opt.text);
                     if (optValClean.includes(targetClean) || optTextClean.includes(targetClean)) {
                         regularSelect.selectedIndex = i;
+                        regularSelect.value = opt.value;
+                        regularSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                        regularSelect.dispatchEvent(new Event('change', { bubbles: true }));
                         regularFound = true;
+                        
+                        const tmplName = document.getElementById('template_name');
+                        if (tmplName) {
+                            tmplName.value = opt.value;
+                            tmplName.dispatchEvent(new Event('input', { bubbles: true }));
+                            tmplName.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
                         if (typeof updateTemplateName === 'function') {
                             updateTemplateName();
                         }
