@@ -22,6 +22,18 @@ from typing import Optional, Dict, Any, List
 from playwright.async_api import async_playwright, Page, Browser
 from dotenv import load_dotenv
 
+# Ensure stdout and stderr handle UTF-8 cleanly without charmap codec errors on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from extractor import (
     extract_metadata,
     extract_reference_images,
@@ -334,41 +346,45 @@ def compute_template_diff(
 
 def print_template_diff(diff: Dict[str, Any], part_no: str):
     """Print an eye-catching ASCII diff table in the console."""
-    print("\n" + "=" * 70)
-    print(f"           PERBANDINGAN TEMPLATE (DIFF EDIT MODE): {part_no}")
-    print("=" * 70)
+    try:
+        print("\n" + "=" * 70)
+        print(f"           PERBANDINGAN TEMPLATE (DIFF EDIT MODE): {part_no}")
+        print("=" * 70)
 
-    if diff.get("meta_diff"):
-        print("[*] Perubahan Metadata:")
-        for field, vals in diff["meta_diff"].items():
-            print(f"    • {field.upper()}: '{vals['old']}' ➔ '{vals['new']}'")
-        print("-" * 70)
+        if diff.get("meta_diff"):
+            print("[*] Perubahan Metadata:")
+            for field, vals in diff["meta_diff"].items():
+                print(f"    * {field.upper()}: '{vals['old']}' -> '{vals['new']}'")
+            print("-" * 70)
 
-    print(f"[*] Ringkasan Titik: {diff['old_count']} lama ➔ {diff['new_count']} baru ({diff['summary']})")
+        print(f"[*] Ringkasan Titik: {diff['old_count']} lama -> {diff['new_count']} baru ({diff['summary']})")
 
-    if diff.get("added"):
-        print(f"\n[+] TITIK DITAMBAH ({len(diff['added'])} titik):")
-        for it in diff["added"][:10]:
-            print(f"    + [Item {it.get('item_no')}] {it.get('inspection_item')} | Std: {it.get('standard') or '-'} | Method: {it.get('method') or '-'}")
-        if len(diff["added"]) > 10:
-            print(f"    ... dan {len(diff['added']) - 10} titik tambahan lainnya")
+        if diff.get("added"):
+            print(f"\n[+] TITIK DITAMBAH ({len(diff['added'])} titik):")
+            for it in diff["added"][:10]:
+                print(f"    + [Item {it.get('item_no')}] {it.get('inspection_item')} | Std: {it.get('standard') or '-'} | Method: {it.get('method') or '-'}")
+            if len(diff["added"]) > 10:
+                print(f"    ... dan {len(diff['added']) - 10} titik tambahan lainnya")
 
-    if diff.get("modified"):
-        print(f"\n[~] TITIK DIUBAH ({len(diff['modified'])} titik):")
-        for it in diff["modified"][:10]:
-            chg_str = ", ".join(it["changes"])
-            print(f"    ~ [Item {it.get('item_no')}] {it.get('inspection_item')}: {chg_str}")
-        if len(diff["modified"]) > 10:
-            print(f"    ... dan {len(diff['modified']) - 10} titik perubahan lainnya")
+        if diff.get("modified"):
+            print(f"\n[~] TITIK DIUBAH ({len(diff['modified'])} titik):")
+            for it in diff["modified"][:10]:
+                chg_str = ", ".join(it["changes"])
+                print(f"    ~ [Item {it.get('item_no')}] {it.get('inspection_item')}: {chg_str}")
+            if len(diff["modified"]) > 10:
+                print(f"    ... dan {len(diff['modified']) - 10} titik perubahan lainnya")
 
-    if diff.get("removed"):
-        print(f"\n[-] TITIK DIHAPUS ({len(diff['removed'])} titik):")
-        for it in diff["removed"][:10]:
-            print(f"    - [Item {it.get('item_no')}] {it.get('inspection_item')} | Std: {it.get('standard') or '-'}")
-        if len(diff["removed"]) > 10:
-            print(f"    ... dan {len(diff['removed']) - 10} titik dihapus lainnya")
+        if diff.get("removed"):
+            print(f"\n[-] TITIK DIHAPUS ({len(diff['removed'])} titik):")
+            for it in diff["removed"][:10]:
+                print(f"    - [Item {it.get('item_no')}] {it.get('inspection_item')} | Std: {it.get('standard') or '-'}")
+            if len(diff["removed"]) > 10:
+                print(f"    ... dan {len(diff['removed']) - 10} titik dihapus lainnya")
 
-    print("=" * 70 + "\n")
+        print("=" * 70 + "\n")
+    except Exception as e:
+        # Fallback to avoid breaking execution if terminal encoding cannot render characters
+        print(f"[*] Perbandingan Template ({part_no}): {diff.get('old_count', 0)} lama -> {diff.get('new_count', 0)} baru ({diff.get('summary', '')})")
 
 
 async def fill_checksheet_form(
@@ -509,7 +525,10 @@ async def fill_checksheet_form(
             new_meta=meta,
             new_items=items
         )
-        print_template_diff(diff_data, part_no)
+        try:
+            print_template_diff(diff_data, part_no)
+        except Exception:
+            pass
 
         # 1. Update Doc Number if input exists
         doc_no = meta["doc_number"]

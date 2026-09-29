@@ -8,6 +8,18 @@ import sys
 import asyncio
 import uvicorn
 
+# Ensure stdout and stderr handle UTF-8 cleanly without charmap codec errors on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # On Windows, Playwright requires ProactorEventLoop and cannot run with uvicorn reload=True.
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
