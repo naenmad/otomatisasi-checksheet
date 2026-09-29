@@ -15,9 +15,9 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.dml.color import RGBColor
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
-from database.models import User, ActivityLog, Checksheet
+from database.models import User, ActivityLog, Checksheet, InspectionPoint
 
 # Indonesian Date Names
 DAYS_ID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
@@ -42,14 +42,22 @@ def is_operator_match(log_op: str, user: User) -> bool:
     return lo == un or lo == nm or (lo and lo in nm) or (un and un in lo)
 
 
-def extract_points_from_log(details: str, cs: Optional[Checksheet]) -> int:
-    """Extract inspection points count from log details or checksheet relationship."""
+def extract_points_from_log(
+    details: str,
+    cs: Optional[Checksheet],
+    part_number: Optional[str],
+    points_by_cs_id: Dict[int, int],
+    points_by_pn: Dict[str, int]
+) -> int:
+    """Extract inspection points count from log details or checksheet point counts without lazy ORM IO."""
     if details:
         m = re.search(r'(\d+)\s*poin', details, re.IGNORECASE)
         if m:
             return int(m.group(1))
-    if cs and cs.inspection_points:
-        return len(cs.inspection_points)
+    if cs and cs.id in points_by_cs_id:
+        return points_by_cs_id[cs.id]
+    if part_number and part_number in points_by_pn:
+        return points_by_pn[part_number]
     return 0
 
 
@@ -162,7 +170,23 @@ async def generate_daily_report_pptx(target_date: date, session: AsyncSession) -
     stmt_ops = select(User).filter(User.role == "operator").order_by(User.name.asc())
     operators: List[User] = (await session.execute(stmt_ops)).scalars().all()
 
-    # 2. Fetch all SUBMIT FACTORYHUB activity logs for this day in WIB (UTC+7)
+    # 2. Fetch point counts pre-aggregated by checksheet and part_number to avoid lazy-loading
+    stmt_pts_cs = (
+        select(InspectionPoint.checksheet_id, func.count(InspectionPoint.id))
+        .group_by(InspectionPoint.checksheet_id)
+    )
+    pts_cs_res = (await session.execute(stmt_pts_cs)).all()
+    points_by_cs_id: Dict[int, int] = {row[0]: row[1] for row in pts_cs_res}
+
+    stmt_pts_pn = (
+        select(Checksheet.part_number, func.count(InspectionPoint.id))
+        .join(InspectionPoint, InspectionPoint.checksheet_id == Checksheet.id)
+        .group_by(Checksheet.part_number)
+    )
+    pts_pn_res = (await session.execute(stmt_pts_pn)).all()
+    points_by_pn: Dict[str, int] = {row[0]: row[1] for row in pts_pn_res}
+
+    # 3. Fetch all SUBMIT FACTORYHUB activity logs for this day in WIB (UTC+7)
     start_utc = datetime.combine(target_date, time.min) - timedelta(hours=7)
     end_utc = datetime.combine(target_date, time.max) - timedelta(hours=7)
 
@@ -184,7 +208,7 @@ async def generate_daily_report_pptx(target_date: date, session: AsyncSession) -
     success_count = 0
 
     for log, cs in raw_logs:
-        pts = extract_points_from_log(log.details, cs)
+        pts = extract_points_from_log(log.details, cs, log.part_number, points_by_cs_id, points_by_pn)
         total_points += pts
         if log.status == "SUCCESS":
             success_count += 1
