@@ -45,6 +45,7 @@ class FuzzyToolNormalizer:
         "Millsheet",
         "Data Label",
         "Thickness Meter",
+        "Thread Gauge",
     ]
 
     ALIASES = {
@@ -103,6 +104,10 @@ class FuzzyToolNormalizer:
         "coating thick/ tester": "Thickness Meter",
         "coating thickness": "Thickness Meter",
         "coating thickness tester": "Thickness Meter",
+        "thread gauge": "Thread Gauge",
+        "thread gaude": "Thread Gauge",
+        "thread gage": "Thread Gauge",
+        "thread gouge": "Thread Gauge",
     }
 
     @classmethod
@@ -544,12 +549,14 @@ class TextNormalizer:
 
             if not matched:
                 # Handle special phrases
-                if "profil" in part and "ok" in part:
+                if "packing" in part:
+                    extra_notes.append("Packing")
+                elif "profil" in part and "ok" in part:
                     extra_notes.append("Profile OK")
                 elif "sesuai sample" in part:
                     if "Profile OK" not in extra_notes:
                         extra_notes.append("Sesuai Sample")
-                elif "ok" in part and "ng" in part:
+                elif re.search(r"\bok\b", part) and re.search(r"\bng\b", part):
                     extra_notes.append("OK / NG")
                 elif "harmful" in part:
                     if "Burry" not in found_defects:
@@ -784,6 +791,9 @@ class TextNormalizer:
                 qh_m = re.search(r"qty\s*hole\s*[:=]?\s*(\d+)", part, re.IGNORECASE)
                 item_name = "Qty Hole"
                 std_val = qh_m.group(1) if qh_m else part
+            elif "packing" in part.lower():
+                item_name = "Packing"
+                std_val = "OK / NG"
             elif "profile ok" in part.lower():
                 item_name = "Profile OK"
                 std_val = "Sesuai Sample"
