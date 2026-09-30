@@ -166,8 +166,12 @@ async def generate_daily_report_pptx(target_date: date, session: AsyncSession) -
     - Slide 1: Executive Overview
     - Slide 2+: Per-operator details (operators only)
     """
-    # 1. Fetch only users who are operators (EXCLUDE admins)
-    stmt_ops = select(User).filter(User.role == "operator").order_by(User.name.asc())
+    # 1. Fetch only users who are active operators (EXCLUDE admins and inactive/deleted users)
+    stmt_ops = (
+        select(User)
+        .filter(User.role == "operator", User.is_active.is_(True))
+        .order_by(User.name.asc())
+    )
     operators: List[User] = (await session.execute(stmt_ops)).scalars().all()
 
     # 2. Fetch point counts pre-aggregated by checksheet and part_number to avoid lazy-loading
