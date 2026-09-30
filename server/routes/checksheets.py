@@ -15,6 +15,7 @@ from sqlalchemy import select, delete, update
 from database.connection import get_db
 from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQueue
 from database.crud import list_checksheets, get_checksheet_by_id
+from parsers.smart_parser import TextNormalizer
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
 
@@ -324,13 +325,20 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
     await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == checksheet_id))
 
     for idx, p in enumerate(payload.points):
+        norm = TextNormalizer.normalize_point({
+            "item_no": p.item_no,
+            "inspection_item": p.inspection_item,
+            "standard": p.standard,
+            "method": p.method,
+            "master_data": p.master_data or "",
+        })
         ip = InspectionPoint(
             checksheet_id=checksheet_id,
-            item_no=p.item_no,
-            inspection_item=p.inspection_item,
-            standard=p.standard,
-            method=p.method,
-            master_data=p.master_data or "",
+            item_no=norm.get("item_no") or p.item_no,
+            inspection_item=norm.get("inspection_item") or p.inspection_item,
+            standard=norm.get("standard") or p.standard,
+            method=norm.get("method") or p.method,
+            master_data=norm.get("master_data") or "",
             order_index=idx
         )
         db.add(ip)

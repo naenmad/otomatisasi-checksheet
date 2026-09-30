@@ -41,6 +41,10 @@ class FuzzyToolNormalizer:
         "Dial Indicator",
         "Hammering",
         "Bolt",
+        "Roll Meter",
+        "Millsheet",
+        "Data Label",
+        "Thickness Meter",
     ]
 
     ALIASES = {
@@ -76,6 +80,8 @@ class FuzzyToolNormalizer:
         "visual": "Visual",
         "visuil": "Visual",
         "visuall": "Visual",
+        "visual insp.": "Visual",
+        "visual insp": "Visual",
         "mata": "Visual",
         "torque wrench": "Torque Wrench",
         "torque": "Torque Wrench",
@@ -86,6 +92,17 @@ class FuzzyToolNormalizer:
         "bolt m8": "Bolt M8",
         "bolt m10": "Bolt M10",
         "baut": "Bolt",
+        "roll meter": "Roll Meter",
+        "rollmeter": "Roll Meter",
+        "meteran": "Roll Meter",
+        "millsheet": "Millsheet",
+        "mill sheet": "Millsheet",
+        "data label": "Data Label",
+        "thickness meter": "Thickness Meter",
+        "thickness tester": "Thickness Meter",
+        "coating thick/ tester": "Thickness Meter",
+        "coating thickness": "Thickness Meter",
+        "coating thickness tester": "Thickness Meter",
     }
 
     @classmethod
@@ -125,6 +142,14 @@ class TextNormalizer:
     and verbose appearance criteria text.
     """
 
+    # Canonical defect items set (share the same item_no in checksheet tables)
+    DEFECT_ITEMS = {
+        "No Rust", "No Scratch", "No Dent", "No Crack", "No Wave",
+        "No Wrinkle", "No Neck", "No Over Cutting", "No Spatter",
+        "No Bubble", "No Meler", "No Kotor", "No Bintik Putih",
+        "No Menggumpal", "No Orange Peel", "No Cacat", "Profile OK", "Packing"
+    }
+
     # ── Inspection Item Label Mapping ──
     # key = lowercased input, value = canonical output
     ITEM_ALIASES = {
@@ -134,49 +159,129 @@ class TextNormalizer:
         "surface": "Surface",
         # Thickness
         "thickness": "Thickness",
+        "thicknss": "Thickness",
+        "thickness permukaan": "Thickness",
+        "thickness after press": "Thickness After Press",
+        "thickness painting": "Thickness Painting",
         "coating thickness": "Coating Thickness",
         # Dimension / Qty / Hole
-        "qty hole": "Qty Hole",
         "qty hole": "Qty Hole",
         "jumlah hole": "Qty Hole",
         "hole": "Hole",
         "hole slot": "Hole Slot",
         "diameter hole": "Diameter Hole",
+        "hole diameter": "Diameter Hole",
+        "diamter hole": "Diameter Hole",
+        "dimention hole": "Diameter Hole",
         "dimensi hole": "Diameter Hole",
         "dimensi": "Dimension",
         "dimention": "Dimension",
         "distance": "Distance",
         "length": "Length",
+        "lenght": "Length",
+        "panjang": "Length",
         "width": "Width",
+        "lebar": "Width",
         "panjang total": "Total Length",
         "radius": "Radius",
-        # Burr
+        # Burr / Burry
         "burry": "Burry",
         "burr": "Burry",
         "burrs": "Burry",
+        "height of burr": "Burry",
+        "no burr": "Burry",
+        "no burry": "Burry",
         "burry max 0.3": "Burry",
         "burry max. : 0.3mm": "Burry",
         "burrs max 0,3 mm": "Burry",
-        "height of burr": "Height of Burr",
+        "burry max 0.2": "Burry",
+        "burry <= 0.2": "Burry",
+        "burry ≤ 0.2": "Burry",
         # Appearance defect checks
         "no rust": "No Rust",
-        "no scratch": "No Scratch",
-        "no wave": "No Wave",
-        "no spatter": "No Spatter",
-        "no crack": "No Crack",
-        "no dent": "No Dent",
-        "tidak crack": "No Crack",
-        "tidak dent": "No Dent",
-        "tidak over cutting": "No Over Cutting",
+        "no rusty": "No Rust",
         "tidak rusty": "No Rust",
         "tidak karat": "No Rust",
+        "karat": "No Rust",
+        "rust": "No Rust",
+        "rusty": "No Rust",
+        "no scratch": "No Scratch",
+        "tidak scratch": "No Scratch",
+        "scratch": "No Scratch",
+        "tidak lecet": "No Scratch",
+        "lecet": "No Scratch",
+        "no wave": "No Wave",
+        "tidak wave": "No Wave",
+        "wave": "No Wave",
+        "no spatter": "No Spatter",
+        "no spater": "No Spatter",
+        "spatter": "No Spatter",
+        "spater": "No Spatter",
+        "sparter": "No Spatter",
+        "tidak spater": "No Spatter",
+        "tidak spatter": "No Spatter",
+        "no crack": "No Crack",
+        "tidak crack": "No Crack",
+        "crack": "No Crack",
+        "neck / crack": "No Crack",
+        "no crack / neck": "No Crack",
+        "no crack/neck": "No Crack",
+        "no dent": "No Dent",
+        "no dented": "No Dent",
+        "danted": "No Dent",
+        "dent": "No Dent",
+        "dented": "No Dent",
+        "tidak dent": "No Dent",
+        "tidak dented": "No Dent",
+        "no over cutting": "No Over Cutting",
+        "tidak over cutting": "No Over Cutting",
+        "over cutting": "No Over Cutting",
+        "overcutting": "No Over Cutting",
+        "no wrinkle": "No Wrinkle",
+        "tidak wrinkle": "No Wrinkle",
+        "wrinkle": "No Wrinkle",
+        "no neck": "No Neck",
+        "tidak neck": "No Neck",
+        "neck": "No Neck",
+        # Painting / Coating appearance defects
+        "no bubble": "No Bubble",
+        "tidak bubble": "No Bubble",
+        "tidak bubule": "No Bubble",
+        "bubble": "No Bubble",
+        "buble": "No Bubble",
+        "no meler": "No Meler",
+        "tidak meler": "No Meler",
+        "meler": "No Meler",
+        "no kotor": "No Kotor",
+        "tidak kotor": "No Kotor",
+        "kotor": "No Kotor",
+        "no bintik putih": "No Bintik Putih",
+        "tidak bintik putih": "No Bintik Putih",
+        "tidak bintik": "No Bintik Putih",
+        "bintik putih": "No Bintik Putih",
+        "bintik": "No Bintik Putih",
+        "no menggumpal": "No Menggumpal",
+        "tidak menggumpal": "No Menggumpal",
+        "menggumpal": "No Menggumpal",
+        "gumpal": "No Menggumpal",
+        "no orange peel": "No Orange Peel",
+        "tidak orange peel": "No Orange Peel",
+        "orange peel": "No Orange Peel",
+        "no cacat": "No Cacat",
+        "tidak cacat": "No Cacat",
+        "cacat": "No Cacat",
+        "profil ok": "Profile OK",
+        "profile ok": "Profile OK",
+        "profile oke": "Profile OK",
         # Function / Packing
         "function": "Function",
         "fungsi": "Function",
         "packing": "Packing",
+        "packing ok": "Packing",
         "packing \"ok\"": "Packing",
+        "packing o": "Packing",
         # Material
-        "material": "Material",
+        "material": "Spec. Material",
         "spec. material": "Spec. Material",
         "warna": "Color",
         "zn plating": "Zn Plating",
@@ -185,6 +290,9 @@ class TextNormalizer:
         "non desctructive test": "Non Destructive Test",
         "non destructive test": "Non Destructive Test",
         "identification mark": "Identification Mark",
+        "welding strength": "Welding Strength",
+        "welding strenght": "Welding Strength",
+        "welding strength (chisel test)": "Welding Strength (Chisel Test)",
         # Nut
         "nut center": "Nut Center",
         "nut tidak rusak": "Nut OK",
@@ -204,6 +312,7 @@ class TextNormalizer:
         "over cutting", "overcutting", "neck", "burr", "burrs",
         "wave", "wrinkle", "twist", "deformation", "spatter",
         "karat", "bubble", "buble", "mengelupas", "belang",
+        "meler", "kotor", "bintik", "gumpal", "orange peel", "cacat", "lecet",
     ]
 
     @classmethod
@@ -315,12 +424,23 @@ class TextNormalizer:
             if normalized:
                 return normalized
 
+        # Force defect items standard
+        if item_label and item_label in cls.DEFECT_ITEMS:
+            if item_label == "Profile OK":
+                return "Sesuai Sample"
+            return "OK / NG"
+
+        # Force Burry standard to ≤ 0.3 mm
+        if item_label and item_label.lower().strip() == "burry":
+            if not standard or standard.strip() in ("-", "", "OK / NG"):
+                return "≤ 0.3 mm"
+
         # Fix comma-decimal inconsistency: "0,55" -> "0.55", "1,6" -> "1.6"
         cleaned = re.sub(r"(\d),(\d)", r"\1.\2", cleaned)
 
-        # Standardize max 0.3 mm variations -> "≤ 0.3 mm"
+        # Standardize max 0.3 / 0.2 mm variations -> "≤ 0.3 mm"
         cleaned_lower = cleaned.lower().strip()
-        if re.search(r"^(?:burry\s+|burrs\s+|burr\s+)?(?:max\.?\s*:?\s*0\.3(?:\s*mm)?|0\.3\s*max|<=?\s*0\.3(?:\s*mm)?|≤\s*0\.3(?:\s*mm)?)$", cleaned_lower):
+        if re.search(r"^(?:burry\s+|burrs\s+|burr\s+)?(?:max\.?\s*:?\s*0[.,][12345](?:\s*mm)?|0[.,][12345]\s*max|<=?\s*0[.,][12345](?:\s*mm)?|≤\s*0[.,][12345](?:\s*mm)?)$", cleaned_lower):
             return "≤ 0.3 mm"
 
         # Fix missing space before ±
@@ -349,6 +469,7 @@ class TextNormalizer:
             "dented": "Dent",
             "dent": "Dent",
             "scratch": "Scratch",
+            "lecet": "Scratch",
             "over cutting": "Over Cutting",
             "overcutting": "Over Cutting",
             "rusty": "Rust",
@@ -366,6 +487,16 @@ class TextNormalizer:
             "spater": "Spatter",
             "bubble": "Bubble",
             "buble": "Bubble",
+            "meler": "Meler",
+            "kotor": "Kotor",
+            "bintik putih": "Bintik Putih",
+            "bintik": "Bintik Putih",
+            "menggumpal": "Menggumpal",
+            "gumpal": "Menggumpal",
+            "orange peel": "Orange Peel",
+            "orange": "Orange Peel",
+            "kulit jeruk": "Orange Peel",
+            "cacat": "Cacat",
             "mengelupas": "Peeling",
             "belang": "Uneven",
             "keropos": "Porosity",
@@ -483,17 +614,41 @@ class TextNormalizer:
         """
         result = dict(point)
 
-        # Normalize inspection item label
         raw_item = result.get("inspection_item", "")
-        result["inspection_item"] = cls.normalize_item(raw_item)
-
-        # Normalize method (via FuzzyToolNormalizer)
-        raw_method = result.get("method", "")
-        result["method"] = FuzzyToolNormalizer.normalize(raw_method)
-
-        # Normalize standard (appearance cleaning)
         raw_std = result.get("standard", "")
-        result["standard"] = cls.normalize_standard(raw_std, result["inspection_item"])
+        raw_method = result.get("method", "")
+
+        item_lower = raw_item.lower().strip()
+        std_lower = raw_std.lower().strip()
+
+        # If item is Dimension/Dimensi but standard specifies burry or <= 0.3 mm -> change item to Burry
+        if item_lower in ("dimension", "dimensi") and (
+            any(b in std_lower for b in ["burr", "burry"])
+            or "≤ 0.3" in std_lower
+            or "<= 0.3" in std_lower
+            or "<_ 0.3" in std_lower
+            or "0.3 mm" in std_lower
+            or "0.2 mm" in std_lower
+        ):
+            raw_item = "Burry"
+            raw_std = "≤ 0.3 mm"
+
+        norm_item = cls.normalize_item(raw_item)
+        result["inspection_item"] = norm_item
+
+        # Normalize standard
+        norm_std = cls.normalize_standard(raw_std, norm_item)
+        if norm_item == "Burry":
+            norm_std = "≤ 0.3 mm"
+        result["standard"] = norm_std
+
+        # Normalize method
+        norm_method = FuzzyToolNormalizer.normalize(raw_method)
+        if norm_item in cls.DEFECT_ITEMS:
+            norm_method = "Visual"
+        elif norm_item == "Burry" and (not norm_method or norm_method in ("Visual", "Visual Insp.")):
+            norm_method = "Caliper"
+        result["method"] = norm_method
 
         return result
 
@@ -504,15 +659,7 @@ class TextNormalizer:
         1. Split combined appearance rows into individual defect check rows
         2. Swap category items (Function, Appearance) where standard is the real item name
         3. Standard for defect checks = "OK / NG"
-
-        Example:
-            Input:  [{"inspection_item": "Appearance", "standard": "No crack, dented, scratch"}]
-            Output: [{"inspection_item": "No Crack",  "standard": "OK / NG", "method": "Visual"},
-                     {"inspection_item": "No Dent",   "standard": "OK / NG", "method": "Visual"},
-                     {"inspection_item": "No Scratch", "standard": "OK / NG", "method": "Visual"}]
-
-            Input:  [{"inspection_item": "Function", "standard": "Non destructive test", "method": "Hammering"}]
-            Output: [{"inspection_item": "Non Destructive Test", "standard": "OK / NG", "method": "Hammering"}]
+        4. Re-numbers item_no sequentially, grouping appearance defect items under the same item_no
         """
         expanded = []
         for pt in points:
@@ -521,9 +668,9 @@ class TextNormalizer:
             std = normalized.get("standard", "").strip()
             method = normalized.get("method", "Visual")
 
-            # --- Category: Appearance / App / Surface ---
+            # --- Category: Appearance / App / Surface / Visual ---
             # Standard contains defect list -> split into individual rows
-            if item_lower in ("appearance", "app", "surface"):
+            if item_lower in ("appearance", "app", "surface", "visual"):
                 if item_lower == "surface" and (re.search(r'[\d±]', std) or method in ("Tapper Gg", "Tapper Gauge", "Feeler Gg", "Feeler Gauge")):
                     expanded.append(normalized)
                     continue
@@ -562,9 +709,27 @@ class TextNormalizer:
 
             expanded.append(normalized)
 
-        # Re-number item_no sequentially
-        for idx, pt in enumerate(expanded):
-            pt["item_no"] = str(idx + 1)
+        # Re-number item_no: consecutive appearance/defect items share the exact same item_no
+        current_num = 1
+        appearance_group_no = None
+        in_appearance_group = False
+
+        for pt in expanded:
+            item_name = pt.get("inspection_item", "")
+            is_defect = item_name in cls.DEFECT_ITEMS or any(
+                item_name.startswith(p) for p in ["No ", "Tidak "]
+            ) or item_name in ("Profile OK", "Packing", "Sesuai Sample")
+
+            if is_defect:
+                if not in_appearance_group:
+                    in_appearance_group = True
+                    appearance_group_no = str(current_num)
+                    current_num += 1
+                pt["item_no"] = appearance_group_no
+            else:
+                in_appearance_group = False
+                pt["item_no"] = str(current_num)
+                current_num += 1
 
         return expanded
 
