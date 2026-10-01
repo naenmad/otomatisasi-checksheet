@@ -1009,7 +1009,19 @@
                         {{ cs.assigned_to }}
                       </span>
                     </td>
-                    <td class="py-3 px-4 font-mono font-bold text-zinc-100">{{ cs.part_number }}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-zinc-100">
+                      <div class="flex items-center gap-1.5 group/pn">
+                        <span>{{ cs.part_number }}</span>
+                        <button type="button"
+                                @click.stop="openGoogleDriveSearch(cs.part_number)"
+                                title="Cari drawing part ini di Google Drive"
+                                class="opacity-0 group-hover/pn:opacity-100 text-sky-400 hover:text-sky-300 p-0.5 rounded transition-all cursor-pointer">
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
                     <td class="py-3 px-4 font-medium text-zinc-200">{{ cs.part_name || '-' }}</td>
                     <td class="py-3 px-3 text-zinc-300 font-mono">{{ cs.model || '-' }}</td>
                     <td class="py-3 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
@@ -1427,6 +1439,89 @@
                    class="text-xs text-indigo-400 hover:text-indigo-300 font-mono break-all underline">
                   https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing
                 </a>
+              </div>
+            </div>
+
+            <!-- Google Drive AI Search Integration Section -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-sky-950/80 border border-sky-800 flex items-center justify-center text-sky-400 shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-zinc-100">Pencarian Gambar Drawing Google Drive (AI Search)</h3>
+                    <p class="text-xs text-zinc-400">Konfigurasi akun profil Google Drive untuk pencarian gambar drawing per part number</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button @click="openGoogleDriveSearch('743F4E000P')"
+                          type="button"
+                          class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105 active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
+                    </svg>
+                    <span>Uji Coba Buka Drive ↗</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <!-- User Profile Index -->
+                <div class="space-y-1.5">
+                  <label class="block font-semibold text-zinc-300">
+                    Nomor Akun Google Login (<span class="font-mono text-sky-400">u/{index}</span>)
+                  </label>
+                  <p class="text-[11px] text-zinc-500 leading-relaxed">
+                    Pilih akun Google Anda yang memiliki fitur AI / Google Workspace Pro (biasanya profil ke-4 atau ke-5 di browser).
+                  </p>
+                  <select v-model="googleDriveUserIndex" @change="saveGoogleDriveSettings"
+                          class="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono text-xs focus:border-sky-500 focus:outline-none">
+                    <option value="0">u/0 - Akun Utama Browser (Default)</option>
+                    <option value="1">u/1 - Akun Google Ke-2</option>
+                    <option value="2">u/2 - Akun Google Ke-3</option>
+                    <option value="3">u/3 - Akun Google Ke-4</option>
+                    <option value="4">u/4 - Akun Google Ke-5 (Rekomendasi Akun Pro / AI)</option>
+                    <option value="5">u/5 - Akun Google Ke-6 (Rekomendasi Akun Pro / AI)</option>
+                    <option value="6">u/6 - Akun Google Ke-7</option>
+                    <option value="7">u/7 - Akun Google Ke-8</option>
+                    <option value="8">u/8 - Akun Google Ke-9</option>
+                    <option value="9">u/9 - Akun Google Ke-10</option>
+                  </select>
+                </div>
+
+                <!-- Parent Folder ID -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <label class="font-semibold text-zinc-300">Parent Folder ID Google Drive</label>
+                    <button @click="resetGoogleDriveFolderId" class="text-[10px] text-sky-400 hover:underline cursor-pointer">Reset ke Default</button>
+                  </div>
+                  <p class="text-[11px] text-zinc-500 leading-relaxed">
+                    ID folder Google Drive tempat seluruh drawing disimpan agar hasil pencarian terkonsentrasi di folder yang benar.
+                  </p>
+                  <div class="flex items-center gap-2">
+                    <input v-model="googleDriveFolderId" @change="saveGoogleDriveSettings"
+                           type="text"
+                           placeholder="Contoh: 1ez8CylXXnyp8HwatGnzGc5tgMR_zue8X"
+                           class="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono text-xs focus:border-sky-500 focus:outline-none">
+                    <button @click="saveGoogleDriveSettings"
+                            class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg font-semibold shrink-0 cursor-pointer">
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Preview URL -->
+              <div class="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
+                <div class="min-w-0">
+                  <span class="text-zinc-500 font-medium">Contoh URL Pencarian Part: </span>
+                  <span class="font-mono text-sky-300 break-all">
+                    https://drive.google.com/drive/u/{{ googleDriveUserIndex }}/search?q=743F4E000P parent:{{ googleDriveFolderId }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1950,15 +2045,38 @@
                   <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
                     {{ activeChecksheet.customer || 'No Customer' }}
                   </span>
+
+                  <!-- Google Drive AI Search Button with Account Picker -->
+                  <div class="inline-flex items-center rounded-lg border border-sky-800/80 bg-sky-950/40 shadow-sm overflow-hidden"
+                       title="Buka pencarian drawing part ini di Google Drive">
+                    <button type="button"
+                            @click="openGoogleDriveSearch(activeChecksheet.part_number)"
+                            class="px-2.5 py-1 text-xs font-bold text-sky-300 hover:text-white hover:bg-sky-900/60 flex items-center gap-1.5 transition-colors cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-sky-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
+                      </svg>
+                      <span>Cari di Drive</span>
+                      <svg class="w-3 h-3 text-sky-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </button>
+                    <!-- Quick user index selector (u/0, u/1, ... u/9) -->
+                    <select v-model="googleDriveUserIndex"
+                            @change="saveGoogleDriveSettings"
+                            title="Ganti akun Google (u/0 = Akun 1, u/4 / u/5 = Akun Google AI Pro)"
+                            class="bg-sky-950 text-[10px] font-mono font-bold text-sky-200 border-l border-sky-800/80 px-1.5 py-1 focus:outline-none cursor-pointer hover:bg-sky-900/70">
+                      <option v-for="n in 10" :key="n-1" :value="String(n-1)">u/{{ n-1 }}</option>
+                    </select>
+                  </div>
+
                   <!-- Quick Status Dropdown -->
                   <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
-                          class="px-2 py-0.5 rounded text-[10px] font-semibold border cursor-pointer focus:outline-none"
-                          :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
-                                  activeChecksheet.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
-                                  activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review' ? 'bg-amber-950 text-amber-300 border-amber-800' :
-                                  activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
-                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'bg-zinc-800 text-zinc-300 border-zinc-600' :
-                                  'bg-rose-950 text-rose-300 border-rose-800'">
+                          class="px-2.5 py-1 rounded text-[11px] font-semibold border cursor-pointer focus:outline-none bg-zinc-900 text-zinc-100"
+                          :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-600 text-emerald-300' :
+                                  activeChecksheet.status === 'Reviewed' ? 'border-sky-600 text-sky-300' :
+                                  activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review' ? 'border-amber-600 text-amber-300' :
+                                  activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 text-purple-300' :
+                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-500 text-zinc-300' :
+                                  'border-rose-600 text-rose-300'">
+                    <option value="Belum di review">Belum di review</option>
                     <option value="Belum Di Input">Belum Di Input</option>
                     <option value="Reviewed">Reviewed</option>
                     <option value="Checksheet Done">Checksheet Done</option>
@@ -2306,36 +2424,42 @@
                   <!-- Button: Paste dari Excel / Spreadsheet -->
                   <button @click="openPasteExcelDialog"
                           type="button"
-                          title="Buka dialog paste atau impor beberapa baris dari Excel / Spreadsheet"
+                          title="Buka dialog paste atau impor baris dari Excel / Spreadsheet"
                           class="px-2.5 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm">
                     <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                    <span>Paste dari Excel</span>
+                    <span>Paste Excel</span>
                   </button>
 
                   <!-- Standardize Tools Button -->
                   <button @click="autoStandardizeAllTools"
                           type="button"
-                          title="Ubah otomatis sebutan non-standar (misal Mata -> Visual, Standar gg -> Standar Gauge, CALIPER -> Caliper)"
+                          title="Ubah otomatis sebutan non-standar (misal Mata -> Visual, Standar gg -> Standar Gauge)"
                           class="px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-800 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
                     <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    <span>Standarkan Alat Ukur</span>
+                    <span>Standarkan</span>
                   </button>
 
-                  <!-- Manual Renumber Button (Only runs when explicitly clicked) -->
+                  <!-- Manual Renumber Button -->
                   <button @click="renumberExcelPoints(); isPointsDirty = true; showToast('Nomor baris diurutkan 1..' + excelPoints.length, 'info')"
                           type="button"
-                          title="Urutkan ulang nomor baris dari 1 sampai akhir secara berurutan (hanya jika Anda ingin menyusun nomor ulang)"
+                          title="Urutkan ulang nomor baris 1 sampai akhir"
                           class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 border border-zinc-700/80 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
                     <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
-                    <span>Urutkan No (1..{{ excelPoints.length }})</span>
+                    <span>Urutkan No</span>
+                  </button>
+
+                  <!-- Toggle Symbols Bar Button -->
+                  <button @click="showSymbolsBar = !showSymbolsBar"
+                          type="button"
+                          :class="showSymbolsBar ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-300 hover:text-white border-zinc-700'"
+                          class="px-2.5 py-1 border rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          title="Tampilkan / sembunyikan palet simbol teknik (Ø, ±, ≤, μm, dll)">
+                    <span class="font-mono font-bold text-xs">Ω</span>
+                    <span>Simbol</span>
                   </button>
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <span class="text-zinc-500 text-[11px] hidden xl:inline">
-                    Tips: Tekan Enter untuk pindah baris ke bawah | Ctrl+V untuk paste multi-baris
-                  </span>
-
                   <!-- Minimize / Maximize Table Button -->
                   <button @click="toggleTablePanel"
                           type="button"
@@ -2348,8 +2472,9 @@
                 </div>
               </div>
 
-              <!-- Quick Engineering Symbols Bar -->
-              <div class="px-4 py-1.5 border-b border-zinc-800 bg-zinc-950 flex flex-wrap items-center justify-between gap-2 text-xs select-none">
+              <!-- Quick Engineering Symbols Bar (Collapsible to reduce clutter) -->
+              <div v-if="showSymbolsBar"
+                   class="px-4 py-1.5 border-b border-zinc-800 bg-zinc-950 flex flex-wrap items-center justify-between gap-2 text-xs select-none animate-fadeIn">
                 <div class="flex items-center flex-wrap gap-1.5">
                   <span class="text-[11px] text-zinc-500 font-semibold mr-1">Simbol:</span>
                   <button v-for="sym in commonSymbols" :key="sym.char"
@@ -2435,7 +2560,6 @@
                           @mouseenter="handleCellMouseEnter(rIdx, 1, $event)">
                         <textarea :id="'cell-' + rIdx + '-1'"
                                   v-model="p.inspection_item"
-                                  placeholder="Nama item inspeksi..."
                                   rows="2"
                                   @mousedown.shift="handleCellMouseDown(rIdx, 1, $event)"
                                   @focus="setActiveCell(rIdx, 1, $event.target); onInspectionItemFocus(rIdx, $event.target)"
@@ -2453,7 +2577,6 @@
                           @mouseenter="handleCellMouseEnter(rIdx, 2, $event)">
                         <textarea :id="'cell-' + rIdx + '-2'"
                                   v-model="p.standard"
-                                  placeholder="Contoh: OK / NG, 10 ± 0.1, dll"
                                   rows="2"
                                   @mousedown.shift="handleCellMouseDown(rIdx, 2, $event)"
                                   @focus="setActiveCell(rIdx, 2, $event.target)"
@@ -2472,7 +2595,6 @@
                                  type="text"
                                  list="standard-tools-list"
                                  v-model="p.method"
-                                 placeholder="Pilih atau ketik..."
                                  @mousedown.shift="handleCellMouseDown(rIdx, 3, $event)"
                                  @blur="normalizeRowTool(rIdx)"
                                  @focus="setActiveCell(rIdx, 3, $event.target)"
@@ -2503,7 +2625,6 @@
                         <input :id="'cell-' + rIdx + '-4'"
                                type="text"
                                v-model="p.master_data"
-                               placeholder="Kode data..."
                                @mousedown.shift="handleCellMouseDown(rIdx, 4, $event)"
                                @focus="setActiveCell(rIdx, 4, $event.target)"
                                @keydown="handleGridKeydown($event, rIdx, 4)"
@@ -2541,7 +2662,7 @@
               <div class="p-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between text-xs">
                 <div class="flex items-center gap-2">
                   <button @click="addExcelRow" 
-                          class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm">
+                          class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm">
                     <span>+ Tambah Baris</span>
                   </button>
                   <button @click="addMultipleExcelRows(5)" 
@@ -2550,10 +2671,11 @@
                   </button>
                 </div>
                 <div class="flex items-center gap-3">
-                  <span class="text-zinc-500 text-[11px] font-mono">Total: {{ excelPoints.length }} baris inspeksi</span>
-                  <button @click="saveExcelPoints" :disabled="isSavingPoints"
-                          class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 shadow cursor-pointer">
-                    {{ isSavingPoints ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                  <span class="text-zinc-500 text-[11px] font-mono">{{ excelPoints.length }} baris inspeksi</span>
+                  <button v-if="isPointsDirty"
+                          @click="saveExcelPoints" :disabled="isSavingPoints"
+                          class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 text-indigo-300 border border-indigo-500/40 rounded text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer">
+                    {{ isSavingPoints ? 'Menyimpan...' : 'Simpan' }}
                   </button>
                 </div>
               </div>
@@ -3339,6 +3461,42 @@
           suggestionState.visible = false;
           focusCell(rIdx, 2);
         };
+
+        // Google Drive AI Search Integration & Studio UI Helpers
+        const googleDriveUserIndex = ref(localStorage.getItem('summit_drive_user_index') || '4');
+        const googleDriveFolderId = ref(localStorage.getItem('summit_drive_folder_id') || '1ez8CylXXnyp8HwatGnzGc5tgMR_zue8X');
+        const showSymbolsBar = ref(false);
+
+        const saveGoogleDriveSettings = () => {
+          localStorage.setItem('summit_drive_user_index', googleDriveUserIndex.value);
+          localStorage.setItem('summit_drive_folder_id', googleDriveFolderId.value);
+          showToast(`Pengaturan Google Drive tersimpan (Akun: u/${googleDriveUserIndex.value})`, 'success');
+        };
+
+        const updateGoogleDriveUserIndex = (val) => {
+          googleDriveUserIndex.value = String(val);
+          localStorage.setItem('summit_drive_user_index', String(val));
+          showToast(`Akun Google Drive diubah ke u/${val}`, 'info');
+        };
+
+        const resetGoogleDriveFolderId = () => {
+          googleDriveFolderId.value = '1ez8CylXXnyp8HwatGnzGc5tgMR_zue8X';
+          saveGoogleDriveSettings();
+        };
+
+        const openGoogleDriveSearch = (partNo) => {
+          const pn = (partNo || activeChecksheet.value?.part_number || '').trim();
+          if (!pn) {
+            showToast('Part number belum tersedia', 'warning');
+            return;
+          }
+          const folder = (googleDriveFolderId.value || '1ez8CylXXnyp8HwatGnzGc5tgMR_zue8X').trim();
+          const u = (googleDriveUserIndex.value || '4').trim();
+          const query = folder ? `${pn} parent:${folder}` : pn;
+          const url = `https://drive.google.com/drive/u/${u}/search?q=${encodeURIComponent(query)}`;
+          window.open(url, '_blank', 'noopener,noreferrer');
+        };
+
         const standardToolsList = [
           'Visual',
           'Caliper',
@@ -6180,7 +6338,14 @@
           handleCellMouseEnter,
           selectEntireColumn,
           selectEntireRow,
-          copySelectedRangeToClipboard
+          copySelectedRangeToClipboard,
+          googleDriveUserIndex,
+          googleDriveFolderId,
+          showSymbolsBar,
+          saveGoogleDriveSettings,
+          updateGoogleDriveUserIndex,
+          openGoogleDriveSearch,
+          resetGoogleDriveFolderId
         };
       }
     }).mount('#app');
