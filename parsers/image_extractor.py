@@ -8,7 +8,7 @@ import os
 import re
 import zipfile
 import xml.etree.ElementTree as ET
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple, Any
 
 try:
     from PIL import Image
