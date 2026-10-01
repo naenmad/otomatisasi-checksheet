@@ -179,11 +179,9 @@ async def run_factoryhub_reconciliation(
                     cs.factoryhub_id = fh_match["fh_id"]
                     updated_urls += 1
         else:
-            # Case 2: In DB status is 'Checksheet Done', but NOT found on FactoryHub (deleted/missing)
-            if cs.status == "Checksheet Done":
-                cs.status = "Butuh Revisi"
-                cs.keterangan = "Template terhapus atau tidak ditemukan di FactoryHub"
-                updated_to_revisi += 1
+            # Case 2: In DB status is 'Checksheet Done', but template not detected in this scrape session.
+            # Do NOT automatically downgrade to 'Butuh Revisi' to prevent false alerts or overwriting valid parts.
+            pass
 
     await session.commit()
     elapsed = round(time.time() - t0, 1)
