@@ -407,7 +407,7 @@ class TextNormalizer:
                     return "Sesuai Sample"
                 if cls.is_qualitative_item(item_label):
                     return "OK / NG"
-            return standard or "-"
+            return ""
 
         cleaned = re.sub(r"\s+", " ", str(standard)).strip()
 

@@ -16,7 +16,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      /* Blokir gestur swipe trackpad back/forward agar tidak keluar dari halaman edit secara tidak sengaja */
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: auto;
+    }
+    #app, #excel-grid-container, .modal-container {
+      overscroll-behavior-x: none;
+    }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     /* Pastikan input tabel, toleransi dan data teknis menggunakan font Inter dengan tabular-nums */
     /* sehingga angka 0 (nol) bulat bersih TANPA garis miring, membedakannya secara tegas dari simbol diameter Ø */
@@ -462,7 +470,7 @@
           </div>
 
           <!-- KPI Metric Cards (Interactive click filters) -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             <!-- Total Checksheets -->
             <button @click="goToChecksheetsWithStatus('ALL')"
                     class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-zinc-700 text-left transition-all group">
@@ -524,6 +532,17 @@
               </div>
               <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
               <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
+            </button>
+
+            <!-- Canceled -->
+            <button @click="goToChecksheetsWithStatus('Canceled')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-zinc-700 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Canceled</p>
+                <span class="w-2 h-2 rounded-full bg-zinc-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-zinc-400 font-mono mt-1 group-hover:text-zinc-200 transition-colors">{{ countStatus('Canceled') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Part / proses dibatalkan</p>
             </button>
           </div>
 
@@ -653,6 +672,7 @@
                                     cs.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
                                     cs.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
                                     cs.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                                    (cs.status && cs.status.toLowerCase() === 'canceled') ? 'bg-zinc-800 text-zinc-300 border-zinc-600' :
                                     'bg-rose-950 text-rose-300 border-rose-800'">
                         {{ cs.status }}
                       </span>
@@ -673,7 +693,7 @@
         <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
         <main v-show="activePage === 'checksheets'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
           <!-- Interactive Metric Filters -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             <button @click="statusFilter = 'ALL'"
                     :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
                     class="p-4 rounded-xl border text-left transition-all">
@@ -746,6 +766,18 @@
                 <span class="text-[10px] text-zinc-500 font-mono">374 part</span>
               </div>
             </div>
+
+            <!-- Canceled -->
+            <button @click="statusFilter = (statusFilter === 'Canceled' ? 'ALL' : 'Canceled')"
+                    :class="statusFilter === 'Canceled' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
+                    class="p-4 rounded-xl border text-left transition-all">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Canceled</p>
+                <span class="w-2 h-2 rounded-full bg-zinc-500"></span>
+              </div>
+              <p class="text-2xl font-bold text-zinc-300 font-mono mt-1">{{ countStatus('Canceled') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Part / proses dibatalkan</p>
+            </button>
           </div>
 
           <!-- Controls & Filter Toolbar -->
@@ -835,6 +867,7 @@
                 <option value="Belum di review">Belum di review</option>
                 <option value="Butuh Revisi">Butuh Revisi</option>
                 <option value="Tidak Ada Part">Tidak Ada Part</option>
+                <option value="Canceled">Canceled</option>
               </select>
 
               <!-- Quick Ambil Batch Button (when unassigned tasks are selected) -->
@@ -1001,6 +1034,11 @@
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-950 text-purple-300 border border-purple-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
                         <span>Butuh Revisi</span>
+                      </span>
+                      <span v-else-if="cs.status && cs.status.toLowerCase() === 'canceled'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-600 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                        <span>Canceled</span>
                       </span>
                       <span v-else
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
@@ -1917,14 +1955,16 @@
                           class="px-2 py-0.5 rounded text-[10px] font-semibold border cursor-pointer focus:outline-none"
                           :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
                                   activeChecksheet.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
-                                  activeChecksheet.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                  activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review' ? 'bg-amber-950 text-amber-300 border-amber-800' :
                                   activeChecksheet.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'bg-zinc-800 text-zinc-300 border-zinc-600' :
                                   'bg-rose-950 text-rose-300 border-rose-800'">
                     <option value="Belum Di Input">Belum Di Input</option>
                     <option value="Reviewed">Reviewed</option>
                     <option value="Checksheet Done">Checksheet Done</option>
                     <option value="Butuh Revisi">Butuh Revisi</option>
                     <option value="Tidak Ada Part">Tidak Ada Part</option>
+                    <option value="Canceled">Canceled</option>
                     <option value="DRAFT">DRAFT</option>
                   </select>
                   <!-- Quick Assignee Dropdown -->
@@ -2250,8 +2290,14 @@
                     {{ excelPoints.length }} Baris
                   </span>
 
-                  <!-- Active Cell Indicator -->
-                  <span v-if="activeRow >= 0 && excelPoints.length > 0" 
+                  <!-- Active Cell / Multi Selection Indicator -->
+                  <span v-if="isMultiSelected()"
+                        class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-900/80 text-indigo-200 border border-indigo-500/80 flex items-center gap-1.5 shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                    <span>Terpilih: {{ getSelectionBounds().maxR - getSelectionBounds().minR + 1 }} Baris × {{ getSelectionBounds().maxC - getSelectionBounds().minC + 1 }} Kolom</span>
+                    <button @click="copySelectedRangeToClipboard" class="ml-1 text-[9px] underline text-indigo-300 hover:text-white cursor-pointer" title="Salin range terpilih ke clipboard (Ctrl+C)">Salin (Ctrl+C)</button>
+                  </span>
+                  <span v-else-if="activeRow >= 0 && excelPoints.length > 0" 
                         class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
                     <span>Baris {{ activeRow + 1 }}, {{ getColName(activeCol) }}</span>
@@ -2320,15 +2366,25 @@
               </div>
 
               <!-- Grid Container with custom scroll -->
-              <div class="flex-1 overflow-auto select-none" id="excel-grid-container" @paste="handleTableContainerPaste($event)">
+              <div class="flex-1 overflow-auto select-none" id="excel-grid-container" @scroll="suggestionState.visible = false" @paste="handleTableContainerPaste($event)">
                 <table class="w-full text-left text-xs border-collapse border border-zinc-800">
                   <thead class="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-700 text-zinc-400 font-semibold uppercase text-[10px] select-none">
                     <tr>
-                      <th class="py-2.5 px-2 w-14 text-center border-r border-zinc-800 bg-zinc-950"># (No)</th>
-                      <th class="py-2.5 px-3 min-w-[180px] border-r border-zinc-800 bg-zinc-950">Item Inspeksi</th>
-                      <th class="py-2.5 px-3 min-w-[220px] border-r border-zinc-800 bg-zinc-950">Standar / Toleransi</th>
-                      <th class="py-2.5 px-3 min-w-[200px] border-r border-zinc-800 bg-zinc-950">Alat Ukur / Metode</th>
-                      <th class="py-2.5 px-3 min-w-[120px] border-r border-zinc-800 bg-zinc-950">Master Data</th>
+                      <th class="py-2.5 px-2 w-14 text-center border-r border-zinc-800 bg-zinc-950 cursor-pointer hover:bg-zinc-800 hover:text-indigo-300 transition-colors"
+                          @click="selectEntireColumn(0)"
+                          title="Klik untuk memilih seluruh kolom nomor"># (No)</th>
+                      <th class="py-2.5 px-3 min-w-[180px] border-r border-zinc-800 bg-zinc-950 cursor-pointer hover:bg-zinc-800 hover:text-indigo-300 transition-colors"
+                          @click="selectEntireColumn(1)"
+                          title="Klik untuk memilih seluruh kolom Item Inspeksi">Item Inspeksi</th>
+                      <th class="py-2.5 px-3 min-w-[220px] border-r border-zinc-800 bg-zinc-950 cursor-pointer hover:bg-zinc-800 hover:text-indigo-300 transition-colors"
+                          @click="selectEntireColumn(2)"
+                          title="Klik untuk memilih seluruh kolom Standar / Toleransi">Standar / Toleransi</th>
+                      <th class="py-2.5 px-3 min-w-[200px] border-r border-zinc-800 bg-zinc-950 cursor-pointer hover:bg-zinc-800 hover:text-indigo-300 transition-colors"
+                          @click="selectEntireColumn(3)"
+                          title="Klik untuk memilih seluruh kolom Alat Ukur / Metode">Alat Ukur / Metode</th>
+                      <th class="py-2.5 px-3 min-w-[120px] border-r border-zinc-800 bg-zinc-950 cursor-pointer hover:bg-zinc-800 hover:text-indigo-300 transition-colors"
+                          @click="selectEntireColumn(4)"
+                          title="Klik untuk memilih seluruh kolom Master Data">Master Data</th>
                       <th class="py-2.5 px-2 w-20 text-center bg-zinc-950">Aksi</th>
                     </tr>
                   </thead>
@@ -2346,12 +2402,16 @@
                         class="transition-colors group border-b border-zinc-800/60">
                       
                       <!-- Col 0: Drag Handle & Item No -->
-                      <td class="p-0 border-r border-zinc-800/80 relative align-middle bg-zinc-950/40">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle bg-zinc-950/40"
+                          :class="getCellSelectionClass(rIdx, 0)"
+                          @mousedown="handleCellMouseDown(rIdx, 0, $event)"
+                          @mouseenter="handleCellMouseEnter(rIdx, 0, $event)">
                         <div class="flex items-center h-full min-h-[44px]">
                           <div draggable="true"
                                @dragstart="handleRowDragStart($event, rIdx)"
                                @dragend="handleRowDragEnd"
-                               title="Klik & geser untuk mengubah urutan baris"
+                               @click.stop="selectEntireRow(rIdx)"
+                               title="Klik untuk memilih seluruh baris ini, atau drag untuk mengubah urutan"
                                class="px-1.5 py-3 cursor-grab active:cursor-grabbing text-zinc-600 group-hover:text-indigo-400 hover:text-indigo-300 transition-colors select-none flex items-center justify-center">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-12a2 2 0 10.001 4.001A2 2 0 0013 2zm0 6a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z"/>
@@ -2360,6 +2420,7 @@
                           <input :id="'cell-' + rIdx + '-0'"
                                  type="text"
                                  v-model="p.item_no"
+                                 @mousedown.shift="handleCellMouseDown(rIdx, 0, $event)"
                                  @focus="setActiveCell(rIdx, 0, $event.target)"
                                  @keydown="handleGridKeydown($event, rIdx, 0)"
                                  @paste="handleExcelPaste($event, rIdx, 0)"
@@ -2368,23 +2429,33 @@
                       </td>
 
                       <!-- Col 1: Inspection Item (Multiline Auto-wrapping) -->
-                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle"
+                          :class="getCellSelectionClass(rIdx, 1)"
+                          @mousedown="handleCellMouseDown(rIdx, 1, $event)"
+                          @mouseenter="handleCellMouseEnter(rIdx, 1, $event)">
                         <textarea :id="'cell-' + rIdx + '-1'"
                                   v-model="p.inspection_item"
                                   placeholder="Nama item inspeksi..."
                                   rows="2"
-                                  @focus="setActiveCell(rIdx, 1, $event.target)"
+                                  @mousedown.shift="handleCellMouseDown(rIdx, 1, $event)"
+                                  @focus="setActiveCell(rIdx, 1, $event.target); onInspectionItemFocus(rIdx, $event.target)"
+                                  @input="onInspectionItemInput(rIdx, $event.target)"
+                                  @blur="onInspectionItemBlur"
                                   @keydown="handleGridKeydown($event, rIdx, 1)"
                                   @paste="handleExcelPaste($event, rIdx, 1)"
                                   class="w-full h-full px-3 py-2.5 bg-transparent font-medium text-zinc-100 placeholder-zinc-600 focus:bg-indigo-950/40 focus:text-indigo-200 focus:outline-none border-2 transition-all border-transparent focus:border-indigo-500 rounded-none text-xs resize-none overflow-hidden block leading-relaxed"></textarea>
                       </td>
 
                       <!-- Col 2: Standard / Toleransi (Multiline Auto-wrapping) -->
-                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle"
+                          :class="getCellSelectionClass(rIdx, 2)"
+                          @mousedown="handleCellMouseDown(rIdx, 2, $event)"
+                          @mouseenter="handleCellMouseEnter(rIdx, 2, $event)">
                         <textarea :id="'cell-' + rIdx + '-2'"
                                   v-model="p.standard"
-                                  placeholder="Contoh: 150 ± 0.5 atau No Rust"
+                                  placeholder="Contoh: OK / NG, 10 ± 0.1, dll"
                                   rows="2"
+                                  @mousedown.shift="handleCellMouseDown(rIdx, 2, $event)"
                                   @focus="setActiveCell(rIdx, 2, $event.target)"
                                   @keydown="handleGridKeydown($event, rIdx, 2)"
                                   @paste="handleExcelPaste($event, rIdx, 2)"
@@ -2392,13 +2463,17 @@
                       </td>
 
                       <!-- Col 3: Method / Alat Ukur (Combobox with dropdown & auto-normalization) -->
-                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle"
+                          :class="getCellSelectionClass(rIdx, 3)"
+                          @mousedown="handleCellMouseDown(rIdx, 3, $event)"
+                          @mouseenter="handleCellMouseEnter(rIdx, 3, $event)">
                         <div class="relative flex items-center h-full min-h-[44px] group">
                           <input :id="'cell-' + rIdx + '-3'"
                                  type="text"
                                  list="standard-tools-list"
                                  v-model="p.method"
                                  placeholder="Pilih atau ketik..."
+                                 @mousedown.shift="handleCellMouseDown(rIdx, 3, $event)"
                                  @blur="normalizeRowTool(rIdx)"
                                  @focus="setActiveCell(rIdx, 3, $event.target)"
                                  @keydown="handleGridKeydown($event, rIdx, 3)"
@@ -2421,11 +2496,15 @@
                       </td>
 
                       <!-- Col 4: Master Data -->
-                      <td class="p-0 border-r border-zinc-800/80 relative align-middle">
+                      <td class="p-0 border-r border-zinc-800/80 relative align-middle"
+                          :class="getCellSelectionClass(rIdx, 4)"
+                          @mousedown="handleCellMouseDown(rIdx, 4, $event)"
+                          @mouseenter="handleCellMouseEnter(rIdx, 4, $event)">
                         <input :id="'cell-' + rIdx + '-4'"
                                type="text"
                                v-model="p.master_data"
                                placeholder="Kode data..."
+                               @mousedown.shift="handleCellMouseDown(rIdx, 4, $event)"
                                @focus="setActiveCell(rIdx, 4, $event.target)"
                                @keydown="handleGridKeydown($event, rIdx, 4)"
                                @paste="handleExcelPaste($event, rIdx, 4)"
@@ -2482,6 +2561,45 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Floating Autocomplete Popup for Inspection Item -->
+      <div v-if="suggestionState.visible && filteredSuggestions.length > 0"
+           id="inspection-item-suggestions"
+           :style="{
+             position: 'fixed',
+             top: suggestionState.top + 'px',
+             left: suggestionState.left + 'px',
+             width: suggestionState.width + 'px',
+             zIndex: 99999
+           }"
+           class="bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden backdrop-blur-md max-h-60 flex flex-col">
+        <div class="px-3 py-1.5 bg-zinc-950/90 border-b border-zinc-800 text-[10px] font-semibold text-zinc-400 flex items-center justify-between select-none">
+          <span class="flex items-center gap-1.5 text-indigo-400">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Saran Item Inspeksi
+          </span>
+          <span class="text-[9px] text-zinc-500 font-normal">↑↓ pilih · Enter / Tab terapkan</span>
+        </div>
+        <div class="p-1 space-y-0.5 overflow-y-auto max-h-52">
+          <div v-for="(item, sIdx) in filteredSuggestions"
+               :key="item.item"
+               @mousedown.prevent="selectSuggestion(item)"
+               @mouseenter="suggestionState.selectedIndex = sIdx"
+               :class="[
+                 suggestionState.selectedIndex === sIdx ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-200 hover:bg-zinc-800/80'
+               ]"
+               class="px-2.5 py-1.5 rounded-lg cursor-pointer text-xs flex items-center justify-between transition-colors select-none">
+            <div class="font-medium flex items-center gap-1.5 truncate">
+              <span class="truncate">{{ item.item }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px] shrink-0 ml-2"
+                 :class="suggestionState.selectedIndex === sIdx ? 'text-indigo-100' : 'text-zinc-400'">
+              <span v-if="item.standard" class="px-1.5 py-0.5 rounded bg-black/25 font-mono text-[9px]">{{ item.standard }}</span>
+              <span class="italic text-[9px]">{{ item.method }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2916,6 +3034,311 @@
         const excelCols = ['item_no', 'inspection_item', 'standard', 'method', 'master_data'];
         const draggedRowIndex = ref(null);
         const dragOverIndex = ref(null);
+
+        // Multi-cell selection state (Excel-like rectangular selection)
+        const selectedRange = ref(null); // { startRow, startCol, endRow, endCol }
+        const isDraggingSelection = ref(false);
+
+        const getSelectionBounds = () => {
+          if (!selectedRange.value) return null;
+          const minR = Math.min(selectedRange.value.startRow, selectedRange.value.endRow);
+          const maxR = Math.max(selectedRange.value.startRow, selectedRange.value.endRow);
+          const minC = Math.min(selectedRange.value.startCol, selectedRange.value.endCol);
+          const maxC = Math.max(selectedRange.value.startCol, selectedRange.value.endCol);
+          return { minR, maxR, minC, maxC, isMulti: (minR !== maxR || minC !== maxC) };
+        };
+
+        const isCellSelected = (r, c) => {
+          const b = getSelectionBounds();
+          if (!b) return false;
+          return r >= b.minR && r <= b.maxR && c >= b.minC && c <= b.maxC;
+        };
+
+        const isMultiSelected = () => {
+          const b = getSelectionBounds();
+          return !!(b && b.isMulti);
+        };
+
+        const getCellSelectionClass = (r, c) => {
+          const b = getSelectionBounds();
+          if (!b || !isCellSelected(r, c) || !b.isMulti) return '';
+          const classes = ['bg-indigo-600/30'];
+          if (r === b.minR) classes.push('border-t-2 border-t-indigo-400');
+          if (r === b.maxR) classes.push('border-b-2 border-b-indigo-400');
+          if (c === b.minC) classes.push('border-l-2 border-l-indigo-400');
+          if (c === b.maxC) classes.push('border-r-2 border-r-indigo-400');
+          return classes.join(' ');
+        };
+
+        const handleCellMouseDown = (r, c, event) => {
+          if (event.button !== 0) return;
+          if (event.shiftKey) {
+            event.preventDefault();
+            const startR = selectedRange.value?.startRow ?? activeRow.value ?? r;
+            const startC = selectedRange.value?.startCol ?? activeCol.value ?? c;
+            selectedRange.value = { startRow: startR, startCol: startC, endRow: r, endCol: c };
+            activeRow.value = r;
+            activeCol.value = c;
+            return;
+          }
+          selectedRange.value = { startRow: r, startCol: c, endRow: r, endCol: c };
+          isDraggingSelection.value = true;
+          activeRow.value = r;
+          activeCol.value = c;
+        };
+
+        const handleCellMouseEnter = (r, c, event) => {
+          if (isDraggingSelection.value && selectedRange.value) {
+            selectedRange.value.endRow = r;
+            selectedRange.value.endCol = c;
+            activeRow.value = r;
+            activeCol.value = c;
+          }
+        };
+
+        const selectEntireColumn = (colIdx) => {
+          if (!excelPoints.value.length) return;
+          selectedRange.value = {
+            startRow: 0,
+            startCol: colIdx,
+            endRow: excelPoints.value.length - 1,
+            endCol: colIdx
+          };
+          activeRow.value = 0;
+          activeCol.value = colIdx;
+          showToast(`Seluruh kolom ${getColName(colIdx)} dipilih (${excelPoints.value.length} baris)`, 'info');
+        };
+
+        const selectEntireRow = (rowIdx) => {
+          selectedRange.value = {
+            startRow: rowIdx,
+            startCol: 0,
+            endRow: rowIdx,
+            endCol: excelCols.length - 1
+          };
+          activeRow.value = rowIdx;
+          activeCol.value = 1;
+        };
+
+        const copySelectedRangeToClipboard = async () => {
+          const b = getSelectionBounds();
+          if (!b) return;
+          const lines = [];
+          for (let r = b.minR; r <= b.maxR; r++) {
+            const row = excelPoints.value[r];
+            if (!row) continue;
+            const cells = [];
+            for (let c = b.minC; c <= b.maxC; c++) {
+              const colKey = excelCols[c];
+              cells.push(row[colKey] ?? '');
+            }
+            lines.push(cells.join('\t'));
+          }
+          const text = lines.join('\n');
+          try {
+            await navigator.clipboard.writeText(text);
+            const rowsCount = b.maxR - b.minR + 1;
+            const colsCount = b.maxC - b.minC + 1;
+            showToast(`Berhasil menyalin ${rowsCount} baris × ${colsCount} kolom ke clipboard!`, 'success');
+          } catch (_) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('Range sel disalin ke clipboard!', 'success');
+          }
+        };
+
+        // Standard inspection items catalog for floating autocomplete
+        const STANDARD_INSPECTION_ITEMS = [
+          // ── Dimensions, Tolerances & Holes ──
+          { item: 'GAP', standard: '', method: 'Caliper' },
+          { item: 'Thickness', standard: '', method: 'Micrometer' },
+          { item: 'Thickness After Press', standard: '', method: 'Micrometer' },
+          { item: 'Dimension', standard: '', method: 'Caliper' },
+          { item: 'Diameter Hole', standard: '', method: 'Pin Gauge' },
+          { item: 'Hole Slot', standard: '', method: 'Caliper' },
+          { item: '1 Datum Hole', standard: '', method: 'Pin Gauge' },
+          { item: '2 Datum Hole', standard: '', method: 'Pin Gauge' },
+          { item: 'Hole Position', standard: 'OK / NG', method: 'Pin Go / No Go' },
+          { item: 'Qty Hole', standard: 'Sesuai Sample', method: 'Visual' },
+          { item: 'Length', standard: '', method: 'Caliper' },
+          { item: 'Width', standard: '', method: 'Caliper' },
+          { item: 'Height', standard: '', method: 'Height Gauge' },
+          { item: 'Total Length', standard: '', method: 'Roll Meter' },
+          { item: 'Distance', standard: '', method: 'Caliper' },
+          { item: 'Pitch', standard: '', method: 'Caliper' },
+          { item: 'Radius', standard: '', method: 'Radius Gauge' },
+          { item: 'R-Bend', standard: '', method: 'Radius Gauge' },
+          { item: 'Angle', standard: '', method: 'Bevel Protractor' },
+          { item: 'Flatness', standard: '≤ 0.5 mm', method: 'Dial Indicator' },
+          { item: 'Chamfer', standard: '', method: 'Visual' },
+          { item: 'Step', standard: '', method: 'Caliper' },
+          { item: 'Flange Height', standard: '', method: 'Height Gauge' },
+          { item: 'Flange A', standard: '', method: 'Caliper' },
+          { item: 'Flange B', standard: '', method: 'Caliper' },
+          { item: 'Flange C', standard: '', method: 'Caliper' },
+          { item: 'Flange D', standard: '', method: 'Caliper' },
+          { item: 'Emboss Height', standard: '', method: 'Dial Indicator' },
+          { item: 'Bead Depth', standard: '', method: 'Dial Indicator' },
+          { item: 'Trim - Line', standard: 'DEV. WITHIN 0.5', method: 'Visual' },
+          { item: 'Profile OK', standard: 'DEV. WITHIN 0.5', method: 'Check Fixture' },
+          { item: 'Position', standard: 'OK / NG', method: 'Pin Go / No Go' },
+
+          // ── Appearance & Stamping Quality ──
+          { item: 'Burry', standard: '≤ 0.3 mm', method: 'Visual' },
+          { item: 'No Scratch', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Rust', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Dent', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Crack', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Wave', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Wrinkle', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Neck', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Over Cutting', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Spatter', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Surface', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Appearance', standard: 'OK / NG', method: 'Visual' },
+
+          // ── Nut, Bolt, Fasteners & Welding ──
+          { item: 'Nut OK', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Nut Smooth', standard: 'OK / NG', method: 'Thread Gauge' },
+          { item: 'Nut Center', standard: 'OK / NG', method: 'Pin Go / No Go' },
+          { item: 'Qty Nut', standard: 'Sesuai Drawing', method: 'Visual' },
+          { item: 'Nut Weld M5', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Nut Weld M6', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Nut Weld M8', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Nut Weld M10', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Nut Weld 7/16', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Bolt Weld 6 x 20', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Bolt Weld 10 x 20', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Stud Bolt Weld', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Collar Nut', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Welding Strength', standard: 'Sesuai Standar', method: 'Torque Wrench' },
+          { item: 'Welding Strength (Chisel Test)', standard: 'No Detachment', method: 'Visual' },
+          { item: 'Non Destructive Test', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Seam Welding', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Spot Welding Position', standard: 'OK / NG', method: 'Check Fixture' },
+          { item: 'Qty Spot Weld', standard: 'Sesuai Drawing', method: 'Visual' },
+
+          // ── Painting, Coating & Finishing ──
+          { item: 'Coating Thickness', standard: '', method: 'Coating Thickness Tester' },
+          { item: 'Thickness Painting', standard: '', method: 'Coating Thickness Tester' },
+          { item: 'No Bubble', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Meler', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Kotor', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Bintik Putih', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Menggumpal', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Orange Peel', standard: 'OK / NG', method: 'Visual' },
+          { item: 'No Cacat', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Zn Plating', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Plastic Coating', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Color / Warna', standard: 'Sesuai Sample', method: 'Visual' },
+
+          // ── Material, Function & Packing ──
+          { item: 'Spec. Material', standard: 'Coil', method: 'Millsheet' },
+          { item: 'Marking Part Number', standard: 'Jelas / Terbaca', method: 'Visual' },
+          { item: 'Identification Mark', standard: 'Jelas / Terbaca', method: 'Visual' },
+          { item: 'Marking Lot Number', standard: 'OK / NG', method: 'Visual' },
+          { item: 'Function', standard: 'Normal', method: 'Visual' },
+          { item: 'Assembly Fit', standard: 'OK / NG', method: 'Check Fixture' },
+          { item: 'Packing', standard: 'Standard', method: 'Visual' },
+          { item: 'Labeling & Barcode', standard: 'Jelas & Terverifikasi', method: 'Data Label' }
+        ];
+
+        // Reactive state for floating suggestion popup
+        const suggestionState = Vue.reactive({
+          visible: false,
+          rowIndex: -1,
+          query: '',
+          selectedIndex: 0,
+          top: 0,
+          left: 0,
+          width: 320
+        });
+
+        // Combined dynamic list: Standard catalog + all unique items from existing checksheets
+        const allSuggestionsList = computed(() => {
+          const map = new Map();
+          STANDARD_INSPECTION_ITEMS.forEach(it => {
+            map.set(it.item.toLowerCase().trim(), it);
+          });
+          (checksheets.value || []).forEach(cs => {
+            (cs.points || []).forEach(p => {
+              const name = (p.inspection_item || '').trim();
+              if (name && name.length >= 2 && !map.has(name.toLowerCase())) {
+                map.set(name.toLowerCase(), {
+                  item: name,
+                  standard: p.standard || '',
+                  method: p.method || 'Visual'
+                });
+              }
+            });
+          });
+          return Array.from(map.values());
+        });
+
+        const filteredSuggestions = computed(() => {
+          const q = (suggestionState.query || '').trim().toLowerCase();
+          const list = allSuggestionsList.value;
+          if (!q) {
+            return list.slice(0, 10);
+          }
+          return list.filter(it =>
+            it.item.toLowerCase().includes(q) || (it.standard && it.standard.toLowerCase().includes(q))
+          ).slice(0, 15);
+        });
+
+        const onInspectionItemFocus = (rIdx, targetEl) => {
+          suggestionState.rowIndex = rIdx;
+          suggestionState.query = excelPoints.value[rIdx]?.inspection_item || '';
+          suggestionState.selectedIndex = 0;
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            suggestionState.top = rect.bottom + 4;
+            suggestionState.left = rect.left;
+            suggestionState.width = Math.max(rect.width, 280);
+          }
+          suggestionState.visible = true;
+        };
+
+        const onInspectionItemInput = (rIdx, targetEl) => {
+          isPointsDirty.value = true;
+          suggestionState.rowIndex = rIdx;
+          suggestionState.query = excelPoints.value[rIdx]?.inspection_item || '';
+          suggestionState.selectedIndex = 0;
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            suggestionState.top = rect.bottom + 4;
+            suggestionState.left = rect.left;
+            suggestionState.width = Math.max(rect.width, 280);
+          }
+          suggestionState.visible = true;
+        };
+
+        const onInspectionItemBlur = () => {
+          setTimeout(() => {
+            suggestionState.visible = false;
+          }, 200);
+        };
+
+        const selectSuggestion = (item) => {
+          const rIdx = suggestionState.rowIndex;
+          if (rIdx >= 0 && excelPoints.value[rIdx]) {
+            const row = excelPoints.value[rIdx];
+            row.inspection_item = item.item;
+            if (item.standard && !row.standard) {
+              row.standard = item.standard;
+            }
+            if (item.method) {
+              row.method = normalizeToolName(item.method);
+            }
+            isPointsDirty.value = true;
+          }
+          suggestionState.visible = false;
+          focusCell(rIdx, 2);
+        };
         const standardToolsList = [
           'Visual',
           'Caliper',
@@ -3119,6 +3542,9 @@
           if (s === 'checksheet done') {
             return checksheets.value.filter(c => c.status && c.status.toLowerCase() === 'checksheet done').length;
           }
+          if (s === 'canceled') {
+            return checksheets.value.filter(c => c.status && c.status.toLowerCase() === 'canceled').length;
+          }
           return checksheets.value.filter(c => c.status === st).length;
         };
 
@@ -3177,6 +3603,8 @@
                 matchStatus = c.status === 'Belum Di Input' || c.status === 'Belum di review';
               } else if (sf === 'checksheet done') {
                 matchStatus = c.status && c.status.toLowerCase() === 'checksheet done';
+              } else if (sf === 'canceled') {
+                matchStatus = c.status && c.status.toLowerCase() === 'canceled';
               } else {
                 matchStatus = c.status === statusFilter.value;
               }
@@ -3605,7 +4033,7 @@
           const newRow = {
             item_no: nextNo,
             inspection_item: '',
-            standard: '-',
+            standard: '',
             method: 'Visual',
             master_data: ''
           };
@@ -3632,7 +4060,7 @@
             excelPoints.value.push({
               item_no: String(lastNum + i + 1),
               inspection_item: '',
-              standard: '-',
+              standard: '',
               method: 'Visual',
               master_data: ''
             });
@@ -3664,7 +4092,7 @@
             excelPoints.value = [{
               item_no: '1',
               inspection_item: '',
-              standard: '-',
+              standard: '',
               method: 'Visual',
               master_data: ''
             }];
@@ -3677,6 +4105,11 @@
           activeRow.value = 0;
           activeCol.value = 0;
           focusCell(0, 0);
+
+          // Push browser history state to protect from accidental swipe-back exit
+          try {
+            window.history.pushState({ studioOpen: true }, '');
+          } catch (_) {}
         };
 
         const openExcelStudioDirect = async (cs) => {
@@ -3691,6 +4124,7 @@
           }
           showExcelStudio.value = false;
           isPointsDirty.value = false;
+          suggestionState.visible = false;
         };
 
         const uploadImageBase64 = async (base64Data, filename = 'drawing.png') => {
@@ -4078,7 +4512,7 @@
               excelPoints.value = [{
                 item_no: '1',
                 inspection_item: '',
-                standard: '-',
+                standard: '',
                 method: 'Visual',
                 master_data: ''
               }];
@@ -4184,7 +4618,7 @@
           const newRow = {
             item_no: nextNo,
             inspection_item: '',
-            standard: '-',
+            standard: '',
             method: 'Visual',
             master_data: ''
           };
@@ -4205,7 +4639,7 @@
             excelPoints.value[0] = {
               item_no: excelPoints.value[0]?.item_no || '1',
               inspection_item: '',
-              standard: '-',
+              standard: '',
               method: 'Visual',
               master_data: ''
             };
@@ -4283,31 +4717,34 @@
           return rows;
         };
 
+        const cleanSpreadsheetCell = (val) => {
+          if (val === null || val === undefined) return '';
+          let s = String(val).trim();
+          if (s.startsWith('"') && s.endsWith('"') && s.length >= 2) {
+            s = s.slice(1, -1).replace(/""/g, '"').trim();
+          }
+          return s;
+        };
+
         const mapSpreadsheetRowToPoint = (cells, rOffset = 0, startCol = 0) => {
           if (!cells || !cells.length) {
-            return { item_no: String(rOffset + 1), inspection_item: '', standard: '-', method: 'Visual', master_data: '' };
+            return { item_no: String(rOffset + 1), inspection_item: '', standard: '', method: 'Visual', master_data: '' };
           }
 
+          const cleaned = cells.map(cleanSpreadsheetCell);
           let item_no = '';
           let inspection_item = '';
-          let standard = '-';
+          let standard = '';
           let method = 'Visual';
           let master_data = '';
 
-          const clean = (val) => {
-            if (val === null || val === undefined) return '';
-            let s = String(val).trim();
-            if (s.startsWith('"') && s.endsWith('"') && s.length >= 2) {
-              s = s.slice(1, -1).replace(/""/g, '"').trim();
-            }
-            return s;
-          };
-
-          const cleaned = cells.map(clean);
+          const firstIsNum = cleaned.length > 0 && /^\d+$/.test(cleaned[0].trim());
 
           if (cleaned.length === 1) {
-            if (startCol === 0) item_no = cleaned[0];
-            else if (startCol === 1) inspection_item = cleaned[0];
+            if (startCol === 0) {
+              if (firstIsNum) item_no = cleaned[0];
+              else inspection_item = cleaned[0];
+            } else if (startCol === 1) inspection_item = cleaned[0];
             else if (startCol === 2) standard = cleaned[0];
             else if (startCol === 3) method = cleaned[0];
             else if (startCol === 4) master_data = cleaned[0];
@@ -4315,12 +4752,14 @@
             if (startCol === 2) {
               standard = cleaned[0];
               method = cleaned[1];
+            } else if (firstIsNum && startCol === 0) {
+              item_no = cleaned[0];
+              inspection_item = cleaned[1];
             } else {
               inspection_item = cleaned[0];
               standard = cleaned[1];
             }
           } else if (cleaned.length === 3) {
-            const firstIsNum = /^\d+$/.test(cleaned[0].trim());
             if (firstIsNum && startCol === 0) {
               item_no = cleaned[0];
               inspection_item = cleaned[1];
@@ -4331,8 +4770,7 @@
               method = cleaned[2];
             }
           } else if (cleaned.length === 4) {
-            const firstIsNum = /^\d+$/.test(cleaned[0].trim());
-            if (firstIsNum) {
+            if (firstIsNum && startCol === 0) {
               item_no = cleaned[0];
               inspection_item = cleaned[1];
               standard = cleaned[2];
@@ -4351,18 +4789,13 @@
             master_data = cleaned[4] || '';
           }
 
-          if (method) {
-            method = normalizeToolName(method);
-          }
-
-          if (standard) {
-            standard = standard.replace(/[ø⌀]/g, 'Ø');
-          }
+          if (method) method = normalizeToolName(method);
+          if (standard) standard = standard.replace(/[ø⌀]/g, 'Ø');
 
           return {
             item_no: item_no || String(rOffset + 1),
             inspection_item: inspection_item || '',
-            standard: standard || '-',
+            standard: standard || '',
             method: method || 'Visual',
             master_data: master_data || ''
           };
@@ -4378,50 +4811,80 @@
         const applyPastedSpreadsheet = (matrix, startRow = 0, startCol = 0, mode = 'cursor') => {
           if (!matrix || !matrix.length) return;
 
-          if (mode === 'replace') {
-            excelPoints.value = matrix.map((cells, idx) => mapSpreadsheetRowToPoint(cells, idx, 0));
-            activeRow.value = 0;
-            activeCol.value = 1;
-            isPointsDirty.value = true;
-            focusCell(0, 1);
-            return;
-          }
-
-          if (mode === 'append') {
-            const startIdx = excelPoints.value.length;
-            const newPoints = matrix.map((cells, idx) => mapSpreadsheetRowToPoint(cells, startIdx + idx, 0));
-            excelPoints.value.push(...newPoints);
-            activeRow.value = startIdx;
-            activeCol.value = 1;
-            isPointsDirty.value = true;
-            focusCell(startIdx, 1);
-            return;
-          }
-
-          // Cursor mode
-          matrix.forEach((cells, rOffset) => {
-            const targetRow = startRow + rOffset;
-            const pointData = mapSpreadsheetRowToPoint(cells, targetRow, startCol);
-
-            if (targetRow >= excelPoints.value.length) {
-              excelPoints.value.push(pointData);
-            } else {
-              const existing = excelPoints.value[targetRow];
-              if (cells.length === 1) {
-                const key = excelCols[startCol] || 'standard';
-                existing[key] = pointData[key];
-              } else {
-                if (pointData.item_no && /^\d+$/.test(pointData.item_no)) existing.item_no = pointData.item_no;
-                if (pointData.inspection_item) existing.inspection_item = pointData.inspection_item;
-                if (pointData.standard) existing.standard = pointData.standard;
-                if (pointData.method) existing.method = pointData.method;
-                if (pointData.master_data) existing.master_data = pointData.master_data;
+          const b = getSelectionBounds();
+          // Excel fill mode: if user selected a multi-cell range AND pasted 1 single cell:
+          if (b && b.isMulti && matrix.length === 1 && matrix[0].length === 1 && mode === 'cursor') {
+            const singleVal = cleanSpreadsheetCell(matrix[0][0]);
+            for (let r = b.minR; r <= b.maxR; r++) {
+              const row = excelPoints.value[r];
+              if (!row) continue;
+              for (let c = b.minC; c <= b.maxC; c++) {
+                const colKey = excelCols[c];
+                let val = singleVal;
+                if (colKey === 'method' && val) val = normalizeToolName(val);
+                if (colKey === 'standard' && val) val = val.replace(/[ø⌀]/g, 'Ø');
+                if (colKey === 'item_no' && (!val || !/^\d+$/.test(val))) val = String(r + 1);
+                row[colKey] = val;
               }
             }
+            isPointsDirty.value = true;
+            showToast(`Mengisi ${b.maxR - b.minR + 1} baris × ${b.maxC - b.minC + 1} kolom dengan "${singleVal}"`, 'success');
+            return;
+          }
+
+          let targetStartRow = (b && b.isMulti) ? b.minR : startRow;
+          let targetStartCol = (b && b.isMulti) ? b.minC : startCol;
+
+          if (mode === 'replace') {
+            excelPoints.value = [];
+            targetStartRow = 0;
+            const firstRow = matrix[0] || [];
+            const firstIsNum = firstRow.length > 0 && /^\d+$/.test(cleanSpreadsheetCell(firstRow[0]));
+            targetStartCol = firstIsNum ? 0 : 1;
+          } else if (mode === 'append') {
+            targetStartRow = excelPoints.value.length;
+            const firstRow = matrix[0] || [];
+            const firstIsNum = firstRow.length > 0 && /^\d+$/.test(cleanSpreadsheetCell(firstRow[0]));
+            targetStartCol = firstIsNum ? 0 : 1;
+          }
+
+          matrix.forEach((rowCells, rOffset) => {
+            const rowIndex = targetStartRow + rOffset;
+            while (rowIndex >= excelPoints.value.length) {
+              excelPoints.value.push({
+                item_no: String(excelPoints.value.length + 1),
+                inspection_item: '',
+                standard: '',
+                method: 'Visual',
+                master_data: ''
+              });
+            }
+            const rowData = excelPoints.value[rowIndex];
+            rowCells.forEach((cellVal, cOffset) => {
+              const colIndex = targetStartCol + cOffset;
+              if (colIndex < excelCols.length) {
+                const colKey = excelCols[colIndex];
+                let val = cleanSpreadsheetCell(cellVal);
+                if (colKey === 'method' && val) val = normalizeToolName(val);
+                if (colKey === 'standard' && val) val = val.replace(/[ø⌀]/g, 'Ø');
+                if (colKey === 'item_no') {
+                  if (!val || !/^\d+$/.test(val)) val = String(rowIndex + 1);
+                }
+                rowData[colKey] = val;
+              }
+            });
           });
 
+          // Set selection box around pasted matrix
+          selectedRange.value = {
+            startRow: targetStartRow,
+            startCol: targetStartCol,
+            endRow: targetStartRow + matrix.length - 1,
+            endCol: Math.min(excelCols.length - 1, targetStartCol + (matrix[0]?.length || 1) - 1)
+          };
+
           isPointsDirty.value = true;
-          focusCell(startRow, startCol);
+          focusCell(targetStartRow, targetStartCol);
         };
 
         const openPasteExcelDialog = async () => {
@@ -4500,6 +4963,93 @@
           const totalRows = excelPoints.value.length;
           const totalCols = excelCols.length;
           isPointsDirty.value = true;
+
+          // Shift + Arrow Keys: Multi-cell rectangular range selection (like Excel)
+          if (event.shiftKey && ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+            event.preventDefault();
+            if (!selectedRange.value) {
+              selectedRange.value = { startRow: rIdx, startCol: cIdx, endRow: rIdx, endCol: cIdx };
+            }
+            if (event.key === 'ArrowDown') {
+              selectedRange.value.endRow = Math.min(totalRows - 1, selectedRange.value.endRow + 1);
+            } else if (event.key === 'ArrowUp') {
+              selectedRange.value.endRow = Math.max(0, selectedRange.value.endRow - 1);
+            } else if (event.key === 'ArrowRight') {
+              selectedRange.value.endCol = Math.min(totalCols - 1, selectedRange.value.endCol + 1);
+            } else if (event.key === 'ArrowLeft') {
+              selectedRange.value.endCol = Math.max(0, selectedRange.value.endCol - 1);
+            }
+            activeRow.value = selectedRange.value.endRow;
+            activeCol.value = selectedRange.value.endCol;
+            return;
+          }
+
+          // Ctrl+C / Cmd+C when multi-cells are selected -> Copy rectangular range TSV
+          if ((event.ctrlKey || event.metaKey) && (event.key === 'c' || event.key === 'C')) {
+            if (isMultiSelected()) {
+              event.preventDefault();
+              copySelectedRangeToClipboard();
+              return;
+            }
+          }
+
+          // Delete or Backspace when multi-cells are selected -> Clear selected cells
+          if ((event.key === 'Delete' || event.key === 'Backspace') && isMultiSelected()) {
+            const b = getSelectionBounds();
+            if (b && b.isMulti) {
+              const el = document.activeElement;
+              const hasTextSelection = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.selectionStart !== el.selectionEnd;
+              if (!hasTextSelection) {
+                event.preventDefault();
+                for (let r = b.minR; r <= b.maxR; r++) {
+                  const row = excelPoints.value[r];
+                  if (!row) continue;
+                  for (let c = b.minC; c <= b.maxC; c++) {
+                    const colKey = excelCols[c];
+                    if (colKey === 'method') row[colKey] = 'Visual';
+                    else if (colKey === 'item_no') row[colKey] = String(r + 1);
+                    else row[colKey] = '';
+                  }
+                }
+                isPointsDirty.value = true;
+                showToast(`Dibersihkan ${b.maxR - b.minR + 1} baris × ${b.maxC - b.minC + 1} kolom`, 'info');
+                return;
+              }
+            }
+          }
+
+          // Escape clears multi-cell selection
+          if (event.key === 'Escape' && isMultiSelected()) {
+            event.preventDefault();
+            selectedRange.value = { startRow: rIdx, startCol: cIdx, endRow: rIdx, endCol: cIdx };
+            return;
+          }
+
+          // Suggestion navigation when dropdown is open on inspection_item (cIdx === 1)
+          if (cIdx === 1 && suggestionState.visible && filteredSuggestions.value.length > 0) {
+            if (event.key === 'ArrowDown') {
+              event.preventDefault();
+              suggestionState.selectedIndex = (suggestionState.selectedIndex + 1) % filteredSuggestions.value.length;
+              return;
+            } else if (event.key === 'ArrowUp') {
+              event.preventDefault();
+              suggestionState.selectedIndex = (suggestionState.selectedIndex - 1 + filteredSuggestions.value.length) % filteredSuggestions.value.length;
+              return;
+            } else if (event.key === 'Enter' || event.key === 'Tab') {
+              if (!event.shiftKey && !event.altKey) {
+                event.preventDefault();
+                const picked = filteredSuggestions.value[suggestionState.selectedIndex];
+                if (picked) {
+                  selectSuggestion(picked);
+                  return;
+                }
+              }
+            } else if (event.key === 'Escape') {
+              event.preventDefault();
+              suggestionState.visible = false;
+              return;
+            }
+          }
 
           // Ctrl+S or Cmd+S -> Save
           if ((event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')) {
@@ -4623,7 +5173,7 @@
               points: excelPoints.value.map((p, idx) => ({
                 item_no: p.item_no || String(idx + 1),
                 inspection_item: p.inspection_item || '',
-                standard: p.standard || '-',
+                standard: p.standard ?? '',
                 method: p.method || 'Visual',
                 master_data: p.master_data || ''
               }))
@@ -5368,10 +5918,32 @@
 
         onMounted(() => {
           window.addEventListener('popstate', () => {
+            if (showExcelStudio.value) {
+              if (isPointsDirty.value) {
+                const leave = confirm('Ada perubahan titik ukur yang belum disimpan. Yakin ingin keluar dari halaman edit?');
+                if (!leave) {
+                  try {
+                    window.history.pushState({ studioOpen: true }, '');
+                  } catch (_) {}
+                  return;
+                }
+              }
+              showExcelStudio.value = false;
+              suggestionState.visible = false;
+            }
             activePage.value = getPageFromRoute();
+          });
+          window.addEventListener('beforeunload', (e) => {
+            if (showExcelStudio.value && isPointsDirty.value) {
+              e.preventDefault();
+              e.returnValue = '';
+            }
           });
           window.addEventListener('hashchange', () => {
             activePage.value = getPageFromRoute();
+          });
+          window.addEventListener('mouseup', () => {
+            isDraggingSelection.value = false;
           });
           const currentRoute = getPageFromRoute();
           const targetPath = '/' + currentRoute;
@@ -5590,7 +6162,25 @@
           checkServerVersionPoll,
           hasNewServerVersion,
           newServerVersionInfo,
-          isUpdateReminderDismissed
+          isUpdateReminderDismissed,
+          suggestionState,
+          filteredSuggestions,
+          allSuggestionsList,
+          onInspectionItemFocus,
+          onInspectionItemInput,
+          onInspectionItemBlur,
+          selectSuggestion,
+          selectedRange,
+          isDraggingSelection,
+          getSelectionBounds,
+          isCellSelected,
+          isMultiSelected,
+          getCellSelectionClass,
+          handleCellMouseDown,
+          handleCellMouseEnter,
+          selectEntireColumn,
+          selectEntireRow,
+          copySelectedRangeToClipboard
         };
       }
     }).mount('#app');

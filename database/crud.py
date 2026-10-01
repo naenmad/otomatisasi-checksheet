@@ -93,7 +93,7 @@ async def create_checksheet(
                 checksheet_id=target.id,
                 item_no=pt.get("item_no") or str(idx + 1),
                 inspection_item=pt.get("inspection_item") or f"Point {idx + 1}",
-                standard=pt.get("standard") or "-",
+                standard=pt.get("standard") or "",
                 method=pt.get("method") or "Visual",
                 master_data=pt.get("master_data") or "",
                 order_index=idx

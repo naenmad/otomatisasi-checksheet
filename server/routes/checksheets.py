@@ -73,7 +73,7 @@ def prepend_checksheet_to_cache(item: Dict[str, Any]):
 class InspectionPointSchema(BaseModel):
     item_no: str
     inspection_item: str
-    standard: str = "-"
+    standard: str = ""
     method: str = "Visual"
     master_data: Optional[str] = ""
 
@@ -636,7 +636,7 @@ async def reconcile_status_endpoint(
 class PointItemManualSchema(BaseModel):
     item_no: Optional[str] = "1"
     inspection_item: str
-    standard: Optional[str] = "-"
+    standard: Optional[str] = ""
     method: Optional[str] = "Visual"
     master_data: Optional[str] = ""
 
@@ -686,7 +686,7 @@ async def create_checksheet_manual(
                 checksheet_id=new_cs.id,
                 item_no=pt.item_no or str(idx + 1),
                 inspection_item=pt.inspection_item,
-                standard=pt.standard or "-",
+                standard=pt.standard or "",
                 method=pt.method or "Visual",
                 master_data=pt.master_data or "",
                 order_index=idx
