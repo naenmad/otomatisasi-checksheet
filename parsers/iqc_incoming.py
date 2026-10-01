@@ -21,6 +21,8 @@ class IQCIncomingParser(BaseParser):
 
         # Quick check filename/path clues
         fp_lower = file_path.lower()
+        if any(k in fp_lower for k in ["ipqc", "child part", "monthly fg", "5p45"]):
+            return False
         if "cs iqc" in fp_lower or "cs incoming" in fp_lower or "iqc" in fp_lower:
             return True
 

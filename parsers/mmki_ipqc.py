@@ -71,27 +71,36 @@ class MMKIIPQCParser(BaseParser):
         if wb is not None:
             try:
                 ws = wb.active
-                for r in range(1, min(ws.max_row + 1, 15)):
-                    for c in range(1, min(ws.max_column + 1, 20)):
+                for r in range(1, min(ws.max_row + 1, 20)):
+                    for c in range(1, min(ws.max_column + 1, 30)):
                         v = str(ws.cell(r, c).value or "").strip()
                         v_u = v.upper()
-                        if "PART NO" in v_u and not part_number:
+                        if any(k in v_u for k in ["PART NO", "NO. PART", "NO PART", "PART NUMBER"]) and not part_number:
                             if ":" in v:
                                 part_number = v.split(":", 1)[1].strip()
                             else:
                                 for dc in range(1, 4):
-                                    cval = str(ws.cell(r, c + dc).value or "").strip()
-                                    if len(cval) > 4:
+                                    cval = str(ws.cell(r, c + dc).value or "").strip().lstrip(": ")
+                                    if len(cval) >= 4 and not any(k in cval.upper() for k in ["PART", "NO"]):
                                         part_number = cval
                                         break
-                        if "PART NAME" in v_u and not part_name:
+                        if any(k in v_u for k in ["PART NAME", "NAMA PART", "NAME"]) and not part_name:
                             if ":" in v:
                                 part_name = v.split(":", 1)[1].strip()
                             else:
                                 for dc in range(1, 4):
-                                    cval = str(ws.cell(r, c + dc).value or "").strip()
-                                    if len(cval) > 2:
+                                    cval = str(ws.cell(r, c + dc).value or "").strip().lstrip(": ")
+                                    if len(cval) >= 2 and not any(k in cval.upper() for k in ["PART", "NAMA"]):
                                         part_name = cval
+                                        break
+                        if "MODEL" in v_u and model == "-":
+                            if ":" in v:
+                                model = v.split(":", 1)[1].strip()
+                            else:
+                                for dc in range(1, 3):
+                                    cval = str(ws.cell(r, c + dc).value or "").strip().lstrip(": ")
+                                    if len(cval) >= 2 and "MODEL" not in cval.upper():
+                                        model = cval
                                         break
             finally:
                 if should_close:
@@ -101,10 +110,18 @@ class MMKIIPQCParser(BaseParser):
                         pass
 
         fname = os.path.basename(file_path)
-        if not part_number:
-            match = re.search(r"([0-9]{4,5}[A-Z0-9_-]{3,})", fname)
-            if match:
-                part_number = match.group(1)
+        match = re.search(r"([0-9A-Z]{4,5}[A-Z0-9_-]{3,})", fname)
+        if match:
+            fn_part = match.group(1).replace("_", "").strip()
+            if not part_number:
+                part_number = fn_part
+            elif fn_part.endswith("P") and fn_part != part_number:
+                # E.g. filename has 76757E020P but sheet cell had 76756E020P
+                part_number = fn_part
+                if "LH" in fname.upper() or fn_part[-4] in ["1", "3", "5", "7", "9"]:
+                    part_name = part_name.replace("RH", "LH")
+                elif "RH" in fname.upper() or fn_part[-4] in ["0", "2", "4", "6", "8"]:
+                    part_name = part_name.replace("LH", "RH")
 
         return {
             "part_number": part_number,
