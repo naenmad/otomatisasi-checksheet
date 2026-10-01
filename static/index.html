@@ -4012,15 +4012,15 @@
         };
 
         // Load Checksheets & Users
-        const loadChecksheets = async () => {
-          isLoading.value = true;
+        const loadChecksheets = async (silent = false) => {
+          if (!silent) isLoading.value = true;
           try {
             const res = await fetch('/api/checksheets?limit=1000');
             if (res.ok) checksheets.value = await res.json();
           } catch (e) {
             console.error('Failed to load checksheets:', e);
           } finally {
-            isLoading.value = false;
+            if (!silent) isLoading.value = false;
           }
         };
 
@@ -6120,6 +6120,12 @@
               checkSystemUpdate(true);
             }
           }, 60000);
+          // Background sync to ensure multiple operator laptops stay 100% in sync
+          setInterval(() => {
+            if (!showExcelStudio.value && !isSyncing.value && !isAuditing.value) {
+              loadChecksheets(true);
+            }
+          }, 30000);
           window.addEventListener('paste', handleGlobalPaste);
         });
 

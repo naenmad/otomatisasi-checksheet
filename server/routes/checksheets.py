@@ -628,6 +628,7 @@ async def reconcile_status_endpoint(
     from services.reconciliation_service import run_factoryhub_reconciliation
     try:
         res = await run_factoryhub_reconciliation(session=db, headless=True, browser_channel=channel)
+        invalidate_checksheets_cache()
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reconciliation audit failed: {str(e)}")
