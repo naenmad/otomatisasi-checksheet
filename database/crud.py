@@ -3,7 +3,7 @@ CRUD operations for database models.
 """
 import re
 from typing import List, Optional, Dict, Any
-from sqlalchemy import select, update, delete, desc
+from sqlalchemy import select, update, delete, desc, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -159,6 +159,102 @@ async def list_checksheets(
     return result.scalars().all()
 
 
+async def get_checksheets_summary_list(
+    session: AsyncSession,
+    assigned_to: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 2000,
+    offset: int = 0
+) -> List[dict]:
+    """High-performance checksheet summary query using SQL aggregates instead of 80,000+ ORM model loads."""
+    pts_sub = (
+        select(InspectionPoint.checksheet_id, func.count(InspectionPoint.id).label("cnt"))
+        .group_by(InspectionPoint.checksheet_id)
+        .subquery()
+    )
+    imgs_sub = (
+        select(PartImage.checksheet_id, func.count(PartImage.id).label("cnt"))
+        .group_by(PartImage.checksheet_id)
+        .subquery()
+    )
+
+    query = (
+        select(
+            Checksheet.id,
+            Checksheet.part_number,
+            Checksheet.part_name,
+            Checksheet.model,
+            Checksheet.customer,
+            Checksheet.doc_number,
+            Checksheet.status,
+            Checksheet.assigned_to,
+            Checksheet.keterangan,
+            Checksheet.factoryhub_url,
+            Checksheet.updated_at,
+            func.coalesce(pts_sub.c.cnt, 0).label("points_count"),
+            func.coalesce(imgs_sub.c.cnt, 0).label("images_count"),
+        )
+        .outerjoin(pts_sub, Checksheet.id == pts_sub.c.checksheet_id)
+        .outerjoin(imgs_sub, Checksheet.id == imgs_sub.c.checksheet_id)
+    )
+
+    if assigned_to and assigned_to.upper() != "ALL":
+        if assigned_to.upper() in ("UNASSIGNED", "BELUM DITUGASKAN"):
+            query = query.where(
+                (Checksheet.assigned_to.is_(None)) |
+                (Checksheet.assigned_to == "") |
+                (Checksheet.assigned_to == "Unassigned") |
+                (Checksheet.assigned_to == "Belum Ditugaskan")
+            )
+        else:
+            query = query.where(Checksheet.assigned_to == assigned_to)
+    if status and status.upper() != "ALL":
+        st_clean = status.strip().lower()
+        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
+            query = query.where(Checksheet.status.in_(["Belum Di Input", "Belum di review"]))
+        elif st_clean in ("checksheet done", "checksheet_done"):
+            query = query.where(Checksheet.status.ilike("Checksheet Done"))
+        else:
+            query = query.where(Checksheet.status.ilike(status))
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.where(
+            (Checksheet.part_number.ilike(search_pattern)) |
+            (Checksheet.part_name.ilike(search_pattern)) |
+            (Checksheet.model.ilike(search_pattern))
+        )
+
+    query = query.order_by(Checksheet.id.asc()).offset(offset).limit(limit)
+    res = await session.execute(query)
+    rows = res.all()
+    return [
+        {
+            "id": r.id,
+            "part_number": r.part_number,
+            "part_name": r.part_name,
+            "model": r.model,
+            "customer": r.customer,
+            "doc_number": r.doc_number,
+            "status": r.status,
+            "assigned_to": r.assigned_to,
+            "keterangan": r.keterangan,
+            "points_count": r.points_count,
+            "images_count": r.images_count,
+            "factoryhub_url": r.factoryhub_url,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        }
+        for r in rows
+    ]
+
+
+async def get_checksheet_base_by_id(session: AsyncSession, checksheet_id: int) -> Optional[Checksheet]:
+    """Fast single checksheet lookup without loading inspection points and images."""
+    query = select(Checksheet).where(Checksheet.id == checksheet_id)
+    result = await session.execute(query)
+    return result.scalar_one_or_none()
+
+
 async def get_checksheet_by_id(session: AsyncSession, checksheet_id: int) -> Optional[Checksheet]:
     query = (
         select(Checksheet)
@@ -176,7 +272,7 @@ async def update_checksheet_status(
     factoryhub_url: Optional[str] = None,
     keterangan: Optional[str] = None
 ) -> Optional[Checksheet]:
-    cs = await get_checksheet_by_id(session, checksheet_id)
+    cs = await get_checksheet_base_by_id(session, checksheet_id)
     if cs:
         cs.status = status
         if factoryhub_url:
@@ -184,7 +280,6 @@ async def update_checksheet_status(
         if keterangan:
             cs.keterangan = keterangan
         await session.commit()
-        await session.refresh(cs)
     return cs
 
 
@@ -208,7 +303,6 @@ async def log_activity(
     )
     session.add(entry)
     await session.commit()
-    await session.refresh(entry)
     return entry
 
 

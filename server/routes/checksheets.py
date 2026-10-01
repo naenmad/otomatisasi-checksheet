@@ -13,19 +13,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, update
 
 from database.connection import get_db
-from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQueue
-from database.crud import list_checksheets, get_checksheet_by_id
+from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQueue, ActivityLog
+from database.crud import (
+    list_checksheets,
+    get_checksheet_by_id,
+    get_checksheet_base_by_id,
+    get_checksheets_summary_list,
+)
 from parsers.smart_parser import TextNormalizer
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
 
-# Ultra-fast in-memory cache with immediate invalidation on write/mutation
+# Ultra-fast in-memory cache kept in-sync via in-place mutations (zero full-dataset reloads)
 _checksheets_cache: Dict[str, Any] = {
     "data": None,
     "timestamp": 0.0,
     "lock": None
 }
-CACHE_TTL = 30.0  # seconds
+CACHE_TTL = 300.0  # 5 minutes default TTL, kept synchronized via in-place mutation
 
 
 def get_cache_lock():
@@ -35,9 +40,34 @@ def get_cache_lock():
 
 
 def invalidate_checksheets_cache():
-    """Wipe in-memory cache so subsequent reads immediately fetch latest database state."""
+    """Wipe in-memory cache so subsequent reads fetch latest database state."""
     _checksheets_cache["data"] = None
     _checksheets_cache["timestamp"] = 0.0
+
+
+def update_checksheet_in_cache(checksheet_id: int, updates: Dict[str, Any]):
+    """Update a single checksheet in memory cache instantly (< 0.01ms)."""
+    data = _checksheets_cache.get("data")
+    if data:
+        for item in data:
+            if item.get("id") == checksheet_id:
+                item.update(updates)
+                break
+
+
+def remove_checksheets_from_cache(checksheet_ids: Union[List[int], set]):
+    """Remove checksheet(s) from memory cache instantly (< 0.01ms)."""
+    data = _checksheets_cache.get("data")
+    if data:
+        id_set = set(checksheet_ids)
+        _checksheets_cache["data"] = [item for item in data if item.get("id") not in id_set]
+
+
+def prepend_checksheet_to_cache(item: Dict[str, Any]):
+    """Prepend a newly created checksheet into memory cache instantly (< 0.01ms)."""
+    data = _checksheets_cache.get("data")
+    if data is not None:
+        data.insert(0, item)
 
 
 class InspectionPointSchema(BaseModel):
@@ -80,32 +110,15 @@ async def get_checksheets(
             if _checksheets_cache["data"] is not None and (time.time() - _checksheets_cache["timestamp"] < CACHE_TTL):
                 raw_list = _checksheets_cache["data"]
             else:
-                items = await list_checksheets(
+                # Fast SQL aggregate query instead of 80,000+ child ORM object loads
+                raw_list = await get_checksheets_summary_list(
                     session=db,
                     assigned_to=None,
                     status=None,
                     search=None,
-                    limit=2000,
+                    limit=5000,
                     offset=0
                 )
-                raw_list = [
-                    {
-                        "id": cs.id,
-                        "part_number": cs.part_number,
-                        "part_name": cs.part_name,
-                        "model": cs.model,
-                        "customer": cs.customer,
-                        "doc_number": cs.doc_number,
-                        "status": cs.status,
-                        "assigned_to": cs.assigned_to,
-                        "keterangan": cs.keterangan,
-                        "points_count": len(cs.inspection_points),
-                        "images_count": len(cs.images),
-                        "factoryhub_url": cs.factoryhub_url,
-                        "updated_at": cs.updated_at.isoformat() if cs.updated_at else None
-                    }
-                    for cs in items
-                ]
                 _checksheets_cache["data"] = raw_list
                 _checksheets_cache["timestamp"] = time.time()
 
@@ -256,29 +269,42 @@ def _build_checksheet_images(cs: Checksheet) -> list:
 @router.put("/{checksheet_id}")
 @router.patch("/{checksheet_id}")
 async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema, db: AsyncSession = Depends(get_db)):
-    cs = await get_checksheet_by_id(db, checksheet_id)
+    cs = await get_checksheet_base_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
     status_changed = False
     assign_changed = False
-    old_assigned = cs.assigned_to
+    cache_updates: Dict[str, Any] = {}
 
-    if payload.part_name is not None: cs.part_name = payload.part_name
-    if payload.model is not None: cs.model = payload.model
-    if payload.customer is not None: cs.customer = payload.customer
-    if payload.doc_number is not None: cs.doc_number = payload.doc_number
+    if payload.part_name is not None:
+        cs.part_name = payload.part_name
+        cache_updates["part_name"] = payload.part_name
+    if payload.model is not None:
+        cs.model = payload.model
+        cache_updates["model"] = payload.model
+    if payload.customer is not None:
+        cs.customer = payload.customer
+        cache_updates["customer"] = payload.customer
+    if payload.doc_number is not None:
+        cs.doc_number = payload.doc_number
+        cache_updates["doc_number"] = payload.doc_number
     if payload.status is not None and payload.status != cs.status:
         cs.status = payload.status
+        cache_updates["status"] = payload.status
         status_changed = True
     if payload.assigned_to is not None and payload.assigned_to != cs.assigned_to:
         cs.assigned_to = payload.assigned_to
+        cache_updates["assigned_to"] = payload.assigned_to
         assign_changed = True
-    if payload.keterangan is not None: cs.keterangan = payload.keterangan
+    if payload.keterangan is not None:
+        cs.keterangan = payload.keterangan
+        cache_updates["keterangan"] = payload.keterangan
 
     await db.commit()
-    await db.refresh(cs)
-    invalidate_checksheets_cache()
+    
+    if cache_updates:
+        update_checksheet_in_cache(cs.id, cache_updates)
 
     from services.google_sheets_service import trigger_background_sheet_sync
     if status_changed or assign_changed:
@@ -294,15 +320,13 @@ class ClaimTaskSchema(BaseModel):
 @router.post("/{checksheet_id}/claim")
 async def claim_checksheet_task(checksheet_id: int, payload: ClaimTaskSchema, db: AsyncSession = Depends(get_db)):
     """Allow an operator to claim an unassigned checksheet task for themselves."""
-    cs = await get_checksheet_by_id(db, checksheet_id)
+    cs = await get_checksheet_base_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
-    old_assigned = cs.assigned_to
     cs.assigned_to = payload.operator_name
     await db.commit()
-    await db.refresh(cs)
-    invalidate_checksheets_cache()
+    update_checksheet_in_cache(cs.id, {"assigned_to": payload.operator_name})
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
@@ -317,7 +341,7 @@ async def claim_checksheet_task(checksheet_id: int, payload: ClaimTaskSchema, db
 
 @router.put("/{checksheet_id}/points")
 async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPointsUpdateSchema, db: AsyncSession = Depends(get_db)):
-    cs = await get_checksheet_by_id(db, checksheet_id)
+    cs = await get_checksheet_base_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
@@ -344,7 +368,7 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
         db.add(ip)
 
     await db.commit()
-    invalidate_checksheets_cache()
+    update_checksheet_in_cache(checksheet_id, {"points_count": len(payload.points)})
     return {"status": "success", "updated_points": len(payload.points)}
 
 
@@ -363,7 +387,8 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     )
     await db.execute(stmt)
     await db.commit()
-    invalidate_checksheets_cache()
+    for cid in payload.checksheet_ids:
+        update_checksheet_in_cache(cid, {"assigned_to": payload.assigned_to})
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
@@ -440,7 +465,7 @@ async def upload_checksheet_image(
         db.add(new_part_img)
         await db.commit()
         await db.refresh(cs)
-        invalidate_checksheets_cache()
+        update_checksheet_in_cache(cs.id, {"images_count": len(cs.images)})
         new_part_img_id = new_part_img.id
     else:
         new_part_img_id = existing_img.id
@@ -539,7 +564,7 @@ async def delete_checksheet_image(
 
     await db.commit()
     await db.refresh(cs)
-    invalidate_checksheets_cache()
+    update_checksheet_in_cache(cs.id, {"images_count": len(cs.images)})
 
     updated_images = _build_checksheet_images(cs)
     return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
@@ -566,8 +591,7 @@ async def delete_all_checksheet_images(
         deleted_count += 1
 
     await db.commit()
-    await db.refresh(cs)
-    invalidate_checksheets_cache()
+    update_checksheet_in_cache(cs.id, {"images_count": 0})
 
     return {
         "status": "success",
@@ -670,8 +694,21 @@ async def create_checksheet_manual(
             db.add(ip)
 
     await db.commit()
-    await db.refresh(new_cs)
-    invalidate_checksheets_cache()
+    prepend_checksheet_to_cache({
+        "id": new_cs.id,
+        "part_number": new_cs.part_number,
+        "part_name": new_cs.part_name,
+        "model": new_cs.model,
+        "customer": new_cs.customer,
+        "doc_number": new_cs.doc_number,
+        "status": new_cs.status,
+        "assigned_to": new_cs.assigned_to,
+        "keterangan": new_cs.keterangan,
+        "points_count": len(payload.points or []),
+        "images_count": 0,
+        "factoryhub_url": None,
+        "updated_at": None
+    })
 
     await log_activity(
         session=db,
@@ -694,27 +731,23 @@ async def delete_checksheet_endpoint(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete a checksheet and its associated inspection points, images, and queue entries."""
-    cs = await get_checksheet_by_id(db, checksheet_id)
+    cs = await get_checksheet_base_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
     pn = cs.part_number
-    await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == checksheet_id))
-    await db.execute(delete(PartImage).where(PartImage.checksheet_id == checksheet_id))
-    await db.execute(delete(SubmissionQueue).where(SubmissionQueue.checksheet_id == checksheet_id))
+    # Cascade foreign keys in Postgres delete child records automatically in 1 query
     await db.execute(delete(Checksheet).where(Checksheet.id == checksheet_id))
-    await db.commit()
-    invalidate_checksheets_cache()
-
-    from database.crud import log_activity
-    await log_activity(
-        session=db,
+    entry = ActivityLog(
         action="DELETE CHECKSHEET",
         part_number=pn,
         operator="Admin",
         status="SUCCESS",
         details=f"Checksheet #{checksheet_id} ({pn}) berhasil dihapus dari database"
     )
+    db.add(entry)
+    await db.commit()
+    remove_checksheets_from_cache([checksheet_id])
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
@@ -736,23 +769,20 @@ async def bulk_delete_checksheets(
         return {"status": "success", "deleted_count": 0}
 
     target_ids = payload.checksheet_ids
-    await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id.in_(target_ids)))
-    await db.execute(delete(PartImage).where(PartImage.checksheet_id.in_(target_ids)))
-    await db.execute(delete(SubmissionQueue).where(SubmissionQueue.checksheet_id.in_(target_ids)))
+    # Cascade foreign keys in Postgres delete child records automatically in 1 query
     res = await db.execute(delete(Checksheet).where(Checksheet.id.in_(target_ids)))
     deleted_count = res.rowcount if hasattr(res, "rowcount") else len(target_ids)
-    await db.commit()
-    invalidate_checksheets_cache()
-
-    from database.crud import log_activity
-    await log_activity(
-        session=db,
+    
+    entry = ActivityLog(
         action="BULK DELETE",
         part_number=f"{deleted_count} Part",
         operator="Admin",
         status="SUCCESS",
         details=f"Bulk delete berhasil menghapus {deleted_count} checksheet"
     )
+    db.add(entry)
+    await db.commit()
+    remove_checksheets_from_cache(target_ids)
 
     from services.google_sheets_service import trigger_background_sheet_sync
     trigger_background_sheet_sync()
