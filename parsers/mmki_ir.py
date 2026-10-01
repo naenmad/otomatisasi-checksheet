@@ -134,7 +134,7 @@ class MMKIIRParser(BaseParser):
             name_cand = os.path.splitext(fname)[0]
             if "_" in name_cand:
                 pname = name_cand.split("_", 1)[1].strip()
-                pname = re.sub(r"[\s-_]*#?Rev.*$", "", pname, flags=re.I).strip()
+                pname = re.sub(r"[-\s_]*#?Rev.*$", "", pname, flags=re.I).strip()
                 if pname:
                     part_name = pname
 
