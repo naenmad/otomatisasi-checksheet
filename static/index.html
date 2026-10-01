@@ -2068,27 +2068,73 @@
               <input ref="imageFileInput" type="file" accept="image/*" class="hidden" @change="handleImageFileSelect">
 
               <!-- Sketch Toolbar -->
-              <div class="p-2.5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-2 text-xs shrink-0">
+              <div class="px-3 py-2 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-2 text-xs shrink-0 flex-wrap">
+                <!-- Left: Title & Page Badge -->
                 <div class="flex items-center gap-2">
-                  <span class="font-bold text-zinc-300">Gambar Sketsa Drawing</span>
-                  <span class="text-zinc-500 text-[11px]">({{ (activeChecksheet.images || []).length }} Gambar)</span>
+                  <span class="font-bold text-zinc-200">Sketsa Drawing</span>
+                  <span v-if="activeChecksheet.images && activeChecksheet.images.length"
+                        class="px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700/80 text-[10px] font-mono text-zinc-300">
+                    {{ activeSketchIdx + 1 }} / {{ activeChecksheet.images.length }}
+                  </span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <!-- Zoom Controls & Reset -->
-                  <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5">
-                    <button @click="sketchZoom = Math.max(0.5, sketchZoom - 0.25)" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer">-</button>
-                    <span class="text-[11px] font-mono text-zinc-400 px-1">{{ Math.round(sketchZoom * 100) }}%</span>
-                    <button @click="sketchZoom = Math.min(3.0, sketchZoom + 0.25)" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer">+</button>
-                    <button @click="sketchZoom = 1.0" class="px-2 py-0.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded text-[10px] cursor-pointer">Reset</button>
+
+                <!-- Right: Action Buttons, Zoom, & View Mode -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <!-- Upload / Change Button -->
+                  <button @click="$refs.imageFileInput.click()"
+                          type="button"
+                          :title="activeChecksheet.images && activeChecksheet.images.length ? 'Ganti atau tambah file gambar baru' : 'Upload file gambar sketsa'"
+                          class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-700 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>{{ activeChecksheet.images && activeChecksheet.images.length ? 'Ganti / Tambah' : 'Upload' }}</span>
+                  </button>
+
+                  <!-- Paste Button -->
+                  <button @click="pasteImageFromClipboard"
+                          type="button"
+                          title="Paste gambar dari clipboard (atau langsung tekan Ctrl+V / Cmd+V)"
+                          class="px-2 py-1 bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 hover:text-indigo-100 border border-indigo-800/80 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <span>Paste</span>
+                  </button>
+
+                  <!-- Delete Actions (Only shown if image exists) -->
+                  <template v-if="activeChecksheet.images && activeChecksheet.images.length">
+                    <button @click="deleteCurrentImage"
+                            type="button"
+                            :title="activeChecksheet.images.length > 1 ? 'Hapus gambar yang sedang ditampilkan ini' : 'Hapus gambar sketsa ini'"
+                            class="px-2 py-1 bg-rose-950/50 hover:bg-rose-900 text-rose-300 hover:text-rose-100 border border-rose-800/70 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors">
+                      <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      <span>Hapus</span>
+                    </button>
+
+                    <button v-if="activeChecksheet.images.length > 1"
+                            @click="deleteAllImages"
+                            type="button"
+                            title="Hapus semua gambar sketsa checksheet ini sekaligus"
+                            class="px-2 py-1 bg-red-950/30 hover:bg-red-950 text-red-400 hover:text-red-200 border border-red-900/60 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors">
+                      <span>Semua ({{ activeChecksheet.images.length }})</span>
+                    </button>
+                  </template>
+
+                  <div class="h-4 w-px bg-zinc-800 mx-0.5"></div>
+
+                  <!-- Zoom Controls -->
+                  <div class="flex items-center bg-zinc-950 border border-zinc-800 rounded-md p-0.5">
+                    <button @click="sketchZoom = Math.max(0.5, sketchZoom - 0.25)" class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer" title="Zoom Out">-</button>
+                    <span class="text-[10px] font-mono text-zinc-400 px-1">{{ Math.round(sketchZoom * 100) }}%</span>
+                    <button @click="sketchZoom = Math.min(3.0, sketchZoom + 0.25)" class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-100 font-bold hover:bg-zinc-800 rounded text-xs cursor-pointer" title="Zoom In">+</button>
+                    <button @click="sketchZoom = 1.0" class="px-1.5 py-0.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded text-[10px] cursor-pointer" title="Reset Zoom">1:1</button>
                   </div>
-                  <!-- Minimize Sketch Button -->
+
+                  <!-- Minimize / Split View Button -->
                   <button @click="toggleSketchPanel"
                           type="button"
                           :title="studioPanelMode === 'image-focus' ? 'Kembalikan Tampilan Split' : 'Minimalkan Gambar (Fokus Tabel)'"
-                          class="px-2 py-1 rounded bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-100 text-xs transition-colors cursor-pointer flex items-center gap-1">
+                          class="px-2 py-1 rounded-md bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-100 text-xs transition-colors cursor-pointer flex items-center gap-1">
                     <svg v-if="studioPanelMode === 'image-focus'" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
                     <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <span class="text-[10px] font-medium hidden sm:inline">{{ studioPanelMode === 'image-focus' ? 'Split' : 'Minimalkan' }}</span>
+                    <span class="text-[10px] font-medium hidden lg:inline">{{ studioPanelMode === 'image-focus' ? 'Split' : 'Minimalkan' }}</span>
                   </button>
                 </div>
               </div>
@@ -2128,31 +2174,6 @@
                   </div>
                 </div>
 
-                <!-- Floating Actions on Top Right of Image -->
-                <div v-if="activeChecksheet.images && activeChecksheet.images.length"
-                     class="absolute top-2 right-2 flex items-center gap-1.5 bg-zinc-950/85 backdrop-blur-sm border border-zinc-800 rounded-lg p-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  <button @click="$refs.imageFileInput.click()" title="Ganti atau tambah gambar baru"
-                          class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    <span>Ganti / Tambah</span>
-                  </button>
-                  <button @click="pasteImageFromClipboard" title="Paste gambar dari clipboard (Cmd+V / Ctrl+V)"
-                          class="px-2 py-1 bg-indigo-950/90 hover:bg-indigo-900 text-indigo-300 border border-indigo-800/80 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
-                    <svg class="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    <span>Paste Gambar</span>
-                  </button>
-                  <button @click="deleteCurrentImage" title="Hapus gambar ini (misal logo PT yang salah ekstrak)"
-                          class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    <span>Hapus Gambar Ini</span>
-                  </button>
-                  <button @click="deleteAllImages" title="Hapus seluruh sketsa gambar pada checksheet part ini sekaligus"
-                          class="px-2 py-1 bg-red-950 hover:bg-red-900 text-red-200 border border-red-800 rounded text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-colors shadow-sm">
-                    <svg class="w-3 h-3 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16M10 11v6m4-6v6"/></svg>
-                    <span>Hapus Semua Gambar</span>
-                  </button>
-                </div>
-
                 <!-- Visual Dropzone Overlay when Dragging a File -->
                 <div v-if="isDraggingImage"
                      class="absolute inset-0 bg-indigo-950/90 border-2 border-dashed border-indigo-400 flex flex-col items-center justify-center p-4 z-20 pointer-events-none">
@@ -2162,30 +2183,16 @@
                 </div>
               </div>
 
-              <!-- Sketch Thumbnails (if any) -->
-              <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="p-2 border-t border-zinc-800/80 bg-zinc-950 flex items-center gap-2 overflow-x-auto shrink-0">
+              <!-- Multi-Image Pagination Strip (Only shown when multiple images exist) -->
+              <div v-if="activeChecksheet.images && activeChecksheet.images.length > 1"
+                   class="px-3 py-1.5 border-t border-zinc-800/80 bg-zinc-950/80 flex items-center gap-2 overflow-x-auto shrink-0">
+                <span class="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider shrink-0">Halaman:</span>
                 <button v-for="(img, idx) in activeChecksheet.images" :key="idx"
                         @click="activeSketchIdx = idx"
-                        :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-zinc-800 opacity-60 hover:opacity-100'"
-                        class="h-12 w-16 rounded border bg-zinc-900 overflow-hidden shrink-0 transition-all cursor-pointer">
-                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" loading="lazy" decoding="async" class="w-full h-full object-cover">
-                </button>
-                <!-- Add image button in strip -->
-                <button @click="$refs.imageFileInput.click()" title="Tambah gambar lain"
-                        class="h-12 w-12 rounded border border-dashed border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-xs">
-                  <span class="text-base font-bold">+</span>
-                </button>
-                <!-- Paste image button in strip -->
-                <button @click="pasteImageFromClipboard" title="Paste gambar dari clipboard (Cmd+V / Ctrl+V)"
-                        class="h-12 px-2.5 rounded border border-indigo-800/80 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-[10px] font-semibold gap-0.5">
-                  <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                  <span>Paste</span>
-                </button>
-                <!-- Quick Delete All in strip if multiple -->
-                <button v-if="activeChecksheet.images.length > 1" @click="deleteAllImages" title="Hapus seluruh gambar checksheet ini"
-                        class="h-12 px-2 rounded border border-red-900/60 bg-red-950/30 hover:bg-red-950 text-red-400 hover:text-red-200 flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer text-[10px] font-semibold gap-0.5">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  <span>Hapus Semua</span>
+                        :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500/50 bg-indigo-950/30 text-indigo-300' : 'border-zinc-800 opacity-60 hover:opacity-100 bg-zinc-900 text-zinc-400'"
+                        class="h-9 px-2 rounded-md border flex items-center gap-1.5 shrink-0 transition-all cursor-pointer">
+                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" loading="lazy" decoding="async" class="w-6 h-6 object-cover rounded">
+                  <span class="text-[11px] font-medium">Gambar #{{ idx + 1 }}</span>
                 </button>
               </div>
 
