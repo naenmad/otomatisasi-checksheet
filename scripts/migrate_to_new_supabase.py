@@ -160,6 +160,12 @@ async def restore_to_new_db(new_db_url: str, new_supabase_url: str):
     print("[*] Membuat skema tabel di database baru...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Clean any partial previous import
+        for tbl in ["activity_logs", "submission_queue", "part_images", "inspection_points", "checksheets", "users"]:
+            try:
+                await conn.execute(text(f"TRUNCATE TABLE {tbl} CASCADE;"))
+            except Exception:
+                pass
 
     # Load backup data
     with open(BACKUP_JSON_FILE, "r", encoding="utf-8") as f:
@@ -174,15 +180,31 @@ async def restore_to_new_db(new_db_url: str, new_supabase_url: str):
 
     Session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
+    def parse_dt(v):
+        if not v:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v)
+            except Exception:
+                return None
+        return v
+
     async with Session() as session:
         print("[*] Mengimpor users...")
         for u in users:
-            session.add(User(**{k: v for k, v in u.items() if hasattr(User, k)}))
+            row_dict = {k: v for k, v in u.items() if hasattr(User, k)}
+            row_dict["created_at"] = parse_dt(row_dict.get("created_at"))
+            session.add(User(**row_dict))
         await session.commit()
 
         print(f"[*] Mengimpor {len(checksheets)} checksheets...")
         for cs in checksheets:
-            session.add(Checksheet(**{k: v for k, v in cs.items() if hasattr(Checksheet, k)}))
+            row_dict = {k: v for k, v in cs.items() if hasattr(Checksheet, k)}
+            row_dict["created_at"] = parse_dt(row_dict.get("created_at"))
+            row_dict["updated_at"] = parse_dt(row_dict.get("updated_at"))
+            row_dict["locked_at"] = parse_dt(row_dict.get("locked_at"))
+            session.add(Checksheet(**row_dict))
         await session.commit()
 
         print(f"[*] Mengimpor {len(points)} inspection points (batch)...")
@@ -212,7 +234,9 @@ async def restore_to_new_db(new_db_url: str, new_supabase_url: str):
 
         print(f"[*] Mengimpor {len(logs)} activity logs...")
         for l in logs:
-            session.add(ActivityLog(**{k: v for k, v in l.items() if hasattr(ActivityLog, k)}))
+            row_dict = {k: v for k, v in l.items() if hasattr(ActivityLog, k)}
+            row_dict["created_at"] = parse_dt(l.get("created_at") or l.get("timestamp"))
+            session.add(ActivityLog(**row_dict))
         await session.commit()
 
         # Update sequences

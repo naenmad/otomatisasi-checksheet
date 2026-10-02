@@ -103,6 +103,25 @@ async def sync_all_part_images_to_db(session: AsyncSession) -> Dict[str, Any]:
                 if not _is_valid_sketch(abs_img_path):
                     continue
 
+                # Auto-convert non-WebP files to WebP (hemat storage & bandwidth)
+                if not f.lower().endswith(".webp"):
+                    try:
+                        from PIL import Image
+                        with Image.open(abs_img_path) as im:
+                            im_c = im.convert("RGBA") if (im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info)) else im.convert("RGB")
+                            webp_name = f"{os.path.splitext(f)[0]}.webp"
+                            webp_path = os.path.join(folder_path, webp_name)
+                            im_c.save(webp_path, "WEBP", quality=82, method=6)
+                            if os.path.isfile(webp_path) and webp_path != abs_img_path:
+                                try:
+                                    os.remove(abs_img_path)
+                                except Exception:
+                                    pass
+                            f = webp_name
+                            abs_img_path = webp_path
+                    except Exception as e:
+                        logger.warning(f"Gagal konversi {abs_img_path} ke WebP: {e}")
+
                 # Relative path for cross-platform DB storage
                 rel_path = _to_relative_path(abs_img_path)
 

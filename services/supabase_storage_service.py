@@ -20,10 +20,14 @@ from database.connection import AsyncSessionLocal
 from database.models import Checksheet, PartImage
 from database.crud import clean_str
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = logging.getLogger("supabase_storage")
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://pkccxrqjnnhgjalcpnot.supabase.co").strip().rstrip("/")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_ffPoXsFoLE3wFZjszPtSMQ_pfhPbdw6").strip()
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip()
 BUCKET_NAME = "image"
 
 
@@ -81,24 +85,34 @@ def upload_image_to_supabase(local_path: str, clean_part: str, filename: str) ->
     return upload_file_to_supabase(local_path, remote_path)
 
 
-def delete_file_from_supabase(remote_path: str) -> bool:
-    """Delete an object from Supabase Storage bucket."""
-    encoded_path = urllib.parse.quote(remote_path.lstrip("/"), safe="/-_.~")
-    endpoint = f"{SUPABASE_URL}/storage/v1/object/{BUCKET_NAME}/{encoded_path}"
+def delete_files_from_supabase(remote_paths: List[str]) -> bool:
+    """Delete multiple objects from Supabase Storage bucket using prefixes API."""
+    if not remote_paths:
+        return True
+    endpoint = f"{SUPABASE_URL}/storage/v1/object/{BUCKET_NAME}"
     try:
+        import json
+        payload = json.dumps({"prefixes": [p.lstrip("/") for p in remote_paths]}).encode("utf-8")
         req = urllib.request.Request(
             endpoint,
+            data=payload,
             headers={
                 "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}"
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+                "Content-Type": "application/json"
             },
             method="DELETE"
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             return resp.status in (200, 204)
     except Exception as e:
-        logger.warning(f"Failed deleting {remote_path} from Supabase: {e}")
+        logger.warning(f"Failed deleting {remote_paths} from Supabase: {e}")
         return False
+
+
+def delete_file_from_supabase(remote_path: str) -> bool:
+    """Delete a single object from Supabase Storage bucket."""
+    return delete_files_from_supabase([remote_path])
 
 
 def _resolve_local_image_path(img: PartImage, cs: Optional[Checksheet]) -> Optional[str]:

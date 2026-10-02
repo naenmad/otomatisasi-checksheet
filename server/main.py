@@ -31,6 +31,7 @@ from server.routes.auth import router as auth_router
 from server.routes.users import router as users_router
 from server.routes.catalog import router as catalog_router
 from server.routes.system import router as system_router
+from server.routes.tools import router as tools_router
 
 
 @asynccontextmanager
@@ -79,6 +80,7 @@ app.include_router(upload_router)
 app.include_router(automation_router)
 app.include_router(export_router)
 app.include_router(system_router)
+app.include_router(tools_router)
 
 class NoCacheStaticFiles(StaticFiles):
     """StaticFiles subclass that enforces Cache-Control: no-cache on all served assets."""

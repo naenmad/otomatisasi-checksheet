@@ -574,27 +574,36 @@ async def upload_checksheet_image(
     os.makedirs(save_dir, exist_ok=True)
 
     b64_str = payload.image_base64
-    ext = "png"
     if "," in b64_str:
-        header, b64_str = b64_str.split(",", 1)
-        if "jpeg" in header or "jpg" in header:
-            ext = "jpg"
-        elif "webp" in header:
-            ext = "webp"
+        _, b64_str = b64_str.split(",", 1)
 
-    raw_name = payload.filename or f"sketch_{int(time.time() * 1000)}.{ext}"
-    base_name = os.path.basename(raw_name)
-    safe_name = re.sub(r"[^0-9A-Za-z_.-]", "_", base_name)
-    if not safe_name.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-        safe_name = f"{safe_name}.{ext}"
+    try:
+        data = base64.b64decode(b64_str)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Gagal memproses base64 gambar: {str(e)}")
+
+    # Always convert and store as optimized WebP (hemat storage & bandwidth)
+    raw_name = payload.filename or f"sketch_{int(time.time() * 1000)}"
+    base_name = os.path.splitext(os.path.basename(raw_name))[0]
+    safe_stem = re.sub(r"[^0-9A-Za-z_-]", "_", base_name)
+    safe_name = f"{safe_stem}.webp"
 
     target_path = os.path.join(save_dir, safe_name)
     try:
-        data = base64.b64decode(b64_str)
+        from PIL import Image
+        import io
+        with Image.open(io.BytesIO(data)) as im:
+            if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+                im_c = im.convert("RGBA")
+            else:
+                im_c = im.convert("RGB")
+            w, h = im_c.size
+            if w > 1920 or h > 1920:
+                im_c.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
+            im_c.save(target_path, "WEBP", quality=82, method=6)
+    except Exception as e:
         with open(target_path, "wb") as f:
             f.write(data)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Gagal memproses file gambar: {str(e)}")
 
     # Always store as forward-slash relative path for cross-platform compatibility
     db_path = target_path.replace("\\", "/")

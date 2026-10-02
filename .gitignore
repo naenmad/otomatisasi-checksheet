@@ -36,6 +36,8 @@ storage/uploads/*
 !storage/uploads/.gitkeep
 storage/images/*
 !storage/images/.gitkeep
+storage/backups/*
+!storage/backups/.gitkeep
 
 # Centralized Logs
 logs/*

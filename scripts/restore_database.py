@@ -146,7 +146,7 @@ async def restore_database(backup_file: str = None):
                 status=l.get("status", "SUCCESS"),
                 details=l.get("details", ""),
                 link=l.get("link"),
-                timestamp=parse_date(l.get("timestamp"))
+                created_at=parse_date(l.get("created_at") or l.get("timestamp"))
             )
             session.add(row)
         await session.commit()
