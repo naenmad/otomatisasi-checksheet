@@ -165,8 +165,14 @@ async def run_factoryhub_reconciliation(
 
         # Check if part exists on FactoryHub
         if fh_match:
+            # If part was explicitly Canceled (e.g. incoming material coil/plat), preserve Canceled status!
+            if cs.status in ("Canceled", "CANCELED"):
+                if not cs.factoryhub_url or cs.factoryhub_url != fh_match["edit_url"]:
+                    cs.factoryhub_url = fh_match["edit_url"]
+                    cs.factoryhub_id = fh_match["fh_id"]
+                    updated_urls += 1
             # Case 1: Exists on FactoryHub, but DB status is NOT 'Checksheet Done'
-            if cs.status != "Checksheet Done":
+            elif cs.status != "Checksheet Done":
                 cs.status = "Checksheet Done"
                 cs.factoryhub_url = fh_match["edit_url"]
                 cs.factoryhub_id = fh_match["fh_id"]

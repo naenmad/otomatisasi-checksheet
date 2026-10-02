@@ -3278,11 +3278,12 @@
         const statusFilter = ref('ALL');
         const selectedIds = ref([]);
 
-        // Visual Image Review Mode & Quick Lightbox
-        const showImageThumbnails = ref(localStorage.getItem('showImageThumbnails') === 'true');
+        // Visual Image Review Mode & Quick Lightbox (Default: ALWAYS ON / TRUE)
+        const savedThumbPref = localStorage.getItem('showImageThumbnails_v2');
+        const showImageThumbnails = ref(savedThumbPref !== 'false');
         const toggleImageThumbnails = () => {
           showImageThumbnails.value = !showImageThumbnails.value;
-          localStorage.setItem('showImageThumbnails', showImageThumbnails.value);
+          localStorage.setItem('showImageThumbnails_v2', showImageThumbnails.value ? 'true' : 'false');
         };
         const quickReviewModal = ref({
           isOpen: false,
