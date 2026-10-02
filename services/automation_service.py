@@ -6,6 +6,8 @@ from __future__ import annotations
 import os
 import re
 import asyncio
+import tempfile
+import urllib.request
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import async_playwright
@@ -14,6 +16,9 @@ from database.models import User
 from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity
 from core.automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
 from core.version import get_full_banner
+
+import logging
+logger = logging.getLogger("automation_service")
 
 # Registry of active batch cancellation requests
 ACTIVE_BATCH_CANCELLATIONS: set = set()
@@ -74,15 +79,28 @@ async def execute_checksheet_submission(
         for p in cs.inspection_points
     ]
 
-    # Reference images strictly from Supabase database PartImage records
+    # Reference images from database: prefer Supabase CDN URL, fallback to local disk
     image_paths = []
+    _temp_files: List[str] = []  # track temp files to clean up after automation
     for img in cs.images:
-        p = img.image_path
-        if p:
-            if not os.path.isabs(p):
-                p = os.path.abspath(p)
-            if os.path.isfile(p):
-                image_paths.append(p)
+        p = img.image_path or ""
+        url = (img.image_url or "").strip()
+
+        if url.startswith("https://") or url.startswith("http://"):
+            # Image is on Supabase CDN — download to a temp file
+            try:
+                suffix = os.path.splitext(url.split("?")[0])[-1] or ".webp"
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                urllib.request.urlretrieve(url, tmp.name)
+                image_paths.append(tmp.name)
+                _temp_files.append(tmp.name)
+            except Exception as dl_err:
+                logger.warning(f"[!] Gagal download gambar dari cloud: {url} ({dl_err})")
+        elif p:
+            # Local path fallback
+            local_p = p if os.path.isabs(p) else os.path.abspath(p)
+            if os.path.isfile(local_p):
+                image_paths.append(local_p)
 
     meta_payload = {
         "part_number": cs.part_number,
@@ -173,6 +191,13 @@ async def execute_checksheet_submission(
 
     except Exception as e:
         yield f"[ERROR] Terjadi kesalahan saat otomatisasi: {str(e)}\n"
+    finally:
+        # Clean up temporary files downloaded from Supabase CDN
+        for tf in _temp_files:
+            try:
+                os.unlink(tf)
+            except Exception:
+                pass
 
 
 async def execute_batch_submission(
@@ -273,13 +298,24 @@ async def execute_batch_submission(
                     ]
 
                     image_paths = []
+                    _temp_files_batch: List[str] = []
                     for img in cs.images:
-                        p_img = img.image_path
-                        if p_img:
-                            if not os.path.isabs(p_img):
-                                p_img = os.path.abspath(p_img)
-                            if os.path.isfile(p_img):
-                                image_paths.append(p_img)
+                        p_img = img.image_path or ""
+                        img_url = (img.image_url or "").strip()
+
+                        if img_url.startswith("https://") or img_url.startswith("http://"):
+                            try:
+                                suffix = os.path.splitext(img_url.split("?")[0])[-1] or ".webp"
+                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                                urllib.request.urlretrieve(img_url, tmp.name)
+                                image_paths.append(tmp.name)
+                                _temp_files_batch.append(tmp.name)
+                            except Exception as dl_err:
+                                yield f"[!] Gagal download gambar dari cloud: {img_url} ({dl_err})\n"
+                        elif p_img:
+                            local_p = p_img if os.path.isabs(p_img) else os.path.abspath(p_img)
+                            if os.path.isfile(local_p):
+                                image_paths.append(local_p)
 
                     meta_payload = {
                         "part_number": cs.part_number,
@@ -385,6 +421,12 @@ async def execute_batch_submission(
                     await browser_obj.close()
             except Exception:
                 pass
+            # Clean up all temp image files downloaded from Supabase CDN during this batch
+            for tf in locals().get("_temp_files_batch", []):
+                try:
+                    os.unlink(tf)
+                except Exception:
+                    pass
             clear_batch_cancellation(batch_id)
             yield f"[+] Sesi browser Playwright background telah ditutup bersih.\n"
 

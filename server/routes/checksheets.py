@@ -208,6 +208,9 @@ def _build_checksheet_images(cs: Checksheet) -> list:
         elif "extracted_images/" in path:
             path = "extracted_images/" + path.split("extracted_images/", 1)[1]
 
+        # Re-check is_remote_url after url may have been rewritten by normalization above
+        is_remote_url = url.startswith("http://") or url.startswith("https://")
+
         if not is_remote_url:
             if "storage/images" in path:
                 sub = path.split("storage/images", 1)[1].lstrip("/")
@@ -219,12 +222,14 @@ def _build_checksheet_images(cs: Checksheet) -> list:
                 sub = url.split("storage/images", 1)[1].lstrip("/")
                 url = f"/media/images/{sub}"
 
-        # Verify file exists on disk if local path is provided and not remote
-        if not is_remote_url and path and not os.path.exists(path):
-            continue
+        # Supabase CDN URLs are always valid — no local disk check needed
+        if is_remote_url:
+            pass  # cloud-hosted, always include
+        elif path and not os.path.exists(path):
+            continue  # local path does not exist on this machine
 
-        # Strictly exclude company logos or header banners if local inspection is available
-        if path and os.path.exists(path):
+        # Exclude company logos / header banners (only applicable for local files)
+        if not is_remote_url and path and os.path.exists(path):
             img_info = get_cached_image_info(path)
             if img_info.get("is_logo", False):
                 continue
