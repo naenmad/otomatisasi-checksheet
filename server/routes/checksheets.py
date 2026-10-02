@@ -522,6 +522,10 @@ async def upload_checksheet_image(
         update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": url_sub})
         new_part_img_id = new_part_img.id
     else:
+        existing_img.image_url = url_sub
+        await db.commit()
+        await db.refresh(cs)
+        update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": url_sub})
         new_part_img_id = existing_img.id
 
     new_img_dict = {
@@ -659,12 +663,18 @@ async def delete_all_checksheet_images(
 @router.post("/sync-images")
 async def sync_images_endpoint(db: AsyncSession = Depends(get_db)):
     """
-    Ingests and synchronizes all part sketch images to the Supabase database (part_images table).
-    Ensures zero parsing of documents during submission/dry-run.
+    Ingests and synchronizes all part sketch images to the Supabase database (part_images table)
+    and uploads missing images directly to Supabase Cloud Storage.
     """
     from services.image_ingestion_service import sync_all_part_images_to_db
+    from services.supabase_storage_service import sync_all_images_to_supabase_storage
     try:
         res = await sync_all_part_images_to_db(db)
+        try:
+            cloud_res = await sync_all_images_to_supabase_storage(db)
+            res["cloud_storage"] = cloud_res
+        except Exception as sc_err:
+            res["cloud_storage_warning"] = str(sc_err)
         invalidate_checksheets_cache()
         return res
     except Exception as e:
