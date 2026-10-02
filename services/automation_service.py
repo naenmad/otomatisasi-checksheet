@@ -2,6 +2,7 @@
 Automation service that triggers Playwright form filling using database inspection points
 and streams log output in real-time via async generator (for SSE/WebSocket).
 """
+from __future__ import annotations
 import os
 import re
 import asyncio
@@ -9,6 +10,7 @@ from typing import AsyncGenerator, Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import async_playwright
 
+from database.models import User
 from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity
 from core.automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
 from core.version import get_full_banner
