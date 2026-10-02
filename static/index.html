@@ -2965,6 +2965,30 @@
             </div>
           </div>
 
+          <!-- Floating Prev Part Button (Left Edge) -->
+          <button v-if="prevStudioPart"
+                  type="button"
+                  @click="navigateStudioPart(-1)"
+                  class="absolute left-1.5 top-1/2 -translate-y-1/2 z-40 px-2 py-4 rounded-xl bg-zinc-950/90 hover:bg-indigo-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-indigo-500 shadow-2xl backdrop-blur-md flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group active:scale-95"
+                  :title="'Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + Panah Kiri)'">
+            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Prev</span>
+          </button>
+
+          <!-- Floating Next Part Button (Right Edge) -->
+          <button v-if="nextStudioPart"
+                  type="button"
+                  @click="navigateStudioPart(1)"
+                  class="absolute right-1.5 top-1/2 -translate-y-1/2 z-40 px-2 py-4 rounded-xl bg-zinc-950/90 hover:bg-indigo-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-indigo-500 shadow-2xl backdrop-blur-md flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group active:scale-95"
+                  :title="'Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + Panah Kanan)'">
+            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Next</span>
+          </button>
+
         </div>
       </div>
 
@@ -4788,6 +4812,69 @@
           suggestionState.visible = false;
         };
 
+        // Studio Part Fast Navigation (Prev & Next Part)
+        const currentStudioList = computed(() => {
+          if (!filteredChecksheets.value || filteredChecksheets.value.length === 0) {
+            return checksheets.value || [];
+          }
+          if (activeChecksheet.value) {
+            const inFiltered = filteredChecksheets.value.some(c => c.id === activeChecksheet.value.id);
+            if (!inFiltered) return checksheets.value || [];
+          }
+          return filteredChecksheets.value;
+        });
+
+        const currentStudioIndex = computed(() => {
+          if (!activeChecksheet.value) return -1;
+          const list = currentStudioList.value;
+          return list.findIndex(c => c.id === activeChecksheet.value.id);
+        });
+
+        const totalStudioParts = computed(() => {
+          return currentStudioList.value.length;
+        });
+
+        const prevStudioPart = computed(() => {
+          const idx = currentStudioIndex.value;
+          const list = currentStudioList.value;
+          if (idx > 0 && list.length > 0) {
+            return list[idx - 1];
+          }
+          return null;
+        });
+
+        const nextStudioPart = computed(() => {
+          const idx = currentStudioIndex.value;
+          const list = currentStudioList.value;
+          if (list && idx >= 0 && idx < list.length - 1) {
+            return list[idx + 1];
+          }
+          return null;
+        });
+
+        const navigateStudioPart = async (direction) => {
+          if (!activeChecksheet.value) return;
+          const target = direction === 1 ? nextStudioPart.value : prevStudioPart.value;
+          if (!target) return;
+
+          if (isPointsDirty.value) {
+            const saveFirst = confirm('Ada perubahan titik ukur yang belum disimpan pada part ini. Simpan perubahan sebelum pindah part?');
+            if (saveFirst) {
+              await saveExcelPoints();
+            } else {
+              isPointsDirty.value = false;
+            }
+          }
+
+          const list = currentStudioList.value;
+          const newIdx = currentStudioIndex.value + direction;
+          if (newIdx >= 0 && newIdx < list.length) {
+            focusedCsIndex.value = newIdx;
+          }
+
+          await openExcelStudio(target);
+        };
+
         const uploadImageBase64 = async (base64Data, filename = 'drawing.png') => {
           if (!activeChecksheet.value) return;
           isUploadingImage.value = true;
@@ -6600,6 +6687,37 @@
             if (e.key === '3') { e.preventDefault(); setStudioPanelMode('table-focus'); return; }
           }
 
+          // Studio Part Fast Navigation (Prev & Next Part)
+          if (showExcelStudio.value && activeChecksheet.value) {
+            // Alt + ArrowLeft / ArrowRight or PageUp / PageDown
+            if ((e.altKey && (e.key === 'ArrowLeft' || e.key === 'Left')) || e.key === 'PageUp') {
+              e.preventDefault();
+              navigateStudioPart(-1);
+              return;
+            }
+            if ((e.altKey && (e.key === 'ArrowRight' || e.key === 'Right')) || e.key === 'PageDown') {
+              e.preventDefault();
+              navigateStudioPart(1);
+              return;
+            }
+
+            // Plain ArrowLeft / ArrowRight or [ / ] or p / n when NOT actively typing inside an input/cell
+            const activeElTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            const isTyping = activeElTag === 'input' || activeElTag === 'textarea' || activeElTag === 'select';
+            if (!isTyping) {
+              if (e.key === 'ArrowLeft' || e.key === '[' || e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                navigateStudioPart(-1);
+                return;
+              }
+              if (e.key === 'ArrowRight' || e.key === ']' || e.key === 'n' || e.key === 'N') {
+                e.preventDefault();
+                navigateStudioPart(1);
+                return;
+              }
+            }
+          }
+
           // Ctrl+S / Cmd+S save shortcut
           if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
             if (showExcelStudio.value || isInlineEditing.value) {
@@ -6820,6 +6938,12 @@
           copyMissingParts,
           openChecksheetFromChecker,
           showExcelStudio,
+          currentStudioList,
+          currentStudioIndex,
+          totalStudioParts,
+          prevStudioPart,
+          nextStudioPart,
+          navigateStudioPart,
           studioPanelMode,
           setStudioPanelMode,
           toggleSketchPanel,
