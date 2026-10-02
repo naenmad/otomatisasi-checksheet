@@ -396,6 +396,45 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
     return {"status": "success", "assigned_count": len(payload.checksheet_ids), "assigned_to": payload.assigned_to}
 
 
+class BatchStatusSchema(BaseModel):
+    checksheet_ids: List[int]
+    status: str
+    keterangan: Optional[str] = None
+
+
+@router.post("/batch-status")
+async def batch_update_status(payload: BatchStatusSchema, db: AsyncSession = Depends(get_db)):
+    """Update status (kategori) for multiple checksheets simultaneously."""
+    if not payload.checksheet_ids:
+        return {"status": "success", "updated_count": 0}
+
+    values: Dict[str, Any] = {"status": payload.status}
+    if payload.keterangan is not None:
+        values["keterangan"] = payload.keterangan
+    elif payload.status.lower() == "canceled":
+        values["keterangan"] = "Dibatalkan manual oleh reviewer"
+
+    stmt = (
+        update(Checksheet)
+        .where(Checksheet.id.in_(payload.checksheet_ids))
+        .values(**values)
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+    for cid in payload.checksheet_ids:
+        update_checksheet_in_cache(cid, values)
+
+    from services.google_sheets_service import trigger_background_sheet_sync
+    trigger_background_sheet_sync()
+
+    return {
+        "status": "success",
+        "updated_count": len(payload.checksheet_ids),
+        "new_status": payload.status
+    }
+
+
 class ImageUploadSchema(BaseModel):
     image_base64: str
     filename: Optional[str] = None

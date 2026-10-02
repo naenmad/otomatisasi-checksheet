@@ -261,8 +261,31 @@ async def get_checksheets_summary_list(
     query = query.order_by(Checksheet.id.asc()).offset(offset).limit(limit)
     res = await session.execute(query)
     rows = res.all()
-    return [
-        {
+
+    # Pre-fetch all images for these checksheets so multiple drawings can be previewed/scrolled directly in the row
+    cs_ids = [r.id for r in rows]
+    cs_images_map: Dict[int, List[str]] = {}
+    if cs_ids:
+        imgs_res = await session.execute(
+            select(PartImage.checksheet_id, PartImage.image_url, PartImage.image_path)
+            .where(PartImage.checksheet_id.in_(cs_ids))
+            .order_by(PartImage.id.asc())
+        )
+        for p_cs_id, p_url, p_path in imgs_res.all():
+            norm_url = _normalize_thumbnail_url(p_url, p_path)
+            if norm_url:
+                cs_images_map.setdefault(p_cs_id, []).append(norm_url)
+
+    items = []
+    for r in rows:
+        thumb = _normalize_thumbnail_url(r.first_image_url, r.first_image_path)
+        all_imgs = cs_images_map.get(r.id)
+        if not all_imgs and thumb:
+            all_imgs = [thumb]
+        elif not all_imgs:
+            all_imgs = []
+
+        items.append({
             "id": r.id,
             "part_number": r.part_number,
             "part_name": r.part_name,
@@ -273,13 +296,13 @@ async def get_checksheets_summary_list(
             "assigned_to": r.assigned_to,
             "keterangan": r.keterangan,
             "points_count": r.points_count,
-            "images_count": r.images_count,
-            "thumbnail_url": _normalize_thumbnail_url(r.first_image_url, r.first_image_path),
+            "images_count": max(r.images_count or 0, len(all_imgs)),
+            "thumbnail_url": thumb or (all_imgs[0] if all_imgs else None),
+            "image_urls": all_imgs,
             "factoryhub_url": r.factoryhub_url,
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
-        }
-        for r in rows
-    ]
+        })
+    return items
 
 
 async def get_checksheet_base_by_id(session: AsyncSession, checksheet_id: int) -> Optional[Checksheet]:

@@ -691,7 +691,7 @@
         </main>
 
         <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
-        <main v-show="activePage === 'checksheets'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-5">
+        <main v-show="activePage === 'checksheets'" class="flex-1 w-full max-w-[99vw] 2xl:max-w-[1920px] mx-auto px-3 sm:px-5 lg:px-6 py-4 flex flex-col gap-4">
           <!-- Interactive Metric Filters -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             <button @click="statusFilter = 'ALL'"
@@ -965,7 +965,7 @@
                     <th class="py-3 px-3 w-32">Penanggung Jawab</th>
                     <th v-if="showImageThumbnails" 
                         class="py-3 px-3 text-center transition-all select-none"
-                        :class="thumbnailSize === 'xl' ? 'w-80 min-w-[300px]' : (thumbnailSize === 'normal' ? 'w-48 min-w-[180px]' : 'w-64 min-w-[240px]')">
+                        :class="thumbnailSize === 'xl' ? 'w-96 min-w-[360px]' : (thumbnailSize === 'normal' ? 'w-56 min-w-[220px]' : 'w-72 min-w-[280px]')">
                       Drawing
                     </th>
                     <th class="py-3 px-4">Part Number</th>
@@ -1047,8 +1047,38 @@
                     </td>
                     <!-- Quick Review Thumbnail Column -->
                     <td v-if="showImageThumbnails" class="py-2.5 px-3 text-center align-middle" @click.stop>
-                      <div v-if="cs.thumbnail_url" 
-                           @click.stop="openQuickImageReview(cs)"
+                      <!-- Multiple Drawings (Horizontal Scroll Strip) -->
+                      <div v-if="cs.image_urls && cs.image_urls.length > 1"
+                           @wheel.prevent="handleDrawingScroll($event)"
+                           class="flex items-center gap-2 overflow-x-auto p-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 scrollbar-thin scrollbar-thumb-zinc-700/80 scrollbar-track-transparent snap-x select-none mx-auto"
+                           :class="thumbnailSize === 'xl' ? 'max-w-[420px]' : (thumbnailSize === 'normal' ? 'max-w-[280px]' : 'max-w-[340px]')"
+                           style="scrollbar-width: thin;"
+                           title="Scroll mouse / geser ke kiri & kanan untuk melihat semua drawing part ini">
+                        <div v-for="(imgUrl, imgIdx) in cs.image_urls" :key="imgIdx"
+                             @click.stop="openQuickImageReview(cs, imgIdx)"
+                             class="relative shrink-0 snap-start inline-flex items-center justify-center bg-zinc-950 border border-zinc-700/80 rounded-lg p-1 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-500/40 transition-all cursor-zoom-in group/subthumb shadow-sm overflow-hidden"
+                             :class="thumbnailSize === 'xl' ? 'w-56 h-52' : (thumbnailSize === 'normal' ? 'w-36 h-26' : 'w-48 h-36')">
+                          <img :src="imgUrl" 
+                               alt="Drawing"
+                               loading="lazy"
+                               class="w-full h-full object-contain filter group-hover/subthumb:brightness-110 transition-transform duration-150 group-hover/subthumb:scale-105" />
+                          <span class="absolute top-1 left-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-black/80 text-zinc-200 border border-white/10 shadow">
+                            {{ imgIdx + 1 }}/{{ cs.image_urls.length }}
+                          </span>
+                          <div class="absolute inset-0 bg-indigo-950/20 opacity-0 group-hover/subthumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                            <span class="px-2 py-0.5 rounded bg-black/80 text-[10px] text-white flex items-center gap-1 shadow">
+                              <svg class="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                              Zoom
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Single Drawing -->
+                      <div v-else-if="cs.thumbnail_url" 
+                           @click.stop="openQuickImageReview(cs, 0)"
                            class="relative inline-flex items-center justify-center bg-zinc-950/90 border border-zinc-700/80 rounded-xl p-1.5 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-500/40 transition-all cursor-zoom-in group/thumb shadow-md overflow-hidden mx-auto"
                            :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"
                            :title="'Klik untuk Quick Review drawing: ' + cs.part_number">
@@ -1056,10 +1086,6 @@
                              alt="Drawing"
                              loading="lazy"
                              class="w-full h-full object-contain filter group-hover/thumb:brightness-110 transition-transform duration-200 group-hover/thumb:scale-105" />
-                        <span v-if="cs.images_count > 1" 
-                              class="absolute bottom-1.5 right-1.5 px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-600/95 text-white shadow-md ring-1 ring-black/40">
-                          {{ cs.images_count }} gambar
-                        </span>
                         <div class="absolute inset-0 bg-indigo-950/25 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                           <span class="px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-sm text-zinc-100 text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-zinc-700/50">
                             <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1069,6 +1095,8 @@
                           </span>
                         </div>
                       </div>
+
+                      <!-- No Drawing -->
                       <div v-else 
                            class="inline-flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800/80 bg-zinc-950/40 text-zinc-600 select-none mx-auto transition-all"
                            :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"
@@ -3082,6 +3110,98 @@
             <span>{{ selectedNonReviewedCount }} part belum 'Reviewed'</span>
           </div>
 
+          <!-- Batch Ubah Status / Kategori Popover Button -->
+          <div class="relative shrink-0 flex items-center">
+            <!-- Backdrop to close status popover -->
+            <div v-if="showStatusDropdown" @click="showStatusDropdown = false" class="fixed inset-0 z-40"></div>
+
+            <button @click="showStatusDropdown = !showStatusDropdown"
+                    class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700/90 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer relative z-50 shadow-sm"
+                    title="Ubah status/kategori untuk semua part terpilih">
+              <svg class="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <span>Ubah Status</span>
+              <svg class="w-3 h-3 text-zinc-400 ml-0.5 transition-transform" :class="showStatusDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <!-- Upward Floating Popover Menu -->
+            <transition enter-active-class="transition ease-out duration-150"
+                        enter-from-class="transform opacity-0 scale-95 translate-y-2"
+                        enter-to-class="transform opacity-100 scale-100 translate-y-0"
+                        leave-active-class="transition ease-in duration-100"
+                        leave-from-class="transform opacity-100 scale-100 translate-y-0"
+                        leave-to-class="transform opacity-0 scale-95 translate-y-2">
+              <div v-if="showStatusDropdown"
+                   class="absolute bottom-full mb-3 left-0 sm:left-auto sm:right-0 w-64 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl p-2 z-50 backdrop-blur-xl ring-1 ring-white/10">
+                <div class="px-2.5 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>Ganti Status ({{ selectedIds.length }} Part):</span>
+                </div>
+                <div class="space-y-1 mt-1">
+                  <!-- Canceled -->
+                  <button @click="batchChangeStatus('Canceled')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-zinc-800 text-zinc-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 group-hover:ring-2 group-hover:ring-zinc-400/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-zinc-200">Canceled</span>
+                      <span class="text-[10px] text-zinc-500 font-normal">Batalkan checksheet part ini</span>
+                    </div>
+                  </button>
+
+                  <!-- Checksheet Done -->
+                  <button @click="batchChangeStatus('Checksheet Done')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-emerald-950/40 text-emerald-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:ring-2 group-hover:ring-emerald-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-emerald-300">Checksheet Done</span>
+                      <span class="text-[10px] text-emerald-500/80 font-normal">Tandai selesai di FactoryHub</span>
+                    </div>
+                  </button>
+
+                  <!-- Reviewed -->
+                  <button @click="batchChangeStatus('Reviewed')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-sky-950/40 text-sky-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 group-hover:ring-2 group-hover:ring-sky-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-sky-300">Reviewed</span>
+                      <span class="text-[10px] text-sky-500/80 font-normal">Ditinjau & siap submit batch</span>
+                    </div>
+                  </button>
+
+                  <!-- Belum di review -->
+                  <button @click="batchChangeStatus('Belum di review')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-amber-950/40 text-amber-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 group-hover:ring-2 group-hover:ring-amber-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-amber-300">Belum di review</span>
+                      <span class="text-[10px] text-amber-500/80 font-normal">Kembalikan ke antrean review</span>
+                    </div>
+                  </button>
+
+                  <!-- Butuh Revisi -->
+                  <button @click="batchChangeStatus('Butuh Revisi')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-purple-950/40 text-purple-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 group-hover:ring-2 group-hover:ring-purple-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-purple-300">Butuh Revisi</span>
+                      <span class="text-[10px] text-purple-400/80 font-normal">Perlu perbaikan drawing/titik</span>
+                    </div>
+                  </button>
+
+                  <!-- Tidak Ada Part -->
+                  <button @click="batchChangeStatus('Tidak Ada Part')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-rose-950/40 text-rose-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 group-hover:ring-2 group-hover:ring-rose-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-rose-300">Tidak Ada Part</span>
+                      <span class="text-[10px] text-rose-500/80 font-normal">Tidak ditemukan di master web</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
+
           <!-- Tugaskan Action (Clean Popover for Admin, Ambil Task for Operator) -->
           <div v-if="currentUser && currentUser.role === 'admin'" class="relative shrink-0 ml-auto flex items-center">
             <!-- Backdrop to close popover -->
@@ -3346,14 +3466,21 @@
           return current.image_url || current.image_path || null;
         });
 
-        const openQuickImageReview = async (cs) => {
+        const openQuickImageReview = async (cs, initialIdx = 0) => {
           if (!cs) return;
-          const initialImgs = cs.thumbnail_url ? [{ id: 'thumb', image_url: cs.thumbnail_url, filename: 'Drawing' }] : [];
+          let initialImgs = [];
+          if (cs.image_urls && cs.image_urls.length > 0) {
+            initialImgs = cs.image_urls.map((url, i) => ({ id: `img_${i}`, image_url: url, filename: `Drawing ${i+1}` }));
+          } else if (cs.thumbnail_url) {
+            initialImgs = [{ id: 'thumb', image_url: cs.thumbnail_url, filename: 'Drawing' }];
+          }
+
+          const startIdx = (typeof initialIdx === 'number' && initialIdx >= 0 && initialIdx < initialImgs.length) ? initialIdx : 0;
           quickReviewModal.value = {
             isOpen: true,
             checksheet: cs,
             images: initialImgs,
-            activeIdx: 0,
+            activeIdx: startIdx,
             isLoadingImages: true,
             zoom: 1.0,
           };
@@ -3363,12 +3490,25 @@
               const data = await res.json();
               if (data.images && data.images.length > 0) {
                 quickReviewModal.value.images = data.images;
+                if (startIdx < data.images.length) {
+                  quickReviewModal.value.activeIdx = startIdx;
+                }
               }
             }
           } catch (e) {
             console.error('Failed to load full drawing images:', e);
           } finally {
             quickReviewModal.value.isLoadingImages = false;
+          }
+        };
+
+        const handleDrawingScroll = (event) => {
+          const container = event.currentTarget;
+          if (!container) return;
+          if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+            container.scrollLeft += event.deltaY;
+          } else {
+            container.scrollLeft += event.deltaX;
           }
         };
 
@@ -3864,6 +4004,7 @@
         const activeBatchEventSource = ref(null);
         const currentBatchId = ref('batch_initial');
         const showAssignDropdown = ref(false);
+        const showStatusDropdown = ref(false);
 
         // System Update & Git State
         const savedAutoUpdate = localStorage.getItem('summit_auto_update_enabled');
@@ -5678,20 +5819,38 @@
           }
         };
 
-        const batchAssign = async (target) => {
+        const batchChangeStatus = async (newStatus) => {
+          showStatusDropdown.value = false;
           if (!selectedIds.value.length) return;
+          const count = selectedIds.value.length;
           try {
-            await Promise.all(selectedIds.value.map(id =>
-              fetch(`/api/checksheets/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assigned_to: target })
+            const res = await fetch('/api/checksheets/batch-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                checksheet_ids: selectedIds.value,
+                status: newStatus
               })
-            ));
-            selectedIds.value = [];
-            await loadChecksheets();
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              const idSet = new Set(selectedIds.value);
+              checksheets.value.forEach(cs => {
+                if (idSet.has(cs.id)) {
+                  cs.status = newStatus;
+                  if (newStatus === 'Canceled') {
+                    cs.keterangan = 'Dibatalkan manual oleh reviewer';
+                  }
+                }
+              });
+              selectedIds.value = [];
+              showToast(`${count} part berhasil diubah ke status '${newStatus}'`, 'success');
+            } else {
+              showToast(data.detail || 'Gagal mengubah status part.', 'error');
+            }
           } catch (e) {
-            alert('Gagal mengubah penugasan.');
+            console.error('Error batch status update:', e);
+            showToast('Gagal menghubungi server.', 'error');
           }
         };
 
@@ -6681,7 +6840,10 @@
           closeQuickImageReview,
           nextQuickImage,
           prevQuickImage,
-          handleQuickReviewWheel
+          handleQuickReviewWheel,
+          handleDrawingScroll,
+          showStatusDropdown,
+          batchChangeStatus
         };
       }
     }).mount('#app');
