@@ -2281,37 +2281,6 @@
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <!-- Part Fast Prev / Next Navigator Button Group -->
-                  <div class="inline-flex items-center rounded-lg border border-zinc-700/80 bg-zinc-950 p-0.5 shadow-sm"
-                       title="Navigasi cepat antar part checksheet (Pintasan: Alt + Panah Kiri / Kanan atau tombol [ dan ])">
-                    <button type="button"
-                            @click="navigateStudioPart(-1)"
-                            :disabled="!prevStudioPart"
-                            :title="prevStudioPart ? ('Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + ←)') : 'Sudah di part pertama'"
-                            class="px-2 py-1 rounded text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                      </svg>
-                      <span class="hidden sm:inline text-[11px]">Prev Part</span>
-                    </button>
-
-                    <span class="px-2.5 py-0.5 text-[11px] font-mono font-bold text-indigo-300 bg-zinc-900 border-x border-zinc-800 select-none whitespace-nowrap"
-                          :title="'Part ke-' + (currentStudioIndex + 1) + ' dari total ' + totalStudioParts + ' part'">
-                      {{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }} / {{ totalStudioParts }}
-                    </span>
-
-                    <button type="button"
-                            @click="navigateStudioPart(1)"
-                            :disabled="!nextStudioPart"
-                            :title="nextStudioPart ? ('Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + →)') : 'Sudah di part terakhir'"
-                            class="px-2 py-1 rounded text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
-                      <span class="hidden sm:inline text-[11px]">Next Part</span>
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-
                   <button type="button"
                           @click="copyToClipboard(activeChecksheet.part_number, 'Part number')"
                           title="Klik untuk otomatis salin part number"
@@ -2659,8 +2628,37 @@
                             class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 resize-none focus:border-zinc-600 focus:outline-none"></textarea>
                 </div>
                 <div class="text-[11px] text-zinc-500 flex items-center justify-between">
-                  <span>Asal: {{ activeChecksheet.raw_file_path ? activeChecksheet.raw_file_path.split('/').pop() : 'Database' }}</span>
-                  <span class="font-mono">ID: #{{ activeChecksheet.id }}</span>
+                  <span>Asal: {{ activeChecksheet.raw_file_path ? activeChecksheet.raw_file_path.split('/').pop() : 'Database' }} · <span class="font-mono">ID: #{{ activeChecksheet.id }}</span></span>
+                </div>
+
+                <!-- Pojok Kiri Bawah: Prev Part Button -->
+                <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                  <button type="button"
+                          @click="navigateStudioPart(-1)"
+                          :disabled="!prevStudioPart"
+                          :title="prevStudioPart ? ('Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + ←)') : 'Sudah di part pertama'"
+                          class="px-3.5 py-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-950 text-zinc-200 hover:text-white border border-zinc-700/80 hover:border-indigo-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed group shadow-sm active:scale-95">
+                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>‹ Prev Part</span>
+                    <span class="text-[10px] text-zinc-400 font-mono">({{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }}/{{ totalStudioParts }})</span>
+                  </button>
+
+                  <div class="flex items-center gap-2">
+                    <span v-if="prevStudioPart" class="text-[10px] text-zinc-400 truncate max-w-[130px] font-mono hidden sm:inline" :title="prevStudioPart.part_number">
+                      {{ prevStudioPart.part_number }}
+                    </span>
+                    <!-- Jika sedang mode Fokus Gambar, sediakan juga tombol Next di sini -->
+                    <button v-if="studioPanelMode === 'image-focus'"
+                            type="button"
+                            @click="navigateStudioPart(1)"
+                            :disabled="!nextStudioPart"
+                            title="Part Selanjutnya (Alt + →)"
+                            class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-zinc-800 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
+                      <span>Next ›</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2959,35 +2957,34 @@
                           class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 text-indigo-300 border border-indigo-500/40 rounded text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer">
                     {{ isSavingPoints ? 'Menyimpan...' : 'Simpan' }}
                   </button>
+
+                  <!-- Pojok Kanan Bawah: Next Part Button (and Prev if in table-focus mode) -->
+                  <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800">
+                    <button v-if="studioPanelMode === 'table-focus'"
+                            type="button"
+                            @click="navigateStudioPart(-1)"
+                            :disabled="!prevStudioPart"
+                            title="Part Sebelumnya (Alt + ←)"
+                            class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-900 text-zinc-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
+                      <span>‹ Prev</span>
+                    </button>
+
+                    <button type="button"
+                            @click="navigateStudioPart(1)"
+                            :disabled="!nextStudioPart"
+                            :title="nextStudioPart ? ('Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + →)') : 'Sudah di part terakhir'"
+                            class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-zinc-800 disabled:bg-zinc-800 text-white disabled:text-zinc-500 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:cursor-not-allowed group active:scale-95 border border-indigo-500/50">
+                      <span>Next Part ›</span>
+                      <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
             </div>
           </div>
-
-          <!-- Floating Prev Part Button (Left Edge) -->
-          <button v-if="prevStudioPart"
-                  type="button"
-                  @click="navigateStudioPart(-1)"
-                  class="absolute left-1.5 top-1/2 -translate-y-1/2 z-40 px-2 py-4 rounded-xl bg-zinc-950/90 hover:bg-indigo-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-indigo-500 shadow-2xl backdrop-blur-md flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group active:scale-95"
-                  :title="'Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + Panah Kiri)'">
-            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span class="text-[9px] font-bold uppercase tracking-wider">Prev</span>
-          </button>
-
-          <!-- Floating Next Part Button (Right Edge) -->
-          <button v-if="nextStudioPart"
-                  type="button"
-                  @click="navigateStudioPart(1)"
-                  class="absolute right-1.5 top-1/2 -translate-y-1/2 z-40 px-2 py-4 rounded-xl bg-zinc-950/90 hover:bg-indigo-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-indigo-500 shadow-2xl backdrop-blur-md flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group active:scale-95"
-                  :title="'Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + Panah Kanan)'">
-            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-            <span class="text-[9px] font-bold uppercase tracking-wider">Next</span>
-          </button>
 
         </div>
       </div>
