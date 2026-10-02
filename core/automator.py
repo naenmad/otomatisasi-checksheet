@@ -491,6 +491,7 @@ async def fill_checksheet_form(
     part_no = meta["part_number"]
     existing_template = await find_existing_template(page, part_no)
     diff_data = None
+    edit_url = None
 
     if existing_template:
         mode_used = "EDIT"
@@ -567,8 +568,21 @@ async def fill_checksheet_form(
             if desc_inp:
                 await desc_inp.fill(meta["part_name"])
 
-        # 3. Upload Reference Images if available
+        # 3. Handle Reference Images in EDIT mode
+        # Menghapus gambar lama di FactoryHub dan mengunggah sketsa baru (overwrite total)
         if images:
+            removed_count = await page.evaluate("""() => {
+                const checkboxes = document.querySelectorAll('input[name="remove_images[]"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('input', { bubbles: true }));
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                return checkboxes.length;
+            }""")
+            if removed_count > 0:
+                print(f"[*] Menandai {removed_count} gambar lama di FactoryHub untuk dihapus (menimpa gambar lama)...")
+
             print(f"[*] Uploading {len(images)} reference image(s)...")
             img_input = await page.query_selector('input[name="images[]"]')
             if img_input:
@@ -896,34 +910,36 @@ async def fill_checksheet_form(
             await submit_button.click()
             await page.wait_for_load_state("networkidle")
             
-            # Verify if redirected or still on create
-            if "/create" in page.url:
-                print(f"[!] Warning: Page still on {page.url}. Checking for validation errors...")
-                errors = await page.evaluate("""() => {
-                    const errs = [];
-                    document.querySelectorAll('.invalid-feedback, .alert-danger, :invalid').forEach(el => {
-                        errs.push(el.innerText || el.validationMessage || el.name || 'validation_error');
-                    });
-                    return errs;
-                }""")
-                if errors:
-                    print(f"[X] Validation errors prevented submission: {errors}")
-                    await page.screenshot(path="checksheet_submitted_error.png", full_page=True)
-                    raise RuntimeError(f"Submission failed due to validation errors: {errors}")
-                else:
-                    # Wait up to 10s for possible navigation
-                    try:
-                        await page.wait_for_url(lambda u: "/create" not in u, timeout=8000)
-                    except Exception:
-                        pass
-            
-            print(f"[+] Final submission URL: {page.url}")
+            # Verify if validation errors occurred on /create or /edit
+            errors = await page.evaluate("""() => {
+                const errs = [];
+                document.querySelectorAll('.invalid-feedback, .alert-danger, :invalid').forEach(el => {
+                    const txt = (el.innerText || el.validationMessage || el.name || '').trim();
+                    if (txt && !errs.includes(txt)) {
+                        errs.push(txt);
+                    }
+                });
+                return errs;
+            }""")
+            if errors:
+                print(f"[X] Validation errors prevented submission: {errors}")
+                await page.screenshot(path="checksheet_submitted_error.png", full_page=True)
+                raise RuntimeError(f"Submission failed due to validation errors: {errors}")
+
+            if mode_used == "CREATE" and "/create" in page.url:
+                try:
+                    await page.wait_for_url(lambda u: "/create" not in u, timeout=8000)
+                except Exception:
+                    pass
+
+            resolved_final_url = edit_url if (mode_used == "EDIT" and edit_url) else page.url
+            print(f"[+] Final submission URL: {resolved_final_url} (Page: {page.url})")
             await page.screenshot(path="checksheet_submitted.png", full_page=True)
             return {
-                "status": "submitted" if "/create" not in page.url else "failed",
+                "status": "submitted",
                 "mode": mode_used,
                 "button_text": button_text,
-                "final_url": page.url,
+                "final_url": resolved_final_url,
                 "inspection_points_count": len(items),
                 "diff": diff_data,
                 "part_number": part_no,
