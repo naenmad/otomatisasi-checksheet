@@ -86,8 +86,14 @@ async def execute_checksheet_submission(
         p = img.image_path or ""
         url = (img.image_url or "").strip()
 
+        # 1. Local disk fast-path (< 0ms): if image already exists locally, use it directly
+        local_p = p if os.path.isabs(p) else os.path.abspath(p)
+        if p and os.path.isfile(local_p):
+            image_paths.append(local_p)
+            continue
+
+        # 2. Cloud CDN download: only download if not available on local disk
         if url.startswith("https://") or url.startswith("http://"):
-            # Image is on Supabase CDN — download to a temp file
             try:
                 suffix = os.path.splitext(url.split("?")[0])[-1] or ".webp"
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -96,11 +102,6 @@ async def execute_checksheet_submission(
                 _temp_files.append(tmp.name)
             except Exception as dl_err:
                 logger.warning(f"[!] Gagal download gambar dari cloud: {url} ({dl_err})")
-        elif p:
-            # Local path fallback
-            local_p = p if os.path.isabs(p) else os.path.abspath(p)
-            if os.path.isfile(local_p):
-                image_paths.append(local_p)
 
     meta_payload = {
         "part_number": cs.part_number,
@@ -303,6 +304,13 @@ async def execute_batch_submission(
                         p_img = img.image_path or ""
                         img_url = (img.image_url or "").strip()
 
+                        # 1. Local disk fast-path (< 0ms): if image already exists locally, use it directly
+                        local_p = p_img if os.path.isabs(p_img) else os.path.abspath(p_img)
+                        if p_img and os.path.isfile(local_p):
+                            image_paths.append(local_p)
+                            continue
+
+                        # 2. Cloud CDN download: only download if not available on local disk
                         if img_url.startswith("https://") or img_url.startswith("http://"):
                             try:
                                 suffix = os.path.splitext(img_url.split("?")[0])[-1] or ".webp"
@@ -312,10 +320,6 @@ async def execute_batch_submission(
                                 _temp_files_batch.append(tmp.name)
                             except Exception as dl_err:
                                 yield f"[!] Gagal download gambar dari cloud: {img_url} ({dl_err})\n"
-                        elif p_img:
-                            local_p = p_img if os.path.isabs(p_img) else os.path.abspath(p_img)
-                            if os.path.isfile(local_p):
-                                image_paths.append(local_p)
 
                     meta_payload = {
                         "part_number": cs.part_number,

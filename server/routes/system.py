@@ -9,8 +9,16 @@ from fastapi import APIRouter, HTTPException
 router = APIRouter(prefix="/api/system", tags=["System"])
 
 
-def run_git_cmd(args: list) -> str:
-    """Run git command in project root."""
+import time
+_last_update_check: dict = {
+    "data": None,
+    "timestamp": 0.0
+}
+UPDATE_CHECK_TTL = 300.0  # Cache git update status for 5 minutes
+
+
+def run_git_cmd(args: list, timeout: int = 5) -> str:
+    """Run git command in project root with sensible timeout."""
     cwd = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     result = subprocess.run(
         ["git"] + args,
@@ -18,7 +26,7 @@ def run_git_cmd(args: list) -> str:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        timeout=15
+        timeout=timeout
     )
     if result.returncode != 0:
         err = result.stderr.strip() or result.stdout.strip()
@@ -41,18 +49,21 @@ def get_system_version():
 
 
 @router.get("/update-status")
-def get_update_status():
-    """Check if remote origin/main has newer commits."""
+def get_update_status(force: bool = False):
+    """Check if remote origin/main has newer commits (cached 5 min to avoid lag)."""
+    now = time.time()
+    if not force and _last_update_check["data"] is not None and (now - _last_update_check["timestamp"] < UPDATE_CHECK_TTL):
+        return _last_update_check["data"]
+
     try:
         current_commit = run_git_cmd(["rev-parse", "--short", "HEAD"])
         current_branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
         
-        # Fetch remote silently
+        # Fetch remote silently with fast 4s timeout
         try:
-            run_git_cmd(["fetch", "origin", "main"])
+            run_git_cmd(["fetch", "origin", "main"], timeout=4)
         except Exception as e:
-            # Network offline or git credential issue
-            return {
+            res = {
                 "has_update": False,
                 "current_commit": current_commit,
                 "current_branch": current_branch,
@@ -62,6 +73,9 @@ def get_update_status():
                 "error": f"Tidak dapat terhubung ke remote: {str(e)}",
                 "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
+            _last_update_check["data"] = res
+            _last_update_check["timestamp"] = now
+            return res
 
         remote_commit = run_git_cmd(["rev-parse", "--short", "origin/main"])
         count_str = run_git_cmd(["rev-list", "--count", "HEAD..origin/main"])
@@ -73,7 +87,7 @@ def get_update_status():
             commits_behind = [line.strip() for line in log_output.split("\n") if line.strip()]
 
         from core.version import VERSION, get_full_banner
-        return {
+        res = {
             "version": VERSION,
             "banner": get_full_banner(),
             "has_update": behind_count > 0,
@@ -84,6 +98,9 @@ def get_update_status():
             "commits_behind": commits_behind,
             "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
+        _last_update_check["data"] = res
+        _last_update_check["timestamp"] = now
+        return res
     except Exception as e:
         return {
             "has_update": False,

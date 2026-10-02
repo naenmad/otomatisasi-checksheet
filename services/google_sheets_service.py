@@ -316,10 +316,13 @@ _debounce_task: Optional[asyncio.Task] = None
 
 
 async def _debounced_sync():
-    """Wait for quiet period before actually syncing."""
+    """Wait for quiet period before actually syncing (only if enabled)."""
+    if os.getenv("ENABLE_AUTO_SHEET_SYNC", "false").lower() not in ("true", "1"):
+        return
     try:
         await asyncio.sleep(5.0)
-        await sync_all_checksheets_to_sheet()
+        if os.getenv("ENABLE_AUTO_SHEET_SYNC", "false").lower() in ("true", "1"):
+            await sync_all_checksheets_to_sheet()
     except asyncio.CancelledError:
         pass
     except Exception as e:
@@ -327,7 +330,13 @@ async def _debounced_sync():
 
 
 def trigger_background_sheet_sync():
-    """Trigger debounced background sync task so rapid edits don't spawn multiple browsers."""
+    """Trigger debounced background sync task so rapid edits don't spawn multiple browsers.
+    Default is disabled to prevent background Playwright Chromium freezes on operator laptops.
+    Can be enabled via ENABLE_AUTO_SHEET_SYNC=true in .env.
+    """
+    if os.getenv("ENABLE_AUTO_SHEET_SYNC", "false").lower() not in ("true", "1"):
+        return
+
     global _debounce_task
     try:
         loop = asyncio.get_event_loop()

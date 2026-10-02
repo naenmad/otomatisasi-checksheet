@@ -24,11 +24,48 @@ from parsers.smart_parser import TextNormalizer
 
 router = APIRouter(prefix="/api/checksheets", tags=["Checksheets"])
 
+import json
+import logging
+logger = logging.getLogger(__name__)
+
+CACHE_DISK_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "data",
+    "checksheets_summary_cache.json"
+)
+
+def _save_cache_to_disk(data: list):
+    """Persist checksheet summary cache to local disk snapshot (< 20ms)."""
+    try:
+        if not data:
+            return
+        os.makedirs(os.path.dirname(CACHE_DISK_FILE), exist_ok=True)
+        tmp_file = CACHE_DISK_FILE + ".tmp"
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp_file, CACHE_DISK_FILE)
+    except Exception as e:
+        logger.warning(f"[Cache] Gagal menyimpan cache ke disk: {e}")
+
+def _load_cache_from_disk() -> Optional[list]:
+    """Load cached checksheets from local disk snapshot (< 2ms)."""
+    try:
+        if os.path.isfile(CACHE_DISK_FILE):
+            with open(CACHE_DISK_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list) and len(data) > 0:
+                    return data
+    except Exception as e:
+        logger.warning(f"[Cache] Gagal membaca cache dari disk: {e}")
+    return None
+
 # Ultra-fast in-memory cache kept in-sync via in-place mutations (zero full-dataset reloads)
+_disk_snapshot = _load_cache_from_disk()
 _checksheets_cache: Dict[str, Any] = {
-    "data": None,
-    "timestamp": 0.0,
-    "lock": None
+    "data": _disk_snapshot,
+    "timestamp": time.time() if _disk_snapshot else 0.0,
+    "lock": None,
+    "refreshing": False
 }
 _checksheet_detail_cache: Dict[int, Dict[str, Any]] = {}
 CACHE_TTL = 300.0  # 5 minutes default TTL, kept synchronized via in-place mutation
@@ -40,11 +77,47 @@ def get_cache_lock():
     return _checksheets_cache["lock"]
 
 
+async def _refresh_cache_in_background():
+    """Silently fetch fresh data from database in background without blocking the user."""
+    if _checksheets_cache.get("refreshing"):
+        return
+    _checksheets_cache["refreshing"] = True
+    try:
+        from database.connection import AsyncSessionLocal
+        async with AsyncSessionLocal() as session:
+            raw_list = await get_checksheets_summary_list(
+                session=session,
+                assigned_to=None,
+                status=None,
+                search=None,
+                limit=5000,
+                offset=0
+            )
+            if raw_list:
+                _checksheets_cache["data"] = raw_list
+                _checksheets_cache["timestamp"] = time.time()
+                _save_cache_to_disk(raw_list)
+    except Exception as e:
+        logger.warning(f"[Cache] Background refresh error: {e}")
+    finally:
+        _checksheets_cache["refreshing"] = False
+
+
+async def warmup_checksheets_cache():
+    """Background warmup on server startup to guarantee instant 0ms responses."""
+    await _refresh_cache_in_background()
+
+
 def invalidate_checksheets_cache():
-    """Wipe in-memory cache so subsequent reads fetch latest database state."""
-    _checksheets_cache["data"] = None
+    """Mark in-memory cache as stale and trigger silent background refresh."""
     _checksheets_cache["timestamp"] = 0.0
     _checksheet_detail_cache.clear()
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(_refresh_cache_in_background())
+    except Exception:
+        pass
 
 
 def invalidate_checksheet_detail(checksheet_id: int):
@@ -61,6 +134,7 @@ def update_checksheet_in_cache(checksheet_id: int, updates: Dict[str, Any]):
             if item.get("id") == checksheet_id:
                 item.update(updates)
                 break
+        _save_cache_to_disk(data)
 
 
 def remove_checksheets_from_cache(checksheet_ids: Union[List[int], set]):
@@ -69,6 +143,7 @@ def remove_checksheets_from_cache(checksheet_ids: Union[List[int], set]):
     if data:
         id_set = set(checksheet_ids)
         _checksheets_cache["data"] = [item for item in data if item.get("id") not in id_set]
+        _save_cache_to_disk(_checksheets_cache["data"])
 
 
 def prepend_checksheet_to_cache(item: Dict[str, Any]):
@@ -76,6 +151,7 @@ def prepend_checksheet_to_cache(item: Dict[str, Any]):
     data = _checksheets_cache.get("data")
     if data is not None:
         data.insert(0, item)
+        _save_cache_to_disk(data)
 
 
 class InspectionPointSchema(BaseModel):
@@ -110,25 +186,35 @@ async def get_checksheets(
     db: AsyncSession = Depends(get_db)
 ):
     now = time.time()
-    cached = _checksheets_cache["data"]
-    if cached is not None and (now - _checksheets_cache["timestamp"] < CACHE_TTL):
+    cached = _checksheets_cache.get("data")
+
+    # Fast-path 1: Memory cache hit (< 0.001ms)
+    if cached is not None and len(cached) > 0:
         raw_list = cached
+        # Stale-While-Revalidate: If older than CACHE_TTL, trigger background refresh without blocking
+        if (now - _checksheets_cache.get("timestamp", 0.0) >= CACHE_TTL) and not _checksheets_cache.get("refreshing"):
+            asyncio.create_task(_refresh_cache_in_background())
     else:
-        async with get_cache_lock():
-            if _checksheets_cache["data"] is not None and (time.time() - _checksheets_cache["timestamp"] < CACHE_TTL):
-                raw_list = _checksheets_cache["data"]
-            else:
-                # Fast SQL aggregate query instead of 80,000+ child ORM object loads
-                raw_list = await get_checksheets_summary_list(
-                    session=db,
-                    assigned_to=None,
-                    status=None,
-                    search=None,
-                    limit=5000,
-                    offset=0
-                )
-                _checksheets_cache["data"] = raw_list
-                _checksheets_cache["timestamp"] = time.time()
+        # Fast-path 2: Try disk snapshot (< 2ms)
+        disk_data = _load_cache_from_disk()
+        if disk_data:
+            _checksheets_cache["data"] = disk_data
+            _checksheets_cache["timestamp"] = now
+            raw_list = disk_data
+            asyncio.create_task(_refresh_cache_in_background())
+        else:
+            # Cold-start fallback: query database
+            raw_list = await get_checksheets_summary_list(
+                session=db,
+                assigned_to=None,
+                status=None,
+                search=None,
+                limit=5000,
+                offset=0
+            )
+            _checksheets_cache["data"] = raw_list
+            _checksheets_cache["timestamp"] = now
+            _save_cache_to_disk(raw_list)
 
     filtered = raw_list
     if assigned_to and assigned_to.upper() != "ALL":

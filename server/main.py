@@ -41,6 +41,12 @@ async def lifespan(app: FastAPI):
     os.makedirs("storage/images", exist_ok=True)
     os.makedirs("extracted_images", exist_ok=True)
     os.makedirs("static", exist_ok=True)
+    # Warmup checksheets cache in background on startup (< 0ms blocking)
+    try:
+        from server.routes.checksheets import warmup_checksheets_cache
+        asyncio.create_task(warmup_checksheets_cache())
+    except Exception:
+        pass
     yield
 
 

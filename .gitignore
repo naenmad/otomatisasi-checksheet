@@ -17,6 +17,7 @@ scratch/
 cs_incoming_analysis.json
 *.json
 !data/factoryhub_catalog.json
+!data/checksheets_summary_cache.json
 !package.json
 !package-lock.json
 *.db

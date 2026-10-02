@@ -1048,17 +1048,31 @@ async def launch_playwright_browser(
             await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
 
     else:
-        ok = await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
-        if not ok:
+        # On Windows, pre-installed Chrome or Edge is native and starts instantly without missing-binary delays
+        if sys.platform == "win32":
             ok = await _try_launch(
                 "Google Chrome",
                 lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
             )
-        if not ok:
-            await _try_launch(
-                "Microsoft Edge",
-                lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
-            )
+            if not ok:
+                ok = await _try_launch(
+                    "Microsoft Edge",
+                    lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
+                )
+            if not ok:
+                await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
+        else:
+            ok = await _try_launch("Chrome Testing (Chromium)", _launch_chromium_testing)
+            if not ok:
+                ok = await _try_launch(
+                    "Google Chrome",
+                    lambda: _launch_persistent("chrome", os.path.expanduser("~/.factoryhub_chrome_profile"), "Google Chrome")
+                )
+            if not ok:
+                await _try_launch(
+                    "Microsoft Edge",
+                    lambda: _launch_persistent("msedge", os.path.expanduser("~/.factoryhub_msedge_profile"), "Microsoft Edge")
+                )
 
     if not page:
         err_joined = " | ".join(launch_errors) if launch_errors else "Unknown launch error"

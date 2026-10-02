@@ -10,8 +10,15 @@ APP_NAME = "Summit Automation Engine"
 SERVER_BOOT_TIME = int(time.time())
 
 
+_cached_commit = None
+_cached_date = None
+
+
 def get_git_commit() -> str:
     """Return short git commit hash or 'release'."""
+    global _cached_commit
+    if _cached_commit is not None:
+        return _cached_commit
     try:
         repo_dir = os.path.dirname(os.path.abspath(__file__))
         commit = subprocess.check_output(
@@ -21,14 +28,19 @@ def get_git_commit() -> str:
             timeout=2
         ).decode("utf-8", errors="ignore").strip()
         if commit:
-            return commit
+            _cached_commit = commit
+            return _cached_commit
     except Exception:
         pass
-    return "release"
+    _cached_commit = "release"
+    return _cached_commit
 
 
 def get_git_date() -> str:
     """Return latest commit date."""
+    global _cached_date
+    if _cached_date is not None:
+        return _cached_date
     try:
         repo_dir = os.path.dirname(os.path.abspath(__file__))
         date = subprocess.check_output(
@@ -38,10 +50,12 @@ def get_git_date() -> str:
             timeout=2
         ).decode("utf-8", errors="ignore").strip()
         if date:
-            return date
+            _cached_date = date
+            return _cached_date
     except Exception:
         pass
-    return ""
+    _cached_date = ""
+    return _cached_date
 
 
 def get_version_banner() -> str:
