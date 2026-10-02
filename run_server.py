@@ -35,16 +35,21 @@ def ensure_port_available(port: int):
     """Clean up any leftover process listening on the target port before starting uvicorn."""
     try:
         import subprocess
+        import time
         if sys.platform != "win32":
             output = subprocess.check_output(["lsof", "-ti", f":{port}"], stderr=subprocess.DEVNULL).decode().strip()
             current_pid = str(os.getpid())
+            killed = False
             for pid_str in output.split():
                 if pid_str and pid_str != current_pid:
                     try:
                         os.kill(int(pid_str), 9)
                         print(f"[*] Cleared previous process on port {port} (PID: {pid_str})")
+                        killed = True
                     except OSError:
                         pass
+            if killed:
+                time.sleep(0.6)
     except Exception:
         pass
 
