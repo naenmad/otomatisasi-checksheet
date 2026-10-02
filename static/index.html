@@ -2268,7 +2268,7 @@
 
       <!-- UNIFIED CHECKSHEET STUDIO MODAL (Review & Edit Split Screen) -->
       <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-[97vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-[97vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden relative">
           
           <!-- Top Studio Header -->
           <div class="px-5 py-3 bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
@@ -2281,6 +2281,37 @@
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Part Fast Prev / Next Navigator Button Group -->
+                  <div class="inline-flex items-center rounded-lg border border-zinc-700/80 bg-zinc-950 p-0.5 shadow-sm"
+                       title="Navigasi cepat antar part checksheet (Pintasan: Alt + Panah Kiri / Kanan atau tombol [ dan ])">
+                    <button type="button"
+                            @click="navigateStudioPart(-1)"
+                            :disabled="!prevStudioPart"
+                            :title="prevStudioPart ? ('Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + ←)') : 'Sudah di part pertama'"
+                            class="px-2 py-1 rounded text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span class="hidden sm:inline text-[11px]">Prev Part</span>
+                    </button>
+
+                    <span class="px-2.5 py-0.5 text-[11px] font-mono font-bold text-indigo-300 bg-zinc-900 border-x border-zinc-800 select-none whitespace-nowrap"
+                          :title="'Part ke-' + (currentStudioIndex + 1) + ' dari total ' + totalStudioParts + ' part'">
+                      {{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }} / {{ totalStudioParts }}
+                    </span>
+
+                    <button type="button"
+                            @click="navigateStudioPart(1)"
+                            :disabled="!nextStudioPart"
+                            :title="nextStudioPart ? ('Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + →)') : 'Sudah di part terakhir'"
+                            class="px-2 py-1 rounded text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
+                      <span class="hidden sm:inline text-[11px]">Next Part</span>
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+
                   <button type="button"
                           @click="copyToClipboard(activeChecksheet.part_number, 'Part number')"
                           title="Klik untuk otomatis salin part number"
