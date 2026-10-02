@@ -23,7 +23,7 @@
 
 set -e
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$DIR"
 
 # Aktifkan virtual environment jika ada
@@ -33,4 +33,4 @@ elif [ -d "$DIR/venv" ]; then
     source "$DIR/venv/bin/activate"
 fi
 
-python3 run.py "$@"
+python3 scripts/run.py "$@"

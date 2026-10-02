@@ -159,6 +159,24 @@ async def list_checksheets(
     return result.scalars().all()
 
 
+def _normalize_thumbnail_url(url: Optional[str], path: Optional[str]) -> Optional[str]:
+    raw = url or path or ""
+    if not raw:
+        return None
+    raw = raw.strip()
+    if raw.startswith("http://") or raw.startswith("https://"):
+        return raw
+    if "storage/images" in raw:
+        sub = raw.split("storage/images", 1)[1].lstrip("/\\").replace("\\", "/")
+        return f"/media/images/{sub}"
+    if "extracted_images" in raw:
+        sub = raw.split("extracted_images", 1)[1].lstrip("/\\").replace("\\", "/")
+        return f"/media/extracted/{sub}"
+    if raw.startswith("/media/"):
+        return raw.replace("\\", "/")
+    return raw
+
+
 async def get_checksheets_summary_list(
     session: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -174,8 +192,20 @@ async def get_checksheets_summary_list(
         .subquery()
     )
     imgs_sub = (
-        select(PartImage.checksheet_id, func.count(PartImage.id).label("cnt"))
+        select(
+            PartImage.checksheet_id,
+            func.count(PartImage.id).label("cnt"),
+            func.min(PartImage.id).label("first_img_id")
+        )
         .group_by(PartImage.checksheet_id)
+        .subquery()
+    )
+    first_img = (
+        select(
+            PartImage.id,
+            PartImage.image_url,
+            PartImage.image_path
+        )
         .subquery()
     )
 
@@ -194,9 +224,12 @@ async def get_checksheets_summary_list(
             Checksheet.updated_at,
             func.coalesce(pts_sub.c.cnt, 0).label("points_count"),
             func.coalesce(imgs_sub.c.cnt, 0).label("images_count"),
+            first_img.c.image_url.label("first_image_url"),
+            first_img.c.image_path.label("first_image_path"),
         )
         .outerjoin(pts_sub, Checksheet.id == pts_sub.c.checksheet_id)
         .outerjoin(imgs_sub, Checksheet.id == imgs_sub.c.checksheet_id)
+        .outerjoin(first_img, imgs_sub.c.first_img_id == first_img.c.id)
     )
 
     if assigned_to and assigned_to.upper() != "ALL":
@@ -241,6 +274,7 @@ async def get_checksheets_summary_list(
             "keterangan": r.keterangan,
             "points_count": r.points_count,
             "images_count": r.images_count,
+            "thumbnail_url": _normalize_thumbnail_url(r.first_image_url, r.first_image_path),
             "factoryhub_url": r.factoryhub_url,
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         }

@@ -236,7 +236,7 @@ async def sync_catalog_from_factoryhub(browser_channel: str = "chrome") -> Dict[
     Can be run by any team member.
     """
     from playwright.async_api import async_playwright
-    from automator import login_factoryhub, CREATE_URL
+    from core.automator import login_factoryhub, CREATE_URL
 
     t0 = time.time()
     print("[*] Memulai sinkronisasi katalog FactoryHub...")

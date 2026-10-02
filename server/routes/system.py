@@ -29,7 +29,7 @@ def run_git_cmd(args: list) -> str:
 @router.get("/version")
 def get_system_version():
     """Return application version, git commit, and banner."""
-    from version import VERSION, APP_NAME, SERVER_BOOT_TIME, get_git_commit, get_git_date, get_full_banner
+    from core.version import VERSION, APP_NAME, SERVER_BOOT_TIME, get_git_commit, get_git_date, get_full_banner
     return {
         "app_name": APP_NAME,
         "version": VERSION,
@@ -72,7 +72,7 @@ def get_update_status():
             log_output = run_git_cmd(["log", "-n", "10", "--oneline", "HEAD..origin/main"])
             commits_behind = [line.strip() for line in log_output.split("\n") if line.strip()]
 
-        from version import VERSION, get_full_banner
+        from core.version import VERSION, get_full_banner
         return {
             "version": VERSION,
             "banner": get_full_banner(),

@@ -302,14 +302,20 @@ class TextNormalizer:
         "nut center": "Nut Center",
         "nut tidak rusak": "Nut OK",
         "nut tidak seret": "Nut Smooth",
-        # Trim
-        "trim line": "Trim Line",
+        # Trim & Alignment & GAP
+        "trim line": "TRIM LINE",
+        "trim - line": "TRIM LINE",
+        "trimline": "TRIM LINE",
+        "trim-line": "TRIM LINE",
+        "stopper trimline": "STOPPER TRIMLINE",
+        "gap": "GAP",
+        "shim": "SHIM",
         # Flange
         "flange height": "Flange Height",
     }
 
-    # Numbered item pattern: "1. TOTAL COMPONEN", "10. NECK / CRACK"
-    NUMBERED_ITEM_RE = re.compile(r"^\d+\.\s*(.+)$")
+    # Numbered item pattern: "1. TOTAL COMPONEN", "16 Trim Line", "14a Distance", "1 Datum Hole"
+    NUMBERED_ITEM_RE = re.compile(r"^\d+[a-zA-Z]?[\.\-\)]?\s+(.+)$")
 
     # Common appearance defect keywords for standard normalization
     DEFECT_KEYWORDS = [
@@ -339,13 +345,40 @@ class TextNormalizer:
         if lower in cls.ITEM_ALIASES:
             return cls.ITEM_ALIASES[lower]
 
-        # Handle numbered items: "1. TOTAL COMPONEN" -> strip number
+        # Handle Trim Line variants with brackets: "Trim - Line [I]", "Trimline [TL]"
+        if re.match(r'^(trim\s*[\-\s]*line|trimline)(\s*\[.+\])?$', cleaned, re.I):
+            bracket = re.search(r'\[.+\]', cleaned)
+            if bracket:
+                return f"TRIM LINE {bracket.group(0).upper()}"
+            return "TRIM LINE"
+
+        if lower == "stopper trimline":
+            return "STOPPER TRIMLINE"
+        if lower == "gap":
+            return "GAP"
+        if lower == "shim":
+            return "SHIM"
+
+        # Clean OCR artifacts on Appearance
+        if "appearance" in lower:
+            return "Appearance"
+
+        # Handle numbered items: "1. TOTAL COMPONEN", "16 Trim Line", "13 GAP" -> strip number
         num_match = cls.NUMBERED_ITEM_RE.match(cleaned)
         if num_match:
             inner = num_match.group(1).strip()
             inner_lower = inner.lower()
             if inner_lower in cls.ITEM_ALIASES:
                 return cls.ITEM_ALIASES[inner_lower]
+            if re.match(r'^(trim\s*[\-\s]*line|trimline)(\s*\[.+\])?$', inner, re.I):
+                bracket = re.search(r'\[.+\]', inner)
+                if bracket:
+                    return f"TRIM LINE {bracket.group(0).upper()}"
+                return "TRIM LINE"
+            if inner_lower == "gap":
+                return "GAP"
+            if inner_lower == "shim":
+                return "SHIM"
             return cls._title_case(inner)
 
         # Handle Flange variants: "Flangeb", "Flange a", "Flange c"
@@ -639,6 +672,15 @@ class TextNormalizer:
         ):
             raw_item = "Burry"
             raw_std = "≤ 0.3 mm"
+
+        # If item is pure number (e.g. balloon number shifted into item column)
+        if re.match(r"^\d+$", item_lower):
+            if any(k in std_lower for k in ["pin go", "mark ctr", "no go", "go/no go", "go / no go"]):
+                raw_item = "Position"
+                if not std_lower.startswith("ok / ng") and not std_lower.startswith("ok/ng"):
+                    raw_std = f"OK / NG {raw_std}"
+            elif raw_method and raw_method.lower() in ["visual", "caliper", "insert pin datum"]:
+                raw_item = "Position"
 
         norm_item = cls.normalize_item(raw_item)
         result["inspection_item"] = norm_item

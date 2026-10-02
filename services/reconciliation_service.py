@@ -21,7 +21,7 @@ from playwright.async_api import async_playwright
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from automator import login_factoryhub, INDEX_URL
+from core.automator import login_factoryhub, INDEX_URL
 from database.models import Checksheet
 from database.crud import clean_str, log_activity
 from services.google_sheets_service import trigger_background_sheet_sync

@@ -17,8 +17,13 @@ import sys
 from typing import Optional
 from dotenv import load_dotenv
 
-from extractor import resolve_part_document, list_available_parts, extract_inspection_points
-from automator import run_automation
+# Ensure project root and core are in sys.path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from core.extractor import resolve_part_document, list_available_parts, extract_inspection_points
+from core.automator import run_automation
 
 load_dotenv()
 

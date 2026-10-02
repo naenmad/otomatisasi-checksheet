@@ -10,9 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import async_playwright
 
 from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity
-from database.models import User
-from automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
-from version import get_full_banner
+from core.automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
+from core.version import get_full_banner
 
 # Registry of active batch cancellation requests
 ACTIVE_BATCH_CANCELLATIONS: set = set()

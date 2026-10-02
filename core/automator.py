@@ -34,14 +34,24 @@ if hasattr(sys.stderr, "reconfigure"):
     except Exception:
         pass
 
-from extractor import (
-    extract_metadata,
-    extract_reference_images,
-    extract_inspection_points,
-    get_reference_images,
-    resolve_part_document
-)
-import logger
+try:
+    from .extractor import (
+        extract_metadata,
+        extract_reference_images,
+        extract_inspection_points,
+        get_reference_images,
+        resolve_part_document
+    )
+    from . import logger
+except ImportError:
+    from core.extractor import (
+        extract_metadata,
+        extract_reference_images,
+        extract_inspection_points,
+        get_reference_images,
+        resolve_part_document
+    )
+    from core import logger
 
 # Load configurations from .env
 load_dotenv()

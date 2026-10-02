@@ -9,5 +9,8 @@ const venvPy = isWin
 
 const pythonExe = fs.existsSync(venvPy) ? venvPy : (isWin ? 'python' : 'python3');
 
-const child = spawn(pythonExe, ['run_server.py'], { stdio: 'inherit' });
+const userArgs = process.argv.slice(2);
+const targetArgs = userArgs.length > 0 ? userArgs : ['run_server.py'];
+
+const child = spawn(pythonExe, targetArgs, { stdio: 'inherit' });
 child.on('exit', (code) => process.exit(code || 0));

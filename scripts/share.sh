@@ -3,6 +3,9 @@
 # Share Script - Otomatisasi Checksheet Team (Zul, Iqbal, Rama, Yogi)
 # ==============================================================================
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_DIR"
+
 PORT=8000
 LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
 

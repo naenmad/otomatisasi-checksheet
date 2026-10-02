@@ -19,7 +19,7 @@ from sqlalchemy import select, delete
 from database.connection import AsyncSessionLocal
 from database.models import Checksheet, PartImage
 from database.crud import clean_str
-from extractor import get_cached_image_info
+from core.extractor import get_cached_image_info
 
 logger = logging.getLogger("image_ingestion")
 

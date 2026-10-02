@@ -30,7 +30,7 @@ else
     NC=''
 fi
 
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo -e "${BLUE}${BOLD}====================================================================${NC}"

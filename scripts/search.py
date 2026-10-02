@@ -21,9 +21,14 @@ from typing import List, Dict, Any, Optional
 from playwright.async_api import async_playwright
 from dotenv import load_dotenv
 
-from automator import login_factoryhub, CREATE_URL
-from extractor import list_available_parts
-import logger
+# Ensure project root and core are in sys.path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from core.automator import login_factoryhub, CREATE_URL
+from core.extractor import list_available_parts
+from core import logger
 
 load_dotenv()
 

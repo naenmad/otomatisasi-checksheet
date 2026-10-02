@@ -870,6 +870,21 @@
                 <option value="Canceled">Canceled</option>
               </select>
 
+              <!-- Mode Review Gambar Toggle Button -->
+              <button type="button"
+                      @click="toggleImageThumbnails"
+                      :class="showImageThumbnails 
+                        ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/70 shadow-sm ring-1 ring-indigo-500/30 font-bold' 
+                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
+                      class="px-3 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+                      :title="showImageThumbnails ? 'Sembunyikan thumbnail gambar pada tabel' : 'Aktifkan Mode Gambar untuk Quick Review visual langsung di tabel'">
+                <svg class="w-3.5 h-3.5" :class="showImageThumbnails ? 'text-indigo-400' : 'text-zinc-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{{ showImageThumbnails ? 'Mode Gambar: Aktif' : 'Mode Gambar' }}</span>
+                <span v-if="showImageThumbnails" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              </button>
+
               <!-- Quick Ambil Batch Button (when unassigned tasks are selected) -->
               <button v-if="selectedUnassignedCount > 0"
                       @click="claimSelectedTasks"
@@ -936,6 +951,7 @@
                     </th>
                     <th class="py-3 px-3 w-12 text-center">No</th>
                     <th class="py-3 px-3 w-32">Penanggung Jawab</th>
+                    <th v-if="showImageThumbnails" class="py-3 px-2 w-24 text-center">Drawing</th>
                     <th class="py-3 px-4">Part Number</th>
                     <th class="py-3 px-4">Nama Part</th>
                     <th class="py-3 px-3 w-20">Model</th>
@@ -952,6 +968,7 @@
                     <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
                     <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
                     <td class="p-3"><div class="w-16 h-5 bg-zinc-800 rounded"></div></td>
+                    <td v-if="showImageThumbnails" class="p-2 text-center"><div class="w-16 h-12 bg-zinc-800 rounded mx-auto"></div></td>
                     <td class="p-3"><div class="w-36 h-4 bg-zinc-800 rounded"></div></td>
                     <td class="p-3"><div class="w-48 h-4 bg-zinc-800 rounded"></div></td>
                     <td class="p-3"><div class="w-12 h-4 bg-zinc-800 rounded"></div></td>
@@ -1008,6 +1025,30 @@
                       <span v-else class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
                         {{ cs.assigned_to }}
                       </span>
+                    </td>
+                    <!-- Quick Review Thumbnail Column -->
+                    <td v-if="showImageThumbnails" class="py-2 px-2 text-center" @click.stop>
+                      <div v-if="cs.thumbnail_url" 
+                           @click.stop="openQuickImageReview(cs)"
+                           class="relative inline-flex items-center justify-center w-16 h-12 bg-zinc-950/90 border border-zinc-700/80 rounded-lg p-0.5 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-500/40 transition-all cursor-zoom-in group/thumb shadow-sm overflow-hidden"
+                           :title="'Klik untuk Quick Review drawing: ' + cs.part_number">
+                        <img :src="cs.thumbnail_url" 
+                             alt="Drawing"
+                             loading="lazy"
+                             class="w-full h-full object-contain filter group-hover/thumb:brightness-110 transition-transform duration-150 group-hover/thumb:scale-105" />
+                        <span v-if="cs.images_count > 1" 
+                              class="absolute bottom-0.5 right-0.5 px-1 py-0.2 text-[9px] font-bold rounded bg-indigo-600/95 text-white shadow ring-1 ring-black/40">
+                          {{ cs.images_count }}
+                        </span>
+                      </div>
+                      <div v-else 
+                           class="inline-flex flex-col items-center justify-center w-16 h-12 rounded-lg border border-dashed border-zinc-800/80 bg-zinc-950/40 text-zinc-600 select-none"
+                           title="Belum ada gambar drawing untuk part ini">
+                        <svg class="w-4 h-4 opacity-40 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-[8px] font-medium text-zinc-600 tracking-tight">No Image</span>
+                      </div>
                     </td>
                     <td class="py-3 px-4 font-mono font-bold text-zinc-100">
                       <div class="flex items-center gap-1.5 group/pn">
@@ -1811,6 +1852,127 @@
         </div>
       </div>
 
+
+      <!-- Quick Image Review Lightbox Modal -->
+      <div v-if="quickReviewModal.isOpen" 
+           class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 md:p-6"
+           @click.self="closeQuickImageReview">
+        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-5xl h-[90vh] max-h-[850px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          
+          <!-- Header: Part Info & Actions -->
+          <div class="px-5 py-3.5 bg-zinc-950/90 border-b border-zinc-800 flex items-center justify-between gap-4 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div class="truncate">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-sm text-zinc-100">{{ quickReviewModal.checksheet?.part_number }}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    {{ quickReviewModal.checksheet?.assigned_to || 'Unassigned' }}
+                  </span>
+                  <span v-if="quickReviewModal.images.length > 1" class="text-xs text-indigo-400 font-semibold">
+                    (Drawing {{ quickReviewModal.activeIdx + 1 }} dari {{ quickReviewModal.images.length }})
+                  </span>
+                </div>
+                <div class="text-xs text-zinc-400 truncate">
+                  {{ quickReviewModal.checksheet?.part_name || '-' }} • Model: {{ quickReviewModal.checksheet?.model || '-' }} • {{ quickReviewModal.checksheet?.customer || '-' }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Header Controls: Zoom, Edit in Studio, Close -->
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- Zoom controls -->
+              <div class="flex items-center bg-zinc-950 border border-zinc-800 rounded-lg p-0.5 text-xs text-zinc-300">
+                <button type="button" @click="quickReviewModal.zoom = Math.max(0.5, quickReviewModal.zoom - 0.25)" class="px-2 py-1 hover:bg-zinc-800 rounded text-zinc-300 font-bold" title="Zoom Out">-</button>
+                <span class="px-1 text-[11px] font-mono text-zinc-400">{{ Math.round(quickReviewModal.zoom * 100) }}%</span>
+                <button type="button" @click="quickReviewModal.zoom = Math.min(3.0, quickReviewModal.zoom + 0.25)" class="px-2 py-1 hover:bg-zinc-800 rounded text-zinc-300 font-bold" title="Zoom In">+</button>
+                <button type="button" @click="quickReviewModal.zoom = 1.0" class="px-1.5 py-1 hover:bg-zinc-800 rounded text-[10px] text-zinc-400 hover:text-zinc-200" title="Reset Zoom">1:1</button>
+              </div>
+
+              <!-- Open Full Studio Button -->
+              <button type="button" 
+                      @click="const targetCs = quickReviewModal.checksheet; closeQuickImageReview(); openExcelStudio(targetCs)" 
+                      class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                      title="Buka checksheet ini di Excel Studio untuk review lengkap & edit titik ukur">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Buka Editor Studio</span>
+              </button>
+
+              <!-- Close button -->
+              <button type="button" 
+                      @click="closeQuickImageReview" 
+                      aria-label="Tutup Preview" 
+                      class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Body: Image Viewer with Navigation Arrows -->
+          <div class="flex-1 bg-zinc-950 relative overflow-hidden flex items-center justify-center select-none"
+               @wheel.prevent="handleQuickReviewWheel">
+            
+            <!-- Left Arrow (Prev Image) -->
+            <button v-if="quickReviewModal.images.length > 1" 
+                    type="button"
+                    @click="prevQuickImage"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-indigo-600 text-zinc-300 hover:text-white border border-zinc-700/80 flex items-center justify-center transition-all shadow-lg backdrop-blur-sm cursor-pointer"
+                    title="Drawing Sebelumnya (Panah Kiri)">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <!-- Active Drawing Image -->
+            <div v-if="currentQuickImageUrl" 
+                 class="w-full h-full flex items-center justify-center p-4 overflow-auto">
+              <img :src="currentQuickImageUrl"
+                   alt="Drawing Preview"
+                   class="max-w-full max-h-full object-contain transition-transform duration-100 drop-shadow-md"
+                   :style="{ transform: `scale(${quickReviewModal.zoom})` }" />
+            </div>
+            <div v-else class="flex flex-col items-center justify-center text-zinc-500 py-12">
+              <svg class="w-12 h-12 opacity-30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-sm font-medium">Tidak ada file drawing untuk part ini</p>
+            </div>
+
+            <!-- Right Arrow (Next Image) -->
+            <button v-if="quickReviewModal.images.length > 1" 
+                    type="button"
+                    @click="nextQuickImage"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-indigo-600 text-zinc-300 hover:text-white border border-zinc-700/80 flex items-center justify-center transition-all shadow-lg backdrop-blur-sm cursor-pointer"
+                    title="Drawing Selanjutnya (Panah Kanan)">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Footer / Thumbnails Strip if multiple drawings -->
+          <div v-if="quickReviewModal.images.length > 1" 
+               class="px-4 py-2.5 bg-zinc-950 border-t border-zinc-800 flex items-center justify-center gap-2 overflow-x-auto shrink-0">
+            <button v-for="(img, idx) in quickReviewModal.images" :key="idx"
+                    type="button"
+                    @click="quickReviewModal.activeIdx = idx; quickReviewModal.zoom = 1.0;"
+                    class="w-16 h-12 rounded-lg border overflow-hidden p-0.5 transition-all bg-zinc-900 shrink-0 cursor-pointer"
+                    :class="quickReviewModal.activeIdx === idx ? 'border-indigo-500 ring-2 ring-indigo-500/50 scale-105' : 'border-zinc-800 opacity-60 hover:opacity-100'">
+              <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" class="w-full h-full object-contain" />
+            </button>
+          </div>
+
+        </div>
+      </div>
 
       <!-- Upload Checksheet Modal (Admin Only) -->
       <div v-if="showUploadModal" class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
@@ -3116,6 +3278,85 @@
         const statusFilter = ref('ALL');
         const selectedIds = ref([]);
 
+        // Visual Image Review Mode & Quick Lightbox
+        const showImageThumbnails = ref(localStorage.getItem('showImageThumbnails') === 'true');
+        const toggleImageThumbnails = () => {
+          showImageThumbnails.value = !showImageThumbnails.value;
+          localStorage.setItem('showImageThumbnails', showImageThumbnails.value);
+        };
+        const quickReviewModal = ref({
+          isOpen: false,
+          checksheet: null,
+          images: [],
+          activeIdx: 0,
+          isLoadingImages: false,
+          zoom: 1.0,
+        });
+
+        const currentQuickImageUrl = computed(() => {
+          const modal = quickReviewModal.value;
+          if (!modal || !modal.images || modal.images.length === 0) return null;
+          const current = modal.images[modal.activeIdx];
+          if (!current) return null;
+          if (typeof current === 'string') return current;
+          return current.image_url || current.image_path || null;
+        });
+
+        const openQuickImageReview = async (cs) => {
+          if (!cs) return;
+          const initialImgs = cs.thumbnail_url ? [{ id: 'thumb', image_url: cs.thumbnail_url, filename: 'Drawing' }] : [];
+          quickReviewModal.value = {
+            isOpen: true,
+            checksheet: cs,
+            images: initialImgs,
+            activeIdx: 0,
+            isLoadingImages: true,
+            zoom: 1.0,
+          };
+          try {
+            const res = await fetch(`/api/checksheets/${cs.id}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.images && data.images.length > 0) {
+                quickReviewModal.value.images = data.images;
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load full drawing images:', e);
+          } finally {
+            quickReviewModal.value.isLoadingImages = false;
+          }
+        };
+
+        const closeQuickImageReview = () => {
+          quickReviewModal.value.isOpen = false;
+          quickReviewModal.value.checksheet = null;
+        };
+
+        const nextQuickImage = () => {
+          const imgs = quickReviewModal.value.images;
+          if (imgs.length > 1) {
+            quickReviewModal.value.activeIdx = (quickReviewModal.value.activeIdx + 1) % imgs.length;
+            quickReviewModal.value.zoom = 1.0;
+          }
+        };
+
+        const prevQuickImage = () => {
+          const imgs = quickReviewModal.value.images;
+          if (imgs.length > 1) {
+            quickReviewModal.value.activeIdx = (quickReviewModal.value.activeIdx - 1 + imgs.length) % imgs.length;
+            quickReviewModal.value.zoom = 1.0;
+          }
+        };
+
+        const handleQuickReviewWheel = (e) => {
+          if (e.deltaY < 0) {
+            quickReviewModal.value.zoom = Math.min(3.0, quickReviewModal.value.zoom + 0.15);
+          } else {
+            quickReviewModal.value.zoom = Math.max(0.5, quickReviewModal.value.zoom - 0.15);
+          }
+        };
+
         // Upload & Automation
         const showUploadModal = ref(false);
         const uploadAssignee = ref('Unassigned');
@@ -3305,7 +3546,7 @@
           { item: 'Flange D', standard: '', method: 'Caliper' },
           { item: 'Emboss Height', standard: '', method: 'Dial Indicator' },
           { item: 'Bead Depth', standard: '', method: 'Dial Indicator' },
-          { item: 'Trim - Line', standard: 'DEV. WITHIN 0.5', method: 'Visual' },
+          { item: 'TRIM LINE', standard: 'DEV. WITHIN 0.5', method: 'Visual' },
           { item: 'Profile OK', standard: 'DEV. WITHIN 0.5', method: 'Check Fixture' },
           { item: 'Position', standard: 'OK / NG', method: 'Pin Go / No Go' },
 
@@ -5989,6 +6230,39 @@
 
         // Keyboard handler
         window.addEventListener('keydown', (e) => {
+          if (quickReviewModal.value && quickReviewModal.value.isOpen) {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              closeQuickImageReview();
+              return;
+            }
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              nextQuickImage();
+              return;
+            }
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              prevQuickImage();
+              return;
+            }
+            if (e.key === '+' || e.key === '=') {
+              e.preventDefault();
+              quickReviewModal.value.zoom = Math.min(3.0, quickReviewModal.value.zoom + 0.25);
+              return;
+            }
+            if (e.key === '-' || e.key === '_') {
+              e.preventDefault();
+              quickReviewModal.value.zoom = Math.max(0.5, quickReviewModal.value.zoom - 0.25);
+              return;
+            }
+            if (e.key === '0') {
+              e.preventDefault();
+              quickReviewModal.value.zoom = 1.0;
+              return;
+            }
+          }
+
           if (systemUpdateInfo.value && systemUpdateInfo.value.has_update && isAutoUpdateEnabled.value && !isUpdateModalDismissed.value) {
             if (e.key === 'Escape') {
               e.preventDefault();
@@ -6027,7 +6301,7 @@
           // Main Table Row Navigation when on checksheets page and no modal is open
           const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
           const isInputActive = tag === 'input' || tag === 'textarea' || tag === 'select';
-          const isModalOpen = showExcelStudio.value || activeChecksheet.value || previewImage.value || (showBatchModal.value && !isBatchMinimized.value) || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value || (isAutoUpdateEnabled.value && !isUpdateModalDismissed.value && systemUpdateInfo.value && systemUpdateInfo.value.has_update);
+          const isModalOpen = (quickReviewModal.value && quickReviewModal.value.isOpen) || showExcelStudio.value || activeChecksheet.value || previewImage.value || (showBatchModal.value && !isBatchMinimized.value) || showUploadModal.value || showUsersModal.value || showPartCheckerModal.value || (isAutoUpdateEnabled.value && !isUpdateModalDismissed.value && systemUpdateInfo.value && systemUpdateInfo.value.has_update);
 
           if (activePage.value === 'checksheets' && !isModalOpen && !isInputActive) {
             const list = filteredChecksheets.value;
@@ -6351,7 +6625,16 @@
           saveGoogleDriveSettings,
           updateGoogleDriveUserIndex,
           openGoogleDriveSearch,
-          resetGoogleDriveFolderId
+          resetGoogleDriveFolderId,
+          showImageThumbnails,
+          toggleImageThumbnails,
+          quickReviewModal,
+          currentQuickImageUrl,
+          openQuickImageReview,
+          closeQuickImageReview,
+          nextQuickImage,
+          prevQuickImage,
+          handleQuickReviewWheel
         };
       }
     }).mount('#app');

@@ -6,6 +6,7 @@ rem ============================================================================
 
 setlocal enabledelayedexpansion
 title Setup Otomatisasi Checksheet Summit Adyawinsa
+cd /d "%~dp0\.."
 
 echo ====================================================================
 echo   INSTALLER ^& SETUP OTOMATISASI CHECKSHEET SUMMIT ADYAWINSA

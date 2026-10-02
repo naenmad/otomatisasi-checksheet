@@ -6,7 +6,7 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SCRIPT_DIR"
 
 # Resolve Python in virtual environment or fallback to system python3
@@ -20,4 +20,4 @@ else
 fi
 
 # Run the optimizer
-$PYTHON_CMD compress_webp.py "$@"
+$PYTHON_CMD scripts/compress_webp.py "$@"

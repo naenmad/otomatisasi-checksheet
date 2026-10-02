@@ -188,7 +188,7 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
 def _build_checksheet_images(cs: Checksheet) -> list:
     import os
     import re
-    from extractor import get_cached_image_info
+    from core.extractor import get_cached_image_info
 
     res = []
     for img in cs.images:
@@ -465,7 +465,7 @@ async def upload_checksheet_image(
         db.add(new_part_img)
         await db.commit()
         await db.refresh(cs)
-        update_checksheet_in_cache(cs.id, {"images_count": len(cs.images)})
+        update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": url_sub})
         new_part_img_id = new_part_img.id
     else:
         new_part_img_id = existing_img.id
@@ -564,9 +564,10 @@ async def delete_checksheet_image(
 
     await db.commit()
     await db.refresh(cs)
-    update_checksheet_in_cache(cs.id, {"images_count": len(cs.images)})
-
     updated_images = _build_checksheet_images(cs)
+    thumb_url = updated_images[0]["image_url"] if updated_images else None
+    update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": thumb_url})
+
     return {"status": "success", "deleted_count": deleted_count, "images": updated_images}
 
 
@@ -591,7 +592,7 @@ async def delete_all_checksheet_images(
         deleted_count += 1
 
     await db.commit()
-    update_checksheet_in_cache(cs.id, {"images_count": 0})
+    update_checksheet_in_cache(cs.id, {"images_count": 0, "thumbnail_url": None})
 
     return {
         "status": "success",
@@ -610,9 +611,17 @@ async def sync_images_endpoint(db: AsyncSession = Depends(get_db)):
     from services.image_ingestion_service import sync_all_part_images_to_db
     try:
         res = await sync_all_part_images_to_db(db)
+        invalidate_checksheets_cache()
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image ingestion failed: {str(e)}")
+
+
+@router.post("/cache/clear")
+async def clear_checksheets_cache_endpoint():
+    """Immediately invalidates the in-memory checksheet summary cache."""
+    invalidate_checksheets_cache()
+    return {"status": "success", "message": "Checksheets cache cleared"}
 
 
 @router.post("/reconcile")
