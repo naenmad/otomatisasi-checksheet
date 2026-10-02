@@ -30,6 +30,7 @@ _checksheets_cache: Dict[str, Any] = {
     "timestamp": 0.0,
     "lock": None
 }
+_checksheet_detail_cache: Dict[int, Dict[str, Any]] = {}
 CACHE_TTL = 300.0  # 5 minutes default TTL, kept synchronized via in-place mutation
 
 
@@ -43,10 +44,17 @@ def invalidate_checksheets_cache():
     """Wipe in-memory cache so subsequent reads fetch latest database state."""
     _checksheets_cache["data"] = None
     _checksheets_cache["timestamp"] = 0.0
+    _checksheet_detail_cache.clear()
+
+
+def invalidate_checksheet_detail(checksheet_id: int):
+    """Evict cached detail for a specific checksheet."""
+    _checksheet_detail_cache.pop(checksheet_id, None)
 
 
 def update_checksheet_in_cache(checksheet_id: int, updates: Dict[str, Any]):
     """Update a single checksheet in memory cache instantly (< 0.01ms)."""
+    invalidate_checksheet_detail(checksheet_id)
     data = _checksheets_cache.get("data")
     if data:
         for item in data:
@@ -155,11 +163,15 @@ async def get_checksheets(
 
 @router.get("/{checksheet_id}")
 async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(get_db)):
+    cached_detail = _checksheet_detail_cache.get(checksheet_id)
+    if cached_detail is not None:
+        return cached_detail
+
     cs = await get_checksheet_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
 
-    return {
+    detail = {
         "id": cs.id,
         "part_number": cs.part_number,
         "part_name": cs.part_name,
@@ -183,6 +195,8 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
         ],
         "images": _build_checksheet_images(cs)
     }
+    _checksheet_detail_cache[checksheet_id] = detail
+    return detail
 
 
 def _build_checksheet_images(cs: Checksheet) -> list:
