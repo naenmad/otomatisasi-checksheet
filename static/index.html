@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Summit FactoryHub: Quality Checksheet Suite</title>
+  <title>FaketoryHub: Quality Checksheet Suite</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -55,13 +55,13 @@
     <div v-if="!currentUser" class="flex-1 flex items-center justify-center p-6 bg-zinc-950">
       <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
         <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-indigo-400">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shadow-inner">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
             </svg>
           </div>
           <div>
-            <h1 class="text-base font-bold text-zinc-100">Summit FactoryHub</h1>
+            <h1 class="text-lg font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">FaketoryHub</h1>
             <p class="text-xs text-zinc-400">Quality Checksheet Control Center</p>
           </div>
         </div>
@@ -140,7 +140,8 @@
            @click="isMobileSidebarOpen = false"></div>
 
       <!-- SIDEBAR -->
-      <aside :class="[
+      <aside v-show="!showExcelStudio"
+             :class="[
                'fixed lg:sticky top-0 z-40 h-screen bg-zinc-900 border-r border-zinc-800 flex flex-col transition-all duration-200 shrink-0',
                isSidebarCollapsed ? 'w-16' : 'w-64',
                isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -150,14 +151,14 @@
              :class="isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'">
           <!-- Brand when Expanded -->
           <div v-if="!isSidebarCollapsed" class="flex items-center gap-3 overflow-hidden">
-            <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-indigo-400 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
             </div>
             <div class="truncate">
-              <span class="text-xs font-bold text-zinc-100 block truncate">Summit FactoryHub</span>
-              <span class="text-[10px] text-zinc-400 block truncate">Quality Suite</span>
+              <span class="text-sm font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 block truncate tracking-tight">FaketoryHub</span>
+              <span class="text-[10px] text-zinc-400 block truncate font-medium">Quality Automation</span>
             </div>
           </div>
 
@@ -323,7 +324,7 @@
       </aside>
 
       <!-- MAIN APP CONTENT AREA -->
-      <div class="flex-1 flex flex-col min-w-0 bg-zinc-950">
+      <div v-show="!showExcelStudio" class="flex-1 flex flex-col min-w-0 bg-zinc-950">
 
         <!-- Top Navigation Header -->
         <header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -339,7 +340,7 @@
             <!-- Breadcrumbs -->
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs text-zinc-400">Summit FactoryHub</span>
+                <span class="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300">FaketoryHub</span>
                 <span class="text-zinc-600">/</span>
                 <h1 class="text-sm font-bold text-zinc-100 capitalize">
                   {{ pageTitle }}
@@ -2266,14 +2267,23 @@
         </div>
       </div>
 
-      <!-- UNIFIED CHECKSHEET STUDIO MODAL (Review & Edit Split Screen) -->
-      <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-[97vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden relative">
+      <!-- UNIFIED CHECKSHEET STUDIO (Full Screen Studio View - No Double Layer) -->
+      <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-screen h-screen overflow-hidden select-none">
+        <div class="bg-zinc-950 w-full h-full flex flex-col overflow-hidden relative">
           
           <!-- Top Studio Header -->
           <div class="px-5 py-3 bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
-            <!-- Left: Part Info & Title -->
+            <!-- Left: Back Button & Part Info & Title -->
             <div class="flex items-center gap-3 min-w-0">
+              <button type="button"
+                      @click="closeExcelStudio"
+                      title="Kembali ke Beranda (Esc)"
+                      class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 hover:border-zinc-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 shrink-0">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span class="hidden sm:inline">Kembali</span>
+              </button>
               <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -2627,38 +2637,9 @@
                             rows="2" placeholder="Catatan part, revisi drawing, atau instruksi submit..."
                             class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 resize-none focus:border-zinc-600 focus:outline-none"></textarea>
                 </div>
-                <div class="text-[11px] text-zinc-500 flex items-center justify-between">
+                <div class="text-[11px] text-zinc-500 flex items-center justify-between pt-2 border-t border-zinc-800/80">
                   <span>Asal: {{ activeChecksheet.raw_file_path ? activeChecksheet.raw_file_path.split('/').pop() : 'Database' }} · <span class="font-mono">ID: #{{ activeChecksheet.id }}</span></span>
-                </div>
-
-                <!-- Pojok Kiri Bawah: Prev Part Button -->
-                <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <button type="button"
-                          @click="navigateStudioPart(-1)"
-                          :disabled="!prevStudioPart"
-                          :title="prevStudioPart ? ('Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + ←)') : 'Sudah di part pertama'"
-                          class="px-3.5 py-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-950 text-zinc-200 hover:text-white border border-zinc-700/80 hover:border-indigo-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed group shadow-sm active:scale-95">
-                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span>‹ Prev Part</span>
-                    <span class="text-[10px] text-zinc-400 font-mono">({{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }}/{{ totalStudioParts }})</span>
-                  </button>
-
-                  <div class="flex items-center gap-2">
-                    <span v-if="prevStudioPart" class="text-[10px] text-zinc-400 truncate max-w-[130px] font-mono hidden sm:inline" :title="prevStudioPart.part_number">
-                      {{ prevStudioPart.part_number }}
-                    </span>
-                    <!-- Jika sedang mode Fokus Gambar, sediakan juga tombol Next di sini -->
-                    <button v-if="studioPanelMode === 'image-focus'"
-                            type="button"
-                            @click="navigateStudioPart(1)"
-                            :disabled="!nextStudioPart"
-                            title="Part Selanjutnya (Alt + →)"
-                            class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-zinc-800 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
-                      <span>Next ›</span>
-                    </button>
-                  </div>
+                  <span class="text-[10px] text-zinc-400 font-mono">Navigasi: <kbd class="px-1 py-0.5 bg-zinc-800 rounded border border-zinc-700 text-indigo-300">Alt + ← / →</kbd></span>
                 </div>
               </div>
 
@@ -2957,33 +2938,49 @@
                           class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 text-indigo-300 border border-indigo-500/40 rounded text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer">
                     {{ isSavingPoints ? 'Menyimpan...' : 'Simpan' }}
                   </button>
-
-                  <!-- Pojok Kanan Bawah: Next Part Button (and Prev if in table-focus mode) -->
-                  <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800">
-                    <button v-if="studioPanelMode === 'table-focus'"
-                            type="button"
-                            @click="navigateStudioPart(-1)"
-                            :disabled="!prevStudioPart"
-                            title="Part Sebelumnya (Alt + ←)"
-                            class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-900 text-zinc-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed">
-                      <span>‹ Prev</span>
-                    </button>
-
-                    <button type="button"
-                            @click="navigateStudioPart(1)"
-                            :disabled="!nextStudioPart"
-                            :title="nextStudioPart ? ('Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + →)') : 'Sudah di part terakhir'"
-                            class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-zinc-800 disabled:bg-zinc-800 text-white disabled:text-zinc-500 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:cursor-not-allowed group active:scale-95 border border-indigo-500/50">
-                      <span>Next Part ›</span>
-                      <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
               </div>
 
             </div>
+          </div>
+
+          <!-- Floating Prev & Next Part Navigation Pill (Pojok Kiri Bawah) -->
+          <div class="fixed bottom-5 left-5 z-50 flex items-center gap-1.5 p-1.5 rounded-2xl bg-zinc-900/95 backdrop-blur-md border border-zinc-700/90 shadow-2xl select-none">
+            <!-- Prev Part Button -->
+            <button type="button"
+                    @click="navigateStudioPart(-1)"
+                    :disabled="!prevStudioPart"
+                    :title="prevStudioPart ? ('Part Sebelumnya: ' + prevStudioPart.part_number + ' • ' + (prevStudioPart.part_name || '') + ' (Alt + ←)') : 'Sudah di part pertama'"
+                    class="px-3.5 py-2 rounded-xl bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200 hover:text-white disabled:opacity-30 disabled:hover:bg-zinc-800/90 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed group shadow-sm active:scale-95 border border-zinc-700/60">
+              <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>‹ Prev Part</span>
+            </button>
+
+            <!-- Counter & Active Part Indicator -->
+            <div class="px-3 py-0.5 text-center font-mono">
+              <div class="text-[11px] font-bold text-zinc-100 flex items-center justify-center gap-1">
+                <span class="text-indigo-400 font-extrabold">{{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }}</span>
+                <span class="text-zinc-500 font-normal">/</span>
+                <span class="text-zinc-400">{{ totalStudioParts }}</span>
+              </div>
+              <div class="text-[10px] text-zinc-400 truncate max-w-[120px] font-semibold" :title="activeChecksheet.part_number">
+                {{ activeChecksheet.part_number }}
+              </div>
+            </div>
+
+            <!-- Next Part Button -->
+            <button type="button"
+                    @click="navigateStudioPart(1)"
+                    :disabled="!nextStudioPart"
+                    :title="nextStudioPart ? ('Part Selanjutnya: ' + nextStudioPart.part_number + ' • ' + (nextStudioPart.part_name || '') + ' (Alt + →)') : 'Sudah di part terakhir'"
+                    class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-30 disabled:hover:bg-zinc-800 disabled:bg-zinc-800 disabled:text-zinc-500 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:cursor-not-allowed group active:scale-95 border border-indigo-500/50">
+              <span>Next Part ›</span>
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
         </div>
@@ -6770,7 +6767,7 @@
               document.title = focused?.part_number || 'Checksheets';
             }
           } else {
-            document.title = 'Summit FactoryHub: Quality Checksheet Suite';
+            document.title = 'FaketoryHub: Quality Checksheet Suite';
           }
         }, { immediate: true });
 
