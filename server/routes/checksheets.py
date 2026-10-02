@@ -192,19 +192,31 @@ def _build_checksheet_images(cs: Checksheet) -> list:
 
     res = []
     for img in cs.images:
-        path = img.image_path or ""
-        url = img.image_url or ""
+        path = (img.image_path or "").replace("\\", "/")
+        url = (img.image_url or "").replace("\\", "/")
         is_remote_url = url.startswith("http://") or url.startswith("https://")
+
+        # Normalize absolute paths to relative (cross-platform fix)
+        for prefix_marker in ["/storage/images/", "/extracted_images/"]:
+            if prefix_marker in path:
+                path = path[path.index(prefix_marker) + 1:]  # strip everything before "storage/..." or "extracted_..."
+                break
+        if path.startswith("storage/images/") or path.startswith("extracted_images/"):
+            pass  # already relative, good
+        elif "storage/images/" in path:
+            path = "storage/images/" + path.split("storage/images/", 1)[1]
+        elif "extracted_images/" in path:
+            path = "extracted_images/" + path.split("extracted_images/", 1)[1]
 
         if not is_remote_url:
             if "storage/images" in path:
-                sub = path.split("storage/images", 1)[1].lstrip("/\\")
+                sub = path.split("storage/images", 1)[1].lstrip("/")
                 url = f"/media/images/{sub}"
             elif "extracted_images" in path:
-                sub = path.split("extracted_images", 1)[1].lstrip("/\\")
+                sub = path.split("extracted_images", 1)[1].lstrip("/")
                 url = f"/media/extracted/{sub}"
             elif url and "storage/images" in url:
-                sub = url.split("storage/images", 1)[1].lstrip("/\\")
+                sub = url.split("storage/images", 1)[1].lstrip("/")
                 url = f"/media/images/{sub}"
 
         # Verify file exists on disk if local path is provided and not remote
@@ -479,6 +491,8 @@ async def upload_checksheet_image(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Gagal memproses file gambar: {str(e)}")
 
+    # Always store as forward-slash relative path for cross-platform compatibility
+    db_path = target_path.replace("\\", "/")
     url_sub = f"/media/images/{clean_p}/{safe_name}"
     try:
         from services.supabase_storage_service import upload_image_to_supabase
@@ -490,7 +504,8 @@ async def upload_checksheet_image(
 
     existing_img = None
     for img in cs.images:
-        if img.image_path == target_path:
+        norm_existing = (img.image_path or "").replace("\\", "/")
+        if norm_existing == db_path:
             existing_img = img
             break
 
@@ -498,7 +513,7 @@ async def upload_checksheet_image(
     if not existing_img:
         new_part_img = PartImage(
             checksheet_id=cs.id,
-            image_path=target_path,
+            image_path=db_path,
             image_url=url_sub
         )
         db.add(new_part_img)
@@ -512,7 +527,7 @@ async def upload_checksheet_image(
     new_img_dict = {
         "id": new_part_img_id,
         "image_url": url_sub,
-        "image_path": target_path,
+        "image_path": db_path,
         "filename": safe_name
     }
 

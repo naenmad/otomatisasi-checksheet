@@ -163,17 +163,17 @@ def _normalize_thumbnail_url(url: Optional[str], path: Optional[str]) -> Optiona
     raw = url or path or ""
     if not raw:
         return None
-    raw = raw.strip()
+    raw = raw.strip().replace("\\", "/")
     if raw.startswith("http://") or raw.startswith("https://"):
         return raw
     if "storage/images" in raw:
-        sub = raw.split("storage/images", 1)[1].lstrip("/\\").replace("\\", "/")
+        sub = raw.split("storage/images", 1)[1].lstrip("/")
         return f"/media/images/{sub}"
     if "extracted_images" in raw:
-        sub = raw.split("extracted_images", 1)[1].lstrip("/\\").replace("\\", "/")
+        sub = raw.split("extracted_images", 1)[1].lstrip("/")
         return f"/media/extracted/{sub}"
     if raw.startswith("/media/"):
-        return raw.replace("\\", "/")
+        return raw
     return raw
 
 
