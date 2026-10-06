@@ -82,6 +82,19 @@ async def parse_and_save_checksheet(
     # Determine status
     cat_match = match_catalog_status(part_no)
 
+    # Determine category based on parser type
+    parser_name = parser.__class__.__name__.lower()
+    if "subcont" in parser_name:
+        category = "Incomming Subcont Part"
+    elif "incoming" in parser_name:
+        category = "Incomming Material"
+    elif "ir" in parser_name:
+        category = "Incomming Std Part"
+    elif "ipqc" in parser_name or "ssw" in parser_name:
+        category = "Accuracy SSW"
+    else:
+        category = meta.get("category") or "Accuracy"
+
     # Save to database
     cs = await create_checksheet(
         session=session,
@@ -91,6 +104,7 @@ async def parse_and_save_checksheet(
         customer=customer,
         doc_number=doc_no,
         template_type=parser.__class__.__name__,
+        category=category,
         status=cat_match["status"],
         assigned_to=assigned_to,
         keterangan=cat_match["keterangan"],

@@ -106,16 +106,17 @@ def standardize_part_number(s: str) -> str:
     return val
 
 
-async def find_existing_template(page: Page, part_no: str) -> Optional[Dict[str, str]]:
+async def find_existing_template(page: Page, part_no: str, target_category: Optional[str] = None) -> Optional[Dict[str, str]]:
     """
-    Search for existing checksheet master template by Part Number on FactoryHub.
+    Search for existing checksheet master template by Part Number and Category on FactoryHub.
     FactoryHub paginates templates (10 items per page), so we MUST query using
     the server-side search parameter (?search=...) to search across all pages.
     Returns dict with editUrl, templateName, partNumber if found, else None.
     """
     clean_target = re.sub(r"[^A-Za-z0-9]", "", part_no or "").upper()
     clean_pn = standardize_part_number(part_no)
-    print(f"[*] Memeriksa apakah template untuk '{part_no}' (clean: {clean_pn}) sudah pernah dibuat sebelumnya...")
+    cat_info = f" (kategori: {target_category})" if target_category else ""
+    print(f"[*] Memeriksa apakah template untuk '{part_no}' (clean: {clean_pn}){cat_info} sudah pernah dibuat sebelumnya...")
 
     # Candidates to query via server-side search
     # IMPORTANT: FactoryHub uses SQL LIKE, so the hyphenated part number (clean_pn) MUST be queried first!
@@ -147,35 +148,57 @@ async def find_existing_template(page: Page, part_no: str) -> Optional[Dict[str,
             print(f"[!] Warning: Gagal memuat {search_url}: {e}")
             continue
 
-        found = await page.evaluate(r"""(target) => {
+        found = await page.evaluate(r"""([target, targetCat]) => {
             const rows = document.querySelectorAll('table tbody tr');
-            let exactMatch = null;
-            let partialMatch = null;
+            const partMatches = [];
 
             for (let tr of rows) {
                 const editLink = tr.querySelector('a[href*="/edit"]');
                 if (!editLink) continue; // Skip header or 'No templates found' row
 
                 const partCell = tr.cells && tr.cells[0] ? tr.cells[0].innerText.trim() : '';
-                const formatCell = tr.cells && tr.cells[1] ? tr.cells[1].innerText.trim() : '';
+                const categoryCell = tr.cells && tr.cells[1] ? tr.cells[1].innerText.trim() : '';
                 const descCell = tr.cells && tr.cells[2] ? tr.cells[2].innerText.trim() : '';
                 const cleanPart = partCell.toUpperCase().replace(/[^A-Za-z0-9]/g, '');
 
                 const matchData = {
-                    templateName: formatCell || tr.innerText.split('\n')[0],
+                    templateName: partCell,
+                    category: categoryCell,
                     partNumber: partCell,
                     description: descCell,
                     editUrl: editLink.href
                 };
 
-                // Alphanumeric clean match takes strict priority
+                // Alphanumeric clean match
                 if (cleanPart === target) {
-                    exactMatch = matchData;
-                    break;
+                    if (targetCat) {
+                        const tc = targetCat.toLowerCase().trim();
+                        const cc = categoryCell.toLowerCase().trim();
+                        // 1. Direct or fuzzy category match
+                        if (cc === tc || cc.includes(tc) || tc.includes(cc)) {
+                            return matchData; // Strict part + category match
+                        }
+                    }
+                    partMatches.push(matchData);
                 }
             }
-            return exactMatch;
-        }""", clean_target)
+
+            // If targetCat was specified and no exact category match found:
+            // Check if there is only 1 template for this part and its category is 'ACCURACY' (FactoryHub legacy default)
+            if (targetCat && partMatches.length === 1) {
+                const single = partMatches[0];
+                if ((single.category || '').toUpperCase() === 'ACCURACY') {
+                    return single; // Upgrade legacy template to target category in EDIT mode
+                }
+            }
+
+            // If no target category was specified, return the first match
+            if (!targetCat && partMatches.length > 0) {
+                return partMatches[0];
+            }
+
+            return null;
+        }""", [clean_target, target_category])
 
         if found:
             print(f"[+] DITEMUKAN TEMPLATE: Part '{found.get('partNumber')}' | Format '{found['templateName']}' (ID: {found['editUrl'].split('/')[-2]}) -> {found['editUrl']}")
@@ -205,6 +228,11 @@ def compute_template_diff(
     new_desc = str(new_meta.get("part_name") or "").strip()
     if old_desc and new_desc and old_desc.lower() != new_desc.lower():
         meta_diff["description"] = {"old": old_desc, "new": new_desc}
+
+    old_cat = str(old_meta.get("category") or "").strip()
+    new_cat = str(new_meta.get("category") or new_meta.get("checksheet_category") or "").strip()
+    if old_cat and new_cat and old_cat.lower() != new_cat.lower():
+        meta_diff["category"] = {"old": old_cat, "new": new_cat}
 
     added = []
     removed = []
@@ -431,19 +459,22 @@ async def fill_checksheet_form(
         doc_path = part_or_excel or ""
         file_type = "xlsx"
         images = [img for img in (override_images or []) if img and os.path.exists(img)]
+        cat_val = override_metadata.get("category") or override_metadata.get("checksheet_category", "Accuracy")
         meta = {
             "part_number": norm_part,
             "part_name": override_metadata.get("part_name", ""),
             "model": override_metadata.get("model", "-"),
             "customer": override_metadata.get("customer", "PT. HPM"),
             "doc_number": custom_doc_no or override_metadata.get("doc_number", "Form 1"),
-            "checksheet_category": override_metadata.get("checksheet_category", "Accuracy")
+            "category": cat_val,
+            "checksheet_category": cat_val
         }
         scan_mode_str = "Supabase Database"
         items = override_items if override_items is not None else []
         print(f"[+] Data Part Berhasil Diambil dari Database:")
         print(f"    - Part Number: {meta['part_number']}")
         print(f"    - Part Name  : {meta['part_name']}")
+        print(f"    - Category   : {meta['category']}")
         print(f"    - Doc Number : {meta['doc_number']}")
         print(f"    - Items      : {len(items)} inspection point(s)")
     else:
@@ -489,7 +520,8 @@ async def fill_checksheet_form(
             items = override_items if override_items is not None else []
 
     part_no = meta["part_number"]
-    existing_template = await find_existing_template(page, part_no)
+    target_category = meta.get("category") or meta.get("checksheet_category") or "Accuracy"
+    existing_template = await find_existing_template(page, part_no, target_category=target_category)
     diff_data = None
     edit_url = None
 
@@ -505,6 +537,8 @@ async def fill_checksheet_form(
         old_template_data = await page.evaluate(r"""() => {
             const docInp = document.querySelector('input[name="doc_number"]');
             const descInp = document.querySelector('input[name="description"]');
+            const catSelect = document.querySelector('select[name="category"]');
+            const oldCat = catSelect && catSelect.selectedIndex >= 0 ? catSelect.options[catSelect.selectedIndex].text.trim() : '';
             const tbody = document.getElementById('inspection-tbody');
 
             const oldItems = [];
@@ -538,6 +572,7 @@ async def fill_checksheet_form(
             return {
                 doc_number: docInp ? docInp.value.trim() : '',
                 description: descInp ? descInp.value.trim() : '',
+                category: oldCat,
                 items: oldItems
             };
         }""")
@@ -567,6 +602,56 @@ async def fill_checksheet_form(
             desc_inp = await page.query_selector('input[name="description"]')
             if desc_inp:
                 await desc_inp.fill(meta["part_name"])
+
+        # 2b. Update Category if select[name="category"] exists in EDIT mode
+        checksheet_cat = meta.get("category") or meta.get("checksheet_category") or "Accuracy"
+        print(f"[*] Updating Category: {checksheet_cat}...")
+        await page.evaluate(r"""(catName) => {
+            const catSelect = document.querySelector('select[name="category"]');
+            if (!catSelect || !catName) return;
+            const target = catName.toLowerCase().trim();
+            let matched = false;
+
+            // 1. Exact match value or text
+            for (let i = 0; i < catSelect.options.length; i++) {
+                const opt = catSelect.options[i];
+                if (opt.value.toLowerCase().trim() === target || opt.text.toLowerCase().trim() === target) {
+                    catSelect.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+
+            // 2. Fuzzy / keyword match
+            if (!matched) {
+                for (let i = 0; i < catSelect.options.length; i++) {
+                    const val = catSelect.options[i].value.toLowerCase();
+                    const txt = catSelect.options[i].text.toLowerCase();
+                    if (target.includes('ssw') && (val.includes('ssw') || txt.includes('ssw'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('subcont') && (val.includes('subcont') || txt.includes('subcont'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('material') && (val.includes('material') || txt.includes('material'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('std') && (val.includes('std') || txt.includes('std'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('accuracy') && (val.includes('accuracy') || txt.includes('accuracy'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('general') && (val.includes('general') || txt.includes('general'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                }
+            }
+
+            // Trigger change event for reactive forms
+            catSelect.dispatchEvent(new Event('input', { bubbles: true }));
+            catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }""", checksheet_cat)
 
         # 3. Handle Reference Images in EDIT mode
         # Menghapus gambar lama di FactoryHub dan mengunggah sketsa baru (overwrite total)
@@ -771,20 +856,53 @@ async def fill_checksheet_form(
                 "message": f"Part number '{part_no}' belum terdaftar di FactoryHub."
             }
 
-        # 1b. Checksheet Category (Accuracy vs General)
-        checksheet_cat = meta.get("checksheet_category") or "Accuracy"
+        # 1b. Checksheet Category
+        checksheet_cat = meta.get("category") or meta.get("checksheet_category") or "Accuracy"
         print(f"[*] Selecting Category: {checksheet_cat}...")
         await page.evaluate(r"""(catName) => {
             const catSelect = document.querySelector('select[name="category"]');
-            if (catSelect && catName) {
+            if (!catSelect || !catName) return;
+            const target = catName.toLowerCase().trim();
+            let matched = false;
+
+            // 1. Exact match value or text
+            for (let i = 0; i < catSelect.options.length; i++) {
+                const opt = catSelect.options[i];
+                if (opt.value.toLowerCase().trim() === target || opt.text.toLowerCase().trim() === target) {
+                    catSelect.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+
+            // 2. Fuzzy / keyword match
+            if (!matched) {
                 for (let i = 0; i < catSelect.options.length; i++) {
-                    const opt = catSelect.options[i];
-                    if (opt.value.toLowerCase() === catName.toLowerCase() || opt.text.toLowerCase() === catName.toLowerCase()) {
-                        catSelect.selectedIndex = i;
-                        break;
+                    const val = catSelect.options[i].value.toLowerCase();
+                    const txt = catSelect.options[i].text.toLowerCase();
+                    if (target.includes('ssw') && (val.includes('ssw') || txt.includes('ssw'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('subcont') && (val.includes('subcont') || txt.includes('subcont'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('material') && (val.includes('material') || txt.includes('material'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('std') && (val.includes('std') || txt.includes('std'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('accuracy') && (val.includes('accuracy') || txt.includes('accuracy'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('general') && (val.includes('general') || txt.includes('general'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
                     }
                 }
             }
+
+            // Trigger change event for reactive forms
+            catSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }""", checksheet_cat)
 
         # 2. Checksheet Format: Daily Checksheet
@@ -795,19 +913,6 @@ async def fill_checksheet_form(
                 formatSelect.value = 'daily';
                 if (typeof updateTableHead === 'function') {
                     updateTableHead();
-                }
-            }
-        }""")
-
-        # 3. Category (Default to Accuracy if available)
-        await page.evaluate("""() => {
-            const catSelect = document.querySelector('select[name="category"]');
-            if (catSelect) {
-                for (let opt of catSelect.options) {
-                    if (opt.value.toLowerCase() === 'accuracy') {
-                        catSelect.value = opt.value;
-                        break;
-                    }
                 }
             }
         }""")

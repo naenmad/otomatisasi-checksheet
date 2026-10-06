@@ -40,6 +40,7 @@ class Checksheet(Base):
     customer = Column(String(100), default="PT. HPM")
     doc_number = Column(String(100), default="Form 1")
     template_type = Column(String(50), default="GENERIC")
+    category = Column(String(100), default="Accuracy", nullable=False, index=True)
 
     # Status: DRAFT, READY_FOR_SUBMIT, IN_QUEUE, SUBMITTED, TIDAK_ADA_PART
     status = Column(String(50), default="DRAFT", index=True)

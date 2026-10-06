@@ -55,14 +55,14 @@
     <div v-if="!currentUser" class="flex-1 flex items-center justify-center p-6 bg-zinc-950">
       <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
         <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shadow-inner shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-400 shadow-inner shrink-0">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
             </svg>
           </div>
           <div>
             <div class="flex items-center gap-1.5 leading-none">
-              <span class="px-2 py-0.5 rounded-md bg-purple-600 border border-purple-400/40 text-white font-black text-sm uppercase tracking-wider shadow-sm shadow-purple-900/50">Fake</span>
+              <span class="px-2 py-0.5 rounded-md bg-red-600 border border-red-400/40 text-white font-black text-sm uppercase tracking-wider shadow-sm shadow-red-900/50 line-through decoration-2 decoration-white/90">Fake</span>
               <span class="text-xl font-extrabold tracking-tight text-zinc-100">toryHub</span>
             </div>
             <p class="text-xs text-zinc-400 mt-1">Quality Checksheet Control Center</p>
@@ -70,39 +70,7 @@
         </div>
 
         <h2 class="text-lg font-bold text-zinc-100 mb-1">Masuk ke Sistem</h2>
-        <p class="text-xs text-zinc-400 mb-4">Pilih akun cepat di bawah ini untuk langsung masuk, atau ketik akun Anda.</p>
-
-        <!-- Quick Login 1-Click Fast Select -->
-        <div class="mb-5 p-3 rounded-xl bg-zinc-950/70 border border-zinc-800">
-          <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Masuk Cepat 1-Klik:</p>
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" @click="quickLogin('admin', 'admin123!')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-              <span>Admin</span>
-            </button>
-            <button type="button" @click="quickLogin('zul', 'zul123')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Zul</span>
-            </button>
-            <button type="button" @click="quickLogin('iqbal', 'iqbal123')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Iqbal</span>
-            </button>
-            <button type="button" @click="quickLogin('rama', 'rama123')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Rama</span>
-            </button>
-            <button type="button" @click="quickLogin('yogi', 'yogi123')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Yogi</span>
-            </button>
-          </div>
-        </div>
+        <p class="text-xs text-zinc-400 mb-4">Silakan masukkan username dan kata sandi Anda untuk mengakses sistem.</p>
 
         <!-- Error Notification -->
         <div v-if="loginError" class="mb-4 p-3 bg-rose-950/80 border border-rose-800 text-rose-300 rounded-lg text-xs flex items-center justify-between">
@@ -154,14 +122,14 @@
              :class="isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'">
           <!-- Brand when Expanded -->
           <div v-if="!isSidebarCollapsed" class="flex items-center gap-2.5 overflow-hidden">
-            <div class="w-8 h-8 rounded-lg bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-400 shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
             </div>
             <div class="truncate">
               <div class="flex items-center gap-1 leading-none">
-                <span class="px-1.5 py-0.5 rounded bg-purple-600 border border-purple-400/40 text-white font-black text-[11px] uppercase tracking-wider shadow-sm shadow-purple-900/40">Fake</span>
+                <span class="px-1.5 py-0.5 rounded bg-red-600 border border-red-400/40 text-white font-black text-[11px] uppercase tracking-wider shadow-sm shadow-red-900/40 line-through decoration-2 decoration-white/90">Fake</span>
                 <span class="text-sm font-extrabold text-zinc-100 tracking-tight">toryHub</span>
               </div>
               <span class="text-[10px] text-zinc-400 block truncate font-medium mt-0.5">Quality Automation</span>
@@ -347,7 +315,7 @@
             <div>
               <div class="flex items-center gap-2">
                 <div class="inline-flex items-center gap-1">
-                  <span class="px-1.5 py-0.5 rounded bg-purple-600 border border-purple-400/30 text-white font-black text-[10px] uppercase tracking-wider shadow-sm">Fake</span>
+                  <span class="px-1.5 py-0.5 rounded bg-red-600 border border-red-400/30 text-white font-black text-[10px] uppercase tracking-wider shadow-sm line-through decoration-2 decoration-white/90">Fake</span>
                   <span class="text-xs font-bold text-zinc-200 tracking-tight">toryHub</span>
                 </div>
                 <span class="text-zinc-600">/</span>
@@ -363,6 +331,25 @@
 
           <!-- Global Action Buttons -->
           <div class="flex items-center gap-2">
+            <!-- Live FactoryHub Category Sync Progress Badge -->
+            <button v-if="syncCategoryState.active || syncCategoryState.is_finished"
+                    @click="showSyncCategoryModal = true"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer shadow-sm"
+                    :class="syncCategoryState.active 
+                      ? 'bg-amber-950/80 text-amber-200 border-amber-700/80 hover:bg-amber-900/90 ring-1 ring-amber-500/40' 
+                      : 'bg-emerald-950/80 text-emerald-200 border-emerald-700/80 hover:bg-emerald-900/90'"
+                    :title="syncCategoryState.active ? 'Klik untuk melihat live progress sinkronisasi FactoryHub' : 'Sinkronisasi kategori FactoryHub selesai. Klik untuk detail.'">
+              <span v-if="syncCategoryState.active" class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span v-else class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Sync Kategori: {{ syncCategoryState.percent }}%</span>
+              <span class="font-mono text-[10px] bg-zinc-950/60 px-1.5 py-0.5 rounded text-zinc-300">
+                {{ syncCategoryState.current }}/{{ syncCategoryState.total }}
+              </span>
+            </button>
+
             <!-- Hard Refresh Button -->
             <button @click="triggerHardRefresh"
                     class="px-2.5 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -434,30 +421,258 @@
         <!-- PAGE 1: DASHBOARD -->
         <main v-show="activePage === 'dashboard'" class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
           <!-- Welcome Banner -->
-          <div class="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-indigo-950 text-indigo-300 border border-indigo-800 uppercase">
+          <div class="relative overflow-hidden bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-md bg-indigo-950/80 text-indigo-300 border border-indigo-800/80 uppercase tracking-wider">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
                   {{ currentUser.role }} QC
                 </span>
-                <span class="text-xs text-zinc-400">• PT. Summit Adyawinsa Indonesia</span>
+                <span class="text-xs text-zinc-400">PT. Summit Adyawinsa Indonesia</span>
+                <span class="text-zinc-600">•</span>
+                <span class="text-xs font-mono text-zinc-400">IQC Quality Control Tower</span>
               </div>
-              <h2 class="text-xl font-bold text-zinc-100 mt-2">
-                Selamat bertugas, {{ currentUser.name }}!
-              </h2>
-              <p class="text-xs text-zinc-400 mt-1 max-w-2xl">
-                Sistem saat ini mengelola <strong>{{ checksheets.length }} part checksheet CS INCOMING</strong> yang siap ditinjau dan disubmit ke portal FactoryHub.
-              </p>
+              <div>
+                <h2 class="text-2xl font-bold tracking-tight text-zinc-100">
+                  Selamat bertugas, {{ currentUser.name }}
+                </h2>
+                <p class="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                  Sistem aktif mengorkestrasi <span class="font-mono font-semibold text-zinc-200">{{ checksheets.length }} part checksheet</span> di seluruh lini inspeksi kualitas untuk sinkronisasi otomatis ke FactoryHub.
+                </p>
+              </div>
+
+              <!-- Quick category telemetry pill strip -->
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Distribusi Kategori:</span>
+                <button @click="goToChecksheetsWithCategory('Incomming Subcont Part')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-950/60 border border-zinc-800 hover:border-amber-700/80 text-zinc-300 transition-colors cursor-pointer">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                  <span>Subcont</span>
+                  <span class="font-bold text-amber-300">{{ countGlobalCategory('Incomming Subcont Part') }}</span>
+                </button>
+                <button @click="goToChecksheetsWithCategory('Incomming Material')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-950/60 border border-zinc-800 hover:border-emerald-700/80 text-zinc-300 transition-colors cursor-pointer">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>Material</span>
+                  <span class="font-bold text-emerald-300">{{ countGlobalCategory('Incomming Material') }}</span>
+                </button>
+                <button @click="goToChecksheetsWithCategory('Incomming Std Part')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-950/60 border border-zinc-800 hover:border-sky-700/80 text-zinc-300 transition-colors cursor-pointer">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                  <span>Std Part</span>
+                  <span class="font-bold text-sky-300">{{ countGlobalCategory('Incomming Std Part') }}</span>
+                </button>
+                <button @click="goToChecksheetsWithCategory('Accuracy SSW')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-950/60 border border-zinc-800 hover:border-indigo-700/80 text-zinc-300 transition-colors cursor-pointer">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                  <span>Accuracy SSW</span>
+                  <span class="font-bold text-indigo-300">{{ countGlobalCategory('Accuracy SSW') }}</span>
+                </button>
+                <button @click="goToChecksheetsWithCategory('Accuracy')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-zinc-950/60 border border-zinc-800 hover:border-violet-700/80 text-zinc-300 transition-colors cursor-pointer">
+                  <span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                  <span>Accuracy</span>
+                  <span class="font-bold text-violet-300">{{ countGlobalCategory('Accuracy') }}</span>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+
+            <div class="flex items-center gap-2.5 shrink-0">
               <button @click="navigate('checksheets')"
-                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
-                <span>Buka Daftar Tugas</span>
+                      class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                <span>Buka Antrean Tugas</span>
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
               </button>
               <button @click="navigate('master_part')"
-                      class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2">
+                      class="px-4 py-2.5 bg-zinc-950/80 hover:bg-zinc-800 active:scale-95 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer">
                 <span>Cari Master Part</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Categorical Health & Distribution Grid (5 Categories Telemetry) -->
+          <div class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  Status Kategori Inspeksi QC
+                </h3>
+                <p class="text-[11px] text-zinc-500">
+                  Pilih kartu kategori untuk langsung memfilter daftar kerja checksheet
+                </p>
+              </div>
+              <span class="text-[11px] font-mono text-zinc-500">5 Kategori Terdaftar</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <!-- Category 1: Incomming Subcont Part -->
+              <button @click="goToChecksheetsWithCategory('Incomming Subcont Part')"
+                      class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-amber-600/80 text-left transition-all group flex flex-col justify-between gap-3 shadow-sm hover:shadow-amber-950/20 cursor-pointer">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-950/80 text-amber-300 border border-amber-800/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                      Subcont Part
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                  <div class="mt-2.5">
+                    <p class="text-2xl font-bold font-mono text-zinc-100 group-hover:text-amber-300 transition-colors">
+                      {{ countGlobalCategory('Incomming Subcont Part') }}
+                    </p>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Part stamping subcont supplier</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-zinc-500">Progress Done</span>
+                    <span class="text-emerald-400 font-semibold">{{ getCategoryProgress('Incomming Subcont Part').percent }}% ({{ getCategoryProgress('Incomming Subcont Part').done }})</span>
+                  </div>
+                  <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: getCategoryProgress('Incomming Subcont Part').percent + '%' }"></div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 flex justify-between">
+                    <span>Siap Kirim:</span>
+                    <span class="font-mono text-sky-400 font-semibold">{{ getCategoryProgress('Incomming Subcont Part').ready }}</span>
+                  </p>
+                </div>
+              </button>
+
+              <!-- Category 2: Incomming Material -->
+              <button @click="goToChecksheetsWithCategory('Incomming Material')"
+                      class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-emerald-600/80 text-left transition-all group flex flex-col justify-between gap-3 shadow-sm hover:shadow-emerald-950/20 cursor-pointer">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      Material
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                  <div class="mt-2.5">
+                    <p class="text-2xl font-bold font-mono text-zinc-100 group-hover:text-emerald-300 transition-colors">
+                      {{ countGlobalCategory('Incomming Material') }}
+                    </p>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Raw material coil & sheet</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-zinc-500">Progress Done</span>
+                    <span class="text-emerald-400 font-semibold">{{ getCategoryProgress('Incomming Material').percent }}% ({{ getCategoryProgress('Incomming Material').done }})</span>
+                  </div>
+                  <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: getCategoryProgress('Incomming Material').percent + '%' }"></div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 flex justify-between">
+                    <span>Siap Kirim:</span>
+                    <span class="font-mono text-sky-400 font-semibold">{{ getCategoryProgress('Incomming Material').ready }}</span>
+                  </p>
+                </div>
+              </button>
+
+              <!-- Category 3: Incomming Std Part -->
+              <button @click="goToChecksheetsWithCategory('Incomming Std Part')"
+                      class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-sky-600/80 text-left transition-all group flex flex-col justify-between gap-3 shadow-sm hover:shadow-sky-950/20 cursor-pointer">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-950/80 text-sky-300 border border-sky-800/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                      Std Part
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                  <div class="mt-2.5">
+                    <p class="text-2xl font-bold font-mono text-zinc-100 group-hover:text-sky-300 transition-colors">
+                      {{ countGlobalCategory('Incomming Std Part') }}
+                    </p>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Purchased standard fasteners</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-zinc-500">Progress Done</span>
+                    <span class="text-emerald-400 font-semibold">{{ getCategoryProgress('Incomming Std Part').percent }}% ({{ getCategoryProgress('Incomming Std Part').done }})</span>
+                  </div>
+                  <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: getCategoryProgress('Incomming Std Part').percent + '%' }"></div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 flex justify-between">
+                    <span>Siap Kirim:</span>
+                    <span class="font-mono text-sky-400 font-semibold">{{ getCategoryProgress('Incomming Std Part').ready }}</span>
+                  </p>
+                </div>
+              </button>
+
+              <!-- Category 4: Accuracy SSW -->
+              <button @click="goToChecksheetsWithCategory('Accuracy SSW')"
+                      class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-indigo-600/80 text-left transition-all group flex flex-col justify-between gap-3 shadow-sm hover:shadow-indigo-950/20 cursor-pointer">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-950/80 text-indigo-300 border border-indigo-800/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                      Accuracy SSW
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                  <div class="mt-2.5">
+                    <p class="text-2xl font-bold font-mono text-zinc-100 group-hover:text-indigo-300 transition-colors">
+                      {{ countGlobalCategory('Accuracy SSW') }}
+                    </p>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Inspeksi presisi stamping SSW</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-zinc-500">Progress Done</span>
+                    <span class="text-emerald-400 font-semibold">{{ getCategoryProgress('Accuracy SSW').percent }}% ({{ getCategoryProgress('Accuracy SSW').done }})</span>
+                  </div>
+                  <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: getCategoryProgress('Accuracy SSW').percent + '%' }"></div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 flex justify-between">
+                    <span>Siap Kirim:</span>
+                    <span class="font-mono text-sky-400 font-semibold">{{ getCategoryProgress('Accuracy SSW').ready }}</span>
+                  </p>
+                </div>
+              </button>
+
+              <!-- Category 5: Accuracy -->
+              <button @click="goToChecksheetsWithCategory('Accuracy')"
+                      class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-violet-600/80 text-left transition-all group flex flex-col justify-between gap-3 shadow-sm hover:shadow-violet-950/20 cursor-pointer">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-violet-950/80 text-violet-300 border border-violet-800/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                      Accuracy
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                  <div class="mt-2.5">
+                    <p class="text-2xl font-bold font-mono text-zinc-100 group-hover:text-violet-300 transition-colors">
+                      {{ countGlobalCategory('Accuracy') }}
+                    </p>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Master checksheet accuracy</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-zinc-500">Progress Done</span>
+                    <span class="text-emerald-400 font-semibold">{{ getCategoryProgress('Accuracy').percent }}% ({{ getCategoryProgress('Accuracy').done }})</span>
+                  </div>
+                  <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden flex">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="{ width: getCategoryProgress('Accuracy').percent + '%' }"></div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 flex justify-between">
+                    <span>Siap Kirim:</span>
+                    <span class="font-mono text-sky-400 font-semibold">{{ getCategoryProgress('Accuracy').ready }}</span>
+                  </p>
+                </div>
               </button>
             </div>
           </div>
@@ -532,37 +747,48 @@
               <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
             </button>
 
-            <!-- Reviewed (Siap Batch) -->
-            <button @click="goToChecksheetsWithStatus('Reviewed')"
+            <!-- Siap Kirim (Siap Batch) -->
+            <button @click="goToChecksheetsWithStatus('Siap Kirim')"
                     class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-sky-800 text-left transition-all group">
               <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Reviewed</p>
+                <p class="text-xs text-zinc-400 font-medium">Siap Kirim</p>
                 <span class="w-2 h-2 rounded-full bg-sky-500"></span>
               </div>
-              <p class="text-2xl font-bold text-sky-400 font-mono mt-1 group-hover:text-sky-300 transition-colors">{{ countStatus('Reviewed') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Ditinjau & siap batch</p>
+              <p class="text-2xl font-bold text-sky-400 font-mono mt-1 group-hover:text-sky-300 transition-colors">{{ countStatus('Siap Kirim') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Ditinjau & siap submit batch</p>
             </button>
 
-            <!-- Belum di review -->
-            <button @click="goToChecksheetsWithStatus('Belum di review')"
+            <!-- Belum Dikerjakan -->
+            <button @click="goToChecksheetsWithStatus('Belum Dikerjakan')"
                     class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-amber-800 text-left transition-all group">
               <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Belum di review</p>
+                <p class="text-xs text-zinc-400 font-medium">Belum Dikerjakan</p>
                 <span class="w-2 h-2 rounded-full bg-amber-500"></span>
               </div>
-              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum di review') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Perlu review & verifikasi</p>
+              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum Dikerjakan') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Antrean pengerjaan operator</p>
             </button>
 
-            <!-- Butuh Revisi -->
-            <button @click="goToChecksheetsWithStatus('Butuh Revisi')"
+            <!-- Perlu Revisi Isi -->
+            <button @click="goToChecksheetsWithStatus('Perlu Revisi Isi')"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-amber-700 text-left transition-all group">
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-zinc-400 font-medium">Perlu Revisi Isi</p>
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              </div>
+              <p class="text-2xl font-bold text-amber-300 font-mono mt-1">{{ countStatus('Perlu Revisi Isi') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Perlu revisi poin/teks</p>
+            </button>
+
+            <!-- Perlu Revisi Gambar -->
+            <button @click="goToChecksheetsWithStatus('Perlu Revisi Gambar')"
                     class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-purple-800 text-left transition-all group">
               <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
+                <p class="text-xs text-zinc-400 font-medium">Perlu Revisi Gambar</p>
                 <span class="w-2 h-2 rounded-full bg-purple-500"></span>
               </div>
-              <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing</p>
+              <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Perlu Revisi Gambar') }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan sketsa drawing</p>
             </button>
 
             <!-- Tidak Ada Part -->
@@ -574,17 +800,6 @@
               </div>
               <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
               <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
-            </button>
-
-            <!-- Canceled -->
-            <button @click="goToChecksheetsWithStatus('Canceled')"
-                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-zinc-700 text-left transition-all group">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Canceled</p>
-                <span class="w-2 h-2 rounded-full bg-zinc-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-zinc-400 font-mono mt-1 group-hover:text-zinc-200 transition-colors">{{ countStatus('Canceled') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Part / proses dibatalkan</p>
             </button>
           </div>
 
@@ -698,6 +913,7 @@
                     <th class="py-2.5 px-4">Nama Part</th>
                     <th class="py-2.5 px-3">Model</th>
                     <th class="py-2.5 px-3">Customer</th>
+                    <th class="py-2.5 px-3">Kategori</th>
                     <th class="py-2.5 px-3">Status</th>
                     <th class="py-2.5 px-3 text-center">Aksi</th>
                   </tr>
@@ -710,11 +926,22 @@
                     <td class="py-2.5 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
                     <td class="py-2.5 px-3">
                       <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
+                            :class="(cs.category === 'Incomming Subcont Part') ? 'bg-amber-950/80 text-amber-300 border-amber-800/80' :
+                                    (cs.category === 'Incomming Material') ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80' :
+                                    (cs.category === 'Incomming Std Part') ? 'bg-sky-950/80 text-sky-300 border-sky-800/80' :
+                                    (cs.category === 'Accuracy SSW') ? 'bg-indigo-950/80 text-indigo-300 border-indigo-800/80' :
+                                    'bg-violet-950/80 text-violet-300 border-violet-800/80'">
+                        {{ formatCategoryShort(cs.category) }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
                             :class="cs.status === 'Checksheet Done' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
-                                    cs.status === 'Reviewed' ? 'bg-sky-950 text-sky-300 border-sky-800' :
-                                    cs.status === 'Belum Di Input' ? 'bg-amber-950 text-amber-300 border-amber-800' :
-                                    cs.status === 'Butuh Revisi' ? 'bg-purple-950 text-purple-300 border-purple-800' :
-                                    (cs.status && cs.status.toLowerCase() === 'canceled') ? 'bg-zinc-800 text-zinc-300 border-zinc-600' :
+                                    (cs.status === 'Siap Kirim' || cs.status === 'Reviewed') ? 'bg-sky-950 text-sky-300 border-sky-800' :
+                                    (cs.status === 'Belum Dikerjakan' || cs.status === 'Belum Di Input' || cs.status === 'Belum di review') ? 'bg-zinc-800 text-zinc-300 border-zinc-700' :
+                                    (cs.status === 'Perlu Revisi Isi' || cs.status === 'Butuh Revisi') ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                    cs.status === 'Perlu Revisi Gambar' ? 'bg-purple-950 text-purple-300 border-purple-800' :
+                                    (cs.status && cs.status.toLowerCase() === 'canceled') ? 'bg-zinc-900 text-zinc-400 border-zinc-700' :
                                     'bg-rose-950 text-rose-300 border-rose-800'">
                         {{ cs.status }}
                       </span>
@@ -733,253 +960,410 @@
         </main>
 
         <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
-        <main v-show="activePage === 'checksheets'" class="flex-1 w-full max-w-[99vw] 2xl:max-w-[1920px] mx-auto px-3 sm:px-5 lg:px-6 py-4 flex flex-col gap-4">
-          <!-- Interactive Metric Filters -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-            <button @click="statusFilter = 'ALL'"
-                    :class="statusFilter === 'ALL' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <p class="text-xs text-zinc-400 font-medium">Total Checksheet</p>
-              <p class="text-2xl font-bold text-zinc-100 font-mono mt-1">{{ checksheets.length }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Seluruh part terdaftar</p>
-            </button>
+        <main v-show="activePage === 'checksheets'" class="flex-1 w-full max-w-[99vw] 2xl:max-w-[1920px] mx-auto px-3 sm:px-5 lg:px-6 py-4 flex flex-col gap-3.5">
+          <!-- 2-TIER WORKFLOW & CATEGORY CONTROL CENTER -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3 shadow-sm">
+            <!-- Tier 1: Alur Kerja Operasional (Workflow Status) -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2 overflow-x-auto max-w-full pb-0.5">
+                <!-- Tab 1: Perlu Dikerjakan (Default To-Do) -->
+                <button @click="workflowTab = 'TODO'; statusFilter = 'ALL'"
+                        :class="workflowTab === 'TODO' 
+                          ? 'bg-amber-950 text-amber-200 border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/50' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
+                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
+                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'TODO' ? 'bg-amber-400 animate-pulse' : 'bg-amber-500/60'"></span>
+                  <span>Perlu Dikerjakan</span>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
+                        :class="workflowTab === 'TODO' ? 'bg-amber-800/90 text-amber-100' : 'bg-zinc-800 text-zinc-400'">
+                    {{ countTodo }}
+                  </span>
+                </button>
 
-            <button @click="statusFilter = 'Checksheet Done'"
-                    :class="statusFilter === 'Checksheet Done' ? 'border-emerald-500 bg-zinc-800/80 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Checksheet Done</p>
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-emerald-400 font-mono mt-1">{{ countStatus('Checksheet Done') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Selesai diinput FactoryHub</p>
-            </button>
+                <!-- Tab 2: Siap Kirim (Reviewed) -->
+                <button @click="workflowTab = 'READY'; statusFilter = 'ALL'"
+                        :class="workflowTab === 'READY' 
+                          ? 'bg-sky-950 text-sky-200 border-sky-600 font-bold shadow-sm ring-1 ring-sky-500/50' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
+                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
+                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'READY' ? 'bg-sky-400' : 'bg-sky-500/60'"></span>
+                  <span>Siap Kirim</span>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
+                        :class="workflowTab === 'READY' ? 'bg-sky-800/90 text-sky-100' : 'bg-zinc-800 text-zinc-400'">
+                    {{ countReady }}
+                  </span>
+                </button>
 
-            <button @click="statusFilter = 'Reviewed'"
-                    :class="statusFilter === 'Reviewed' ? 'border-sky-500 bg-zinc-800/80 ring-1 ring-sky-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Reviewed</p>
-                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-sky-400 font-mono mt-1">{{ countStatus('Reviewed') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Ditinjau & siap batch</p>
-            </button>
+                <!-- Tab 3: Selesai (Checksheet Done) -->
+                <button @click="workflowTab = 'DONE'; statusFilter = 'ALL'"
+                        :class="workflowTab === 'DONE' 
+                          ? 'bg-emerald-950 text-emerald-200 border-emerald-600 font-bold shadow-sm ring-1 ring-emerald-500/50' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
+                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
+                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'DONE' ? 'bg-emerald-400' : 'bg-emerald-500/60'"></span>
+                  <span>Selesai</span>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
+                        :class="workflowTab === 'DONE' ? 'bg-emerald-800/90 text-emerald-100' : 'bg-zinc-800 text-zinc-400'">
+                    {{ countDone }}
+                  </span>
+                </button>
 
-            <button @click="statusFilter = (statusFilter === 'Belum di review' || statusFilter === 'Belum Di Input' ? 'ALL' : 'Belum di review')"
-                    :class="(statusFilter === 'Belum di review' || statusFilter === 'Belum Di Input') ? 'border-amber-500 bg-zinc-800/80 ring-1 ring-amber-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Belum di review</p>
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countStatus('Belum di review') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Perlu review & verifikasi</p>
-            </button>
+                <span class="h-5 w-px bg-zinc-800 mx-1"></span>
 
-            <button @click="statusFilter = 'Butuh Revisi'"
-                    :class="statusFilter === 'Butuh Revisi' ? 'border-purple-500 bg-zinc-800/80 ring-1 ring-purple-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Butuh Revisi</p>
-                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-purple-400 font-mono mt-1">{{ countStatus('Butuh Revisi') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan drawing</p>
-            </button>
+                <!-- Tab 4: Semua Part (Archive & Overview) -->
+                <button @click="workflowTab = 'ALL'; statusFilter = 'ALL'"
+                        :class="workflowTab === 'ALL' 
+                          ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-sm' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-zinc-800'"
+                        class="px-3.5 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer">
+                  <span>Semua Part</span>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded text-zinc-300 bg-zinc-950/80">
+                    {{ checksheets.length }}
+                  </span>
+                </button>
 
-            <div :class="statusFilter === 'Tidak Ada Part' ? 'border-rose-500 bg-zinc-800/80 ring-1 ring-rose-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                 class="p-4 rounded-xl border text-left transition-all flex flex-col justify-between">
-              <button @click="statusFilter = (statusFilter === 'Tidak Ada Part' ? 'ALL' : 'Tidak Ada Part')" class="w-full text-left cursor-pointer">
-                <div class="flex items-center justify-between">
-                  <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
-                  <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <!-- Tab 5 (Kecil/Opsional): Masalah (Tidak Ada Part & Canceled) jika ada -->
+                <div v-if="countIssues > 0" class="inline-flex items-center rounded-lg border shrink-0"
+                     :class="workflowTab === 'ISSUES' ? 'bg-rose-950 border-rose-700' : 'border-zinc-800 bg-zinc-950/40'">
+                  <button @click="workflowTab = 'ISSUES'; statusFilter = 'ALL'"
+                          :class="workflowTab === 'ISSUES' ? 'text-rose-200 font-bold' : 'text-rose-400/80 hover:text-rose-300 hover:bg-zinc-800/60'"
+                          class="px-3 py-2 text-xs sm:text-sm transition-colors flex items-center gap-2 rounded-l-lg cursor-pointer"
+                          title="Part yang belum ada di Master atau Dibatalkan">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    <span>Masalah / Pending</span>
+                    <span class="font-mono text-xs px-2 py-0.5 rounded font-bold"
+                          :class="workflowTab === 'ISSUES' ? 'bg-rose-800/90 text-rose-100' : 'text-rose-400'">
+                      {{ countIssues }}
+                    </span>
+                  </button>
+                  <a href="/api/export/excel/tidak-ada-part" download
+                     class="px-2.5 py-2 text-rose-400 hover:text-rose-200 hover:bg-rose-900/40 rounded-r-lg border-l border-zinc-800 transition-colors"
+                     title="Unduh Excel khusus part belum terdaftar di Master Web">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                  </a>
                 </div>
-                <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
-                <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
-              </button>
-              <div class="mt-2.5 pt-2 border-t border-zinc-800/60 flex items-center justify-between">
-                <a href="/api/export/excel/tidak-ada-part" download
-                   class="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300 hover:underline"
-                   title="Download file Excel khusus 374 Part Belum Ada">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                  <span>Unduh Excel</span>
-                </a>
-                <span class="text-[10px] text-zinc-500 font-mono">374 part</span>
               </div>
+
+              <!-- Active Filter Reset Button if any filter active -->
+              <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name)"
+                      @click="resetFilters"
+                      class="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition-colors flex items-center gap-1.5 shrink-0 ml-auto cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>Reset Filter</span>
+              </button>
             </div>
 
-            <!-- Canceled -->
-            <button @click="statusFilter = (statusFilter === 'Canceled' ? 'ALL' : 'Canceled')"
-                    :class="statusFilter === 'Canceled' ? 'border-zinc-500 bg-zinc-800/80 ring-1 ring-zinc-500' : 'border-zinc-800 bg-zinc-900/90 hover:border-zinc-700'"
-                    class="p-4 rounded-xl border text-left transition-all">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Canceled</p>
-                <span class="w-2 h-2 rounded-full bg-zinc-500"></span>
-              </div>
-              <p class="text-2xl font-bold text-zinc-300 font-mono mt-1">{{ countStatus('Canceled') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Part / proses dibatalkan</p>
-            </button>
+            <!-- Sub-filter Status Detail (Saat berada di tab Perlu Dikerjakan) -->
+            <div v-if="workflowTab === 'TODO'" class="pt-2 border-t border-zinc-800/60 flex items-center gap-1.5 overflow-x-auto max-w-full pb-0.5">
+              <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                <span>Filter Status:</span>
+              </span>
+              <button @click="statusFilter = 'ALL'"
+                      :class="statusFilter === 'ALL'
+                        ? 'bg-zinc-200 text-zinc-950 font-bold shadow-sm'
+                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
+                      class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                Semua Antrean ({{ countTodo }})
+              </button>
+              <button @click="statusFilter = 'Belum Dikerjakan'"
+                      :class="statusFilter === 'Belum Dikerjakan'
+                        ? 'bg-amber-950 text-amber-200 border border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/40'
+                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
+                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Belum Dikerjakan ({{ countStatus('Belum Dikerjakan') }})</span>
+              </button>
+              <button @click="statusFilter = 'Perlu Revisi Isi'"
+                      :class="statusFilter === 'Perlu Revisi Isi'
+                        ? 'bg-amber-950 text-amber-200 border border-amber-500 font-bold shadow-sm ring-1 ring-amber-500/40'
+                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
+                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Perlu Revisi Isi ({{ countStatus('Perlu Revisi Isi') }})</span>
+              </button>
+              <button @click="statusFilter = 'Perlu Revisi Gambar'"
+                      :class="statusFilter === 'Perlu Revisi Gambar'
+                        ? 'bg-purple-950 text-purple-200 border border-purple-500 font-bold shadow-sm ring-1 ring-purple-500/40'
+                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
+                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span>Perlu Revisi Gambar ({{ countStatus('Perlu Revisi Gambar') }})</span>
+              </button>
+            </div>
+
+            <!-- Tier 2: Kategori Part (Besar & Prominen di Bawah Workflow) -->
+            <div class="pt-2.5 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto max-w-full pb-0.5">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>Kategori:</span>
+              </span>
+
+              <!-- Tab Kategori 1: Semua Kategori -->
+              <button @click="toggleCategoryFilter('ALL')"
+                      :class="categoryFilter === 'ALL'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold border-white shadow-sm'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer">
+                <span>Semua Kategori</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'ALL' ? 'bg-zinc-800 text-white' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('ALL') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 2: Subcont Part -->
+              <button @click="toggleCategoryFilter('Incomming Subcont Part')"
+                      :class="categoryFilter === 'Incomming Subcont Part'
+                        ? 'bg-amber-950 text-amber-200 border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/50'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('Incomming Subcont Part')">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                <span>Subcont Part</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'Incomming Subcont Part' ? 'bg-amber-800 text-amber-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('Incomming Subcont Part') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 3: Material -->
+              <button @click="toggleCategoryFilter('Incomming Material')"
+                      :class="categoryFilter === 'Incomming Material'
+                        ? 'bg-cyan-950 text-cyan-200 border-cyan-600 font-bold shadow-sm ring-1 ring-cyan-500/50'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('Incomming Material')">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                <span>Material</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'Incomming Material' ? 'bg-cyan-800 text-cyan-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('Incomming Material') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 4: Std Part -->
+              <button @click="toggleCategoryFilter('Incomming Std Part')"
+                      :class="categoryFilter === 'Incomming Std Part'
+                        ? 'bg-emerald-950 text-emerald-200 border-emerald-600 font-bold shadow-sm ring-1 ring-emerald-500/50'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('Incomming Std Part')">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span>Std Part</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'Incomming Std Part' ? 'bg-emerald-800 text-emerald-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('Incomming Std Part') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 5: Accuracy SSW -->
+              <button @click="toggleCategoryFilter('Accuracy SSW')"
+                      :class="categoryFilter === 'Accuracy SSW'
+                        ? 'bg-indigo-950 text-indigo-200 border-indigo-600 font-bold shadow-sm ring-1 ring-indigo-500/50'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('Accuracy SSW')">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
+                <span>Accuracy SSW</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'Accuracy SSW' ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('Accuracy SSW') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 6: Accuracy -->
+              <button @click="toggleCategoryFilter('Accuracy')"
+                      :class="categoryFilter === 'Accuracy'
+                        ? 'bg-blue-950 text-blue-200 border-blue-600 font-bold shadow-sm ring-1 ring-blue-500/50'
+                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('Accuracy')">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                <span>Accuracy</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'Accuracy' ? 'bg-blue-800 text-blue-100' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('Accuracy') }}
+                </span>
+              </button>
+
+              <!-- Tab Kategori 7: General (jika ada) -->
+              <button v-if="countCategory('General') > 0 || categoryFilter === 'General'"
+                      @click="toggleCategoryFilter('General')"
+                      :class="categoryFilter === 'General'
+                        ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-sm'
+                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
+                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :title="'Total di database: ' + countCategory('General')">
+                <span class="w-2.5 h-2.5 rounded-full bg-zinc-400"></span>
+                <span>General</span>
+                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
+                      :class="categoryFilter === 'General' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countCategoryInWorkflow('General') }}
+                </span>
+              </button>
+            </div>
           </div>
 
-          <!-- Controls & Filter Toolbar -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
-            <!-- ADMIN TABS -->
-            <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-2xl">
-              <button @click="activeTeam = 'Semua'"
-                      :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
-                Semua Part
-                <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
-              </button>
-              <button @click="activeTeam = 'Unassigned'"
-                      :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
-                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
-                <span>Belum Ditugaskan</span>
-                <span class="ml-1 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
-                  ({{ countUnassigned() }})
-                </span>
-              </button>
-              <button v-for="u in operatorUsers" :key="u.id"
-                      @click="activeTeam = u.name"
-                      :class="activeTeam === u.name ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                      class="px-3 py-1 rounded-md text-xs transition-colors shrink-0">
-                {{ u.name }}
-                <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(u.name) }})</span>
-              </button>
-            </div>
-
-            <!-- OPERATOR TABS -->
-            <div v-else class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto">
-              <button @click="activeTeam = currentUser.name"
-                      :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                      class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span>Task Sendiri ({{ currentUser.name }})</span>
-                <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                      :class="activeTeam === currentUser.name ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countByTeam(currentUser.name) }}
-                </span>
-              </button>
-
-              <!-- Tab Belum Ditugaskan: Operator dapat melihat & mengambil task bebas -->
-              <button @click="activeTeam = 'Unassigned'"
-                      :class="activeTeam === 'Unassigned' ? 'bg-amber-600 text-white font-semibold shadow-sm ring-1 ring-amber-400' : 'text-amber-400/90 hover:text-amber-300 hover:bg-zinc-900'"
-                      class="px-3.5 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
-                      title="Klik untuk melihat task bebas yang bisa Anda ambil untuk dikerjakan">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                <span>Belum Ditugaskan</span>
-                <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold"
-                      :class="activeTeam === 'Unassigned' ? 'bg-amber-800 text-amber-100' : 'bg-amber-950 text-amber-300 border border-amber-800/80'">
-                  {{ countUnassigned() }}
-                </span>
-              </button>
-
-              <button @click="activeTeam = 'LAINNYA'"
-                      :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                      class="px-3.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <span>Task Operator Lain</span>
-                <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                      :class="activeTeam === 'LAINNYA' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countOtherTasks() }}
-                </span>
-              </button>
-            </div>
-
-            <!-- Search Input & Status Selector -->
-            <div class="flex items-center gap-2.5 flex-1 max-w-lg ml-auto">
-              <div class="relative w-full">
-                <input v-model="searchQuery" type="text"
-                       placeholder="Cari part number, nama part, atau model..."
-                       class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors">
-                <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <button v-if="searchQuery" @click="searchQuery = ''" aria-label="Hapus pencarian" class="absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <!-- Controls Toolbar: Scope Tabs + Action Buttons + Unified Search & Category Filter -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3 shadow-sm">
+            <!-- Row 1: Scope Tabs & Action Buttons -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <!-- ADMIN TABS -->
+              <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-full">
+                <button @click="activeTeam = 'Semua'"
+                        :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0">
+                  Semua Part
+                  <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
+                </button>
+                <button @click="activeTeam = 'Unassigned'"
+                        :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
+                  <span>Belum Ditugaskan</span>
+                  <span class="ml-1 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
+                    ({{ countUnassigned() }})
+                  </span>
+                </button>
+                <button v-for="u in operatorUsers" :key="u.id"
+                        @click="activeTeam = u.name"
+                        :class="activeTeam === u.name ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0">
+                  {{ u.name }}
+                  <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(u.name) }})</span>
                 </button>
               </div>
 
-              <select v-model="statusFilter" class="bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 rounded-lg px-2.5 py-1.5 focus:border-zinc-600 focus:outline-none">
-                <option value="ALL">Semua Status</option>
-                <option value="Checksheet Done">Checksheet done</option>
-                <option value="Reviewed">Reviewed</option>
-                <option value="Belum di review">Belum di review</option>
-                <option value="Butuh Revisi">Butuh Revisi</option>
-                <option value="Tidak Ada Part">Tidak Ada Part</option>
-                <option value="Canceled">Canceled</option>
-              </select>
+              <!-- OPERATOR TABS -->
+              <div v-else class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-full">
+                <button @click="activeTeam = currentUser.name"
+                        :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  <span>Task Sendiri ({{ currentUser.name }})</span>
+                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
+                        :class="activeTeam === currentUser.name ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
+                    {{ countByTeam(currentUser.name) }}
+                  </span>
+                </button>
 
-              <!-- Mode Review Gambar Toggle Button -->
-              <button type="button"
-                      @click="toggleImageThumbnails"
-                      :class="showImageThumbnails 
-                        ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/70 shadow-sm ring-1 ring-indigo-500/30 font-bold' 
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
-                      class="px-3 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                      :title="showImageThumbnails ? 'Sembunyikan thumbnail gambar pada tabel' : 'Aktifkan Mode Gambar untuk Quick Review visual langsung di tabel'">
-                <svg class="w-3.5 h-3.5" :class="showImageThumbnails ? 'text-indigo-400' : 'text-zinc-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{{ showImageThumbnails ? 'Mode Gambar: Aktif' : 'Mode Gambar' }}</span>
-                <span v-if="showImageThumbnails" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </button>
+                <button @click="activeTeam = 'Unassigned'"
+                        :class="activeTeam === 'Unassigned' ? 'bg-amber-600 text-white font-semibold shadow-sm ring-1 ring-amber-400' : 'text-amber-400/90 hover:text-amber-300 hover:bg-zinc-900'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        title="Klik untuk melihat task bebas yang bisa Anda ambil untuk dikerjakan">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  <span>Belum Ditugaskan</span>
+                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold"
+                        :class="activeTeam === 'Unassigned' ? 'bg-amber-800 text-amber-100' : 'bg-amber-950 text-amber-300 border border-amber-800/80'">
+                    {{ countUnassigned() }}
+                  </span>
+                </button>
 
-              <!-- Ukuran Tinggi Drawing Quick Control -->
-              <button v-if="showImageThumbnails"
-                      type="button"
-                      @click="cycleThumbnailSize"
-                      class="px-2.5 py-1.5 rounded-lg border border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-300 text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                      :title="'Klik untuk rotasi ukuran tinggi drawing: Sedang (112px) -> Besar (160px) -> Ekstra (224px)'">
-                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-                <span>Tinggi: <strong class="text-indigo-300">{{ thumbnailSizeLabel }}</strong></span>
-              </button>
+                <button @click="activeTeam = 'LAINNYA'"
+                        :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                        class="px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  <span>Task Operator Lain</span>
+                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
+                        :class="activeTeam === 'LAINNYA' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
+                    {{ countOtherTasks() }}
+                  </span>
+                </button>
+              </div>
 
-              <!-- Quick Ambil Batch Button (when unassigned tasks are selected) -->
-              <button v-if="selectedUnassignedCount > 0"
-                      @click="claimSelectedTasks"
-                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm hover:scale-105"
-                      :title="'Ambil ' + selectedUnassignedCount + ' task terpilih untuk dikerjakan'">
-                <svg class="w-3.5 h-3.5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Ambil ({{ selectedUnassignedCount }}) Task</span>
-              </button>
+              <!-- Contextual Action Buttons -->
+              <div class="flex items-center gap-2 ml-auto shrink-0">
+                <!-- Ambil Task Button (when unassigned tasks are checked) -->
+                <button v-if="selectedUnassignedCount > 0"
+                        @click="claimSelectedTasks"
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
+                        :title="'Ambil ' + selectedUnassignedCount + ' task terpilih untuk dikerjakan'">
+                  <svg class="w-3.5 h-3.5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  <span>Ambil ({{ selectedUnassignedCount }}) Task</span>
+                </button>
 
-              <!-- Quick Kirim Batch Button (Only appears if canBatchSendSelected or if nothing selected) -->
-              <button v-if="selectedIds.length === 0 || canBatchSendSelected"
-                      @click="selectedIds.length > 0 ? startDirectBatchAutomation() : openBatchModal()"
-                      :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'"
-                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
-                      :title="selectedIds.length > 0 ? 'Kirim ' + selectedIds.length + ' part yang dicentang ke FactoryHub' : 'Kirim batch otomasi Playwright'">
-                <svg class="w-3.5 h-3.5" :class="selectedIds.length > 0 ? 'text-white' : 'text-emerald-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                </svg>
-                <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
-              </button>
+                <!-- Kirim Batch Button -->
+                <button v-if="selectedIds.length === 0 || canBatchSendSelected"
+                        @click="selectedIds.length > 0 ? startDirectBatchAutomation() : openBatchModal()"
+                        :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'"
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        :title="selectedIds.length > 0 ? 'Kirim ' + selectedIds.length + ' part yang dicentang ke FactoryHub' : 'Kirim batch otomasi Playwright'">
+                  <svg class="w-3.5 h-3.5" :class="selectedIds.length > 0 ? 'text-white' : 'text-emerald-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  </svg>
+                  <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
+                </button>
 
-              <!-- Admin Bulk Delete Button -->
-              <button v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
-                      @click="confirmBulkDelete"
-                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
-                      :title="'Hapus ' + selectedIds.length + ' checksheet terpilih secara permanen'">
-                <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Hapus ({{ selectedIds.length }}) Part</span>
-              </button>
+                <!-- Admin Bulk Delete Button -->
+                <button v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
+                        @click="confirmBulkDelete"
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
+                        :title="'Hapus ' + selectedIds.length + ' checksheet terpilih secara permanen'">
+                  <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Hapus ({{ selectedIds.length }}) Part</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Row 2: Search and Image View Options -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-zinc-800/80">
+              <div class="flex items-center gap-2.5 flex-1 max-w-xl">
+                <!-- Search Input -->
+                <div class="relative w-full">
+                  <input v-model="searchQuery" type="text"
+                         placeholder="Cari part number, nama part, model, atau kategori..."
+                         class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none transition-colors">
+                  <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <button v-if="searchQuery" @click="searchQuery = ''" aria-label="Hapus pencarian" class="absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- View Controls: Mode Gambar & Ukuran Tinggi -->
+              <div class="flex items-center gap-2 ml-auto shrink-0">
+                <button type="button"
+                        @click="toggleImageThumbnails"
+                        :class="showImageThumbnails 
+                          ? 'bg-indigo-600/25 text-indigo-300 border-indigo-500/60 shadow-sm ring-1 ring-indigo-500/30 font-semibold' 
+                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
+                        class="px-3 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+                        :title="showImageThumbnails ? 'Sembunyikan thumbnail gambar pada tabel' : 'Aktifkan Mode Gambar untuk Quick Review visual langsung di tabel'">
+                  <svg class="w-3.5 h-3.5" :class="showImageThumbnails ? 'text-indigo-400' : 'text-zinc-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{{ showImageThumbnails ? 'Mode Gambar: Aktif' : 'Mode Gambar' }}</span>
+                </button>
+
+                <button v-if="showImageThumbnails"
+                        type="button"
+                        @click="cycleThumbnailSize"
+                        class="px-2.5 py-1.5 rounded-lg border border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-300 text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+                        title="Klik untuk rotasi ukuran tinggi drawing: Sedang (112px), Besar (160px), Ekstra (224px)">
+                  <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                  <span>Tinggi: <strong class="text-indigo-300">{{ thumbnailSizeLabel }}</strong></span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Main Data Table Container -->
+          <!-- Main Data Table Container (Consolidated 7-8 Column Layout) -->
           <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
+                <thead class="bg-zinc-900/95 border-b border-zinc-800 text-zinc-400 font-semibold tracking-wider uppercase text-[11px]">
                   <tr>
                     <th class="py-3 px-3 w-12 text-center select-none">
                       <button type="button"
@@ -1004,19 +1388,16 @@
                       </button>
                     </th>
                     <th class="py-3 px-3 w-12 text-center">No</th>
-                    <th class="py-3 px-3 w-32">Penanggung Jawab</th>
+                    <th class="py-3 px-4 w-64 min-w-[210px]">Part & Kategori</th>
                     <th v-if="showImageThumbnails" 
                         class="py-3 px-3 text-center transition-all select-none"
                         :class="thumbnailSize === 'xl' ? 'w-96 min-w-[360px]' : (thumbnailSize === 'normal' ? 'w-56 min-w-[220px]' : 'w-72 min-w-[280px]')">
                       Drawing
                     </th>
-                    <th class="py-3 px-4">Part Number</th>
-                    <th class="py-3 px-4">Nama Part</th>
-                    <th class="py-3 px-3 w-20">Model</th>
-                    <th class="py-3 px-3 w-24">Customer</th>
+                    <th class="py-3 px-4 min-w-[220px]">Nama Part & Detail</th>
+                    <th class="py-3 px-3 w-36">Penanggung Jawab</th>
                     <th class="py-3 px-3 w-36">Status</th>
-                    <th class="py-3 px-4">Keterangan</th>
-                    <th class="py-3 px-3 w-24 text-center">Aksi</th>
+                    <th class="py-3 px-3 w-28 text-center">Aksi</th>
                   </tr>
                 </thead>
 
@@ -1025,18 +1406,21 @@
                   <tr v-for="n in 8" :key="n" class="animate-pulse">
                     <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
                     <td class="p-3 text-center"><div class="w-4 h-4 bg-zinc-800 rounded mx-auto"></div></td>
-                    <td class="p-3"><div class="w-16 h-5 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3">
+                      <div class="w-36 h-4 bg-zinc-800 rounded mb-1.5"></div>
+                      <div class="w-24 h-3 bg-zinc-800/60 rounded"></div>
+                    </td>
                     <td v-if="showImageThumbnails" class="p-2 text-center">
                       <div class="bg-zinc-800 rounded-xl mx-auto transition-all"
                            :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"></div>
                     </td>
-                    <td class="p-3"><div class="w-36 h-4 bg-zinc-800 rounded"></div></td>
-                    <td class="p-3"><div class="w-48 h-4 bg-zinc-800 rounded"></div></td>
-                    <td class="p-3"><div class="w-12 h-4 bg-zinc-800 rounded"></div></td>
-                    <td class="p-3"><div class="w-16 h-4 bg-zinc-800 rounded"></div></td>
+                    <td class="p-3">
+                      <div class="w-48 h-4 bg-zinc-800 rounded mb-1.5"></div>
+                      <div class="w-28 h-3 bg-zinc-800/60 rounded"></div>
+                    </td>
+                    <td class="p-3"><div class="w-20 h-5 bg-zinc-800 rounded"></div></td>
                     <td class="p-3"><div class="w-24 h-5 bg-zinc-800 rounded"></div></td>
-                    <td class="p-3"><div class="w-32 h-4 bg-zinc-800 rounded"></div></td>
-                    <td class="p-3 text-center"><div class="w-14 h-6 bg-zinc-800 rounded mx-auto"></div></td>
+                    <td class="p-3 text-center"><div class="w-16 h-6 bg-zinc-800 rounded mx-auto"></div></td>
                   </tr>
                 </tbody>
 
@@ -1054,6 +1438,7 @@
                       @click="handleRowClick($event, cs, (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx))"
                       @dblclick="openExcelStudio(cs)"
                       title="Klik baris untuk memilih part. Dobel-klik untuk membuka editor.">
+                    <!-- Checkbox -->
                     <td class="py-3 px-3 text-center select-none" @click.stop="isSelectable(cs) && (focusedCsIndex = (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx), toggleSelect(cs.id))">
                       <button type="button"
                               :disabled="!isSelectable(cs)"
@@ -1071,23 +1456,42 @@
                         </svg>
                       </button>
                     </td>
+
+                    <!-- No -->
                     <td class="py-3 px-3 text-center font-mono text-zinc-400">{{ (pageSize === 'Semua' ? idx : (currentPage - 1) * parseInt(pageSize, 10) + idx) + 1 }}</td>
-                    <td class="py-3 px-3" @click.stop>
-                      <div v-if="isUnassigned(cs)" class="inline-flex items-center gap-1.5">
-                        <button @click.stop="claimTask(cs)"
-                                class="px-2.5 py-1 rounded text-[11px] font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all inline-flex items-center gap-1 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
-                                title="Ambil task ini untuk Anda kerjakan">
-                          <svg class="w-3 h-3 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                          </svg>
-                          <span>Ambil Task</span>
-                        </button>
+
+                    <!-- Consolidated Column: Part Number & Kategori -->
+                    <td class="py-3 px-4">
+                      <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-1.5 group/pn">
+                          <span class="font-mono font-bold text-zinc-100 text-xs tracking-tight">{{ cs.part_number }}</span>
+                          <!-- Multi-template Badge -->
+                          <span v-if="partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] > 1"
+                                @click.stop="searchQuery = cs.part_number"
+                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950/90 text-indigo-300 border border-indigo-700/80 cursor-pointer hover:bg-indigo-900 transition-colors"
+                                :title="'Part ini memiliki ' + partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] + ' template checksheet. Klik untuk memfilter semua varian template part ini.'">
+                            {{ partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] }} Template
+                          </span>
+                          <button type="button"
+                                  @click.stop="openGoogleDriveSearch(cs.part_number)"
+                                  title="Cari drawing part ini di Google Drive"
+                                  class="opacity-0 group-hover/pn:opacity-100 text-sky-400 hover:text-sky-300 p-0.5 rounded transition-all cursor-pointer">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Direct Category Tag: Clean, Quiet, Informative -->
+                        <div>
+                          <span class="text-[10px] font-medium text-zinc-400 bg-zinc-800/80 border border-zinc-700/60 px-1.5 py-0.5 rounded inline-block">
+                            {{ formatCategoryShort(cs.category) }}
+                          </span>
+                        </div>
                       </div>
-                      <span v-else class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
-                        {{ cs.assigned_to }}
-                      </span>
                     </td>
-                    <!-- Quick Review Thumbnail Column -->
+
+                    <!-- Quick Review Thumbnail Column (Optional) -->
                     <td v-if="showImageThumbnails" class="py-2.5 px-3 text-center align-middle" @click.stop>
                       <!-- Multiple Drawings (Horizontal Scroll Strip) -->
                       <div v-if="cs.image_urls && cs.image_urls.length > 1"
@@ -1149,56 +1553,88 @@
                         <span class="text-xs font-medium text-zinc-500 tracking-tight">Tidak Ada Drawing</span>
                       </div>
                     </td>
-                    <td class="py-3 px-4 font-mono font-bold text-zinc-100">
-                      <div class="flex items-center gap-1.5 group/pn">
-                        <span>{{ cs.part_number }}</span>
-                        <button type="button"
-                                @click.stop="openGoogleDriveSearch(cs.part_number)"
-                                title="Cari drawing part ini di Google Drive"
-                                class="opacity-0 group-hover/pn:opacity-100 text-sky-400 hover:text-sky-300 p-0.5 rounded transition-all cursor-pointer">
-                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm3.43 6l3.43 6h9.72l-3.43-6h-9.72zm5.71-6l-3.43 6 4.86 8.5 3.43-6-4.86-8.5z"/>
-                          </svg>
-                        </button>
+
+                    <!-- Consolidated Column: Nama Part & Detail Metadata -->
+                    <td class="py-3 px-4">
+                      <div class="flex flex-col gap-0.5">
+                        <span class="font-medium text-zinc-200 text-xs">{{ cs.part_name || '-' }}</span>
+                        <!-- Customer & Model Subtitle -->
+                        <div class="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                          <span v-if="cs.customer" class="text-zinc-400">{{ cs.customer }}</span>
+                          <span v-if="cs.customer && cs.model" class="text-zinc-600">•</span>
+                          <span v-if="cs.model" class="font-mono text-zinc-300">{{ cs.model }}</span>
+                          <span v-if="!cs.customer && !cs.model" class="text-zinc-600">-</span>
+                        </div>
+                        <!-- Keterangan Note if exists -->
+                        <div v-if="cs.keterangan && cs.keterangan !== '-'" class="mt-1">
+                          <span class="inline-flex items-center gap-1 text-[10px] text-amber-300/90 bg-amber-950/40 border border-amber-800/50 px-1.5 py-0.5 rounded truncate max-w-xs"
+                                :title="cs.keterangan">
+                            <svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="truncate">{{ cs.keterangan }}</span>
+                          </span>
+                        </div>
                       </div>
                     </td>
-                    <td class="py-3 px-4 font-medium text-zinc-200">{{ cs.part_name || '-' }}</td>
-                    <td class="py-3 px-3 text-zinc-300 font-mono">{{ cs.model || '-' }}</td>
-                    <td class="py-3 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
+
+                    <!-- Penanggung Jawab -->
+                    <td class="py-3 px-3" @click.stop>
+                      <div v-if="isUnassigned(cs)" class="inline-flex items-center gap-1.5">
+                        <button @click.stop="claimTask(cs)"
+                                class="px-2.5 py-1 rounded text-[11px] font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all inline-flex items-center gap-1 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
+                                title="Ambil task ini untuk Anda kerjakan">
+                          <svg class="w-3 h-3 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                          <span>Ambil Task</span>
+                        </button>
+                      </div>
+                      <span v-else class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
+                        {{ cs.assigned_to }}
+                      </span>
+                    </td>
+
+                    <!-- Status Badges -->
                     <td class="py-3 px-3">
-                      <!-- High Contrast Badges -->
                       <span v-if="cs.status && cs.status.toLowerCase() === 'checksheet done'"
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <span>Checksheet done</span>
+                        <span>Checksheet Done</span>
                       </span>
-                      <span v-else-if="cs.status === 'Reviewed'"
+                      <span v-else-if="cs.status === 'Siap Kirim' || cs.status === 'Reviewed'"
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-sky-950 text-sky-300 border border-sky-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-                        <span>Reviewed</span>
+                        <span>Siap Kirim</span>
                       </span>
-                      <span v-else-if="cs.status === 'Belum Di Input' || cs.status === 'Belum di review'"
+                      <span v-else-if="cs.status === 'Belum Dikerjakan' || cs.status === 'Belum Di Input' || cs.status === 'Belum di review'"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 inline-flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <span>Belum Dikerjakan</span>
+                      </span>
+                      <span v-else-if="cs.status === 'Perlu Revisi Isi' || cs.status === 'Butuh Revisi'"
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                        <span>Belum di review</span>
+                        <span>Perlu Revisi Isi</span>
                       </span>
-                      <span v-else-if="cs.status === 'Butuh Revisi'"
+                      <span v-else-if="cs.status === 'Perlu Revisi Gambar'"
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-950 text-purple-300 border border-purple-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                        <span>Butuh Revisi</span>
+                        <span>Perlu Revisi Gambar</span>
                       </span>
                       <span v-else-if="cs.status && cs.status.toLowerCase() === 'canceled'"
-                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-600 inline-flex items-center gap-1.5">
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold bg-zinc-900 text-zinc-400 border border-zinc-700 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
                         <span>Canceled</span>
                       </span>
                       <span v-else
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                        <span>No Part</span>
+                        <span>{{ cs.status || 'Tidak Ada Part' }}</span>
                       </span>
                     </td>
-                    <td class="py-3 px-4 text-zinc-400 truncate max-w-xs">{{ cs.keterangan || '-' }}</td>
+
+                    <!-- Aksi -->
                     <td class="py-3 px-3 text-center" @click.stop>
                       <div class="flex items-center justify-center gap-1.5">
                         <button @click="openExcelStudio(cs)"
@@ -1224,14 +1660,14 @@
 
                   <!-- Empty State -->
                   <tr v-if="filteredChecksheets.length === 0">
-                    <td colspan="10" class="py-16 text-center">
+                    <td :colspan="showImageThumbnails ? 8 : 7" class="py-16 text-center">
                       <div class="max-w-sm mx-auto flex flex-col items-center">
                         <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3">
                           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
                         </div>
                         <p class="text-sm font-semibold text-zinc-200">Tidak ada checksheet yang sesuai</p>
                         <p class="text-xs text-zinc-400 mt-1">Coba sesuaikan pencarian atau pilih tab penanggung jawab lainnya.</p>
-                        <button @click="resetFilters" class="mt-4 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700">
+                        <button @click="resetFilters" class="mt-4 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700 cursor-pointer">
                           Reset Semua Filter
                         </button>
                       </div>
@@ -1449,8 +1885,8 @@
 
               <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
                 <span class="text-xs text-zinc-400">Checksheet Siap Submit</span>
-                <p class="text-base font-bold text-amber-400 mt-1 font-mono">{{ countStatus('Belum Di Input') }} Part</p>
-                <p class="text-[11px] text-zinc-500 mt-1">Bisa disubmit sekaligus via Batch Action</p>
+                <p class="text-base font-bold text-sky-400 mt-1 font-mono">{{ countStatus('Siap Kirim') }} Part</p>
+                <p class="text-[11px] text-zinc-500 mt-1">Part berstatus Siap Kirim untuk disubmit batch</p>
               </div>
             </div>
 
@@ -1969,6 +2405,10 @@
               <div class="truncate">
                 <div class="flex items-center gap-2">
                   <span class="font-mono font-bold text-sm text-zinc-100">{{ quickReviewModal.checksheet?.part_number }}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
+                        :class="getCategoryBadgeClass(quickReviewModal.checksheet?.category)">
+                    {{ quickReviewModal.checksheet?.category || 'Accuracy' }}
+                  </span>
                   <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
                     {{ quickReviewModal.checksheet?.assigned_to || 'Unassigned' }}
                   </span>
@@ -2156,6 +2596,17 @@
                        class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 placeholder-zinc-600 focus:border-emerald-500 focus:outline-none font-mono">
               </div>
               <div>
+                <label class="block text-zinc-300 font-medium mb-1">Kategori Checksheet (FactoryHub)</label>
+                <select v-model="newPartForm.category" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-indigo-300 font-medium focus:border-emerald-500 focus:outline-none cursor-pointer">
+                  <option value="Accuracy">Accuracy</option>
+                  <option value="Accuracy SSW">Accuracy SSW</option>
+                  <option value="Incomming Material">Incomming Material</option>
+                  <option value="Incomming Std Part">Incomming Std Part</option>
+                  <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div>
                 <label class="block text-zinc-300 font-medium mb-1">Penanggung Jawab (PIC)</label>
                 <select v-model="newPartForm.assigned_to" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 focus:border-emerald-500 focus:outline-none cursor-pointer">
                   <option value="Unassigned">Belum Ditugaskan (Unassigned)</option>
@@ -2165,10 +2616,11 @@
               <div>
                 <label class="block text-zinc-300 font-medium mb-1">Status Awal</label>
                 <select v-model="newPartForm.status" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 focus:border-emerald-500 focus:outline-none cursor-pointer">
-                  <option value="Belum di review">Belum di review</option>
-                  <option value="Reviewed">Reviewed</option>
-                  <option value="Checksheet Done">Checksheet done</option>
-                  <option value="Butuh Revisi">Butuh Revisi</option>
+                  <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                  <option value="Siap Kirim">Siap Kirim</option>
+                  <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
+                  <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
+                  <option value="Checksheet Done">Checksheet Done</option>
                   <option value="Tidak Ada Part">Tidak Ada Part</option>
                 </select>
               </div>
@@ -2276,6 +2728,76 @@
         </div>
       </div>
 
+      <!-- Sync Category Live Progress Modal -->
+      <div v-if="showSyncCategoryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <div class="flex items-center gap-2.5">
+              <span v-if="syncCategoryState.active" class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+              </span>
+              <span v-else class="w-3 h-3 rounded-full bg-emerald-400"></span>
+              <div>
+                <h3 class="text-sm font-bold text-zinc-100">Live Sinkronisasi Kategori FactoryHub</h3>
+                <p class="text-[11px] text-zinc-400">{{ syncCategoryState.active ? 'Proses Playwright sedang mengupdate kategori di FactoryHub...' : 'Proses sinkronisasi telah selesai!' }}</p>
+              </div>
+            </div>
+            <button @click="showSyncCategoryModal = false" aria-label="Tutup" class="text-zinc-500 hover:text-zinc-300 cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Progress Bar & Part Info -->
+          <div class="space-y-2 bg-zinc-950 p-4 rounded-xl border border-zinc-800/80">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">Part Sedang Diproses: <strong class="text-indigo-400 font-mono">{{ syncCategoryState.current_part }}</strong></span>
+              <span class="font-mono text-zinc-200 font-bold">{{ syncCategoryState.percent }}% ({{ syncCategoryState.current }} / {{ syncCategoryState.total }})</span>
+            </div>
+            <div class="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-amber-500 to-indigo-500 h-2.5 rounded-full transition-all duration-300"
+                   :style="{ width: syncCategoryState.percent + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- Counters Grid -->
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="p-3 bg-zinc-950/70 border border-emerald-900/50 rounded-xl">
+              <p class="text-[11px] text-zinc-400 mb-1">Berhasil Diupdate</p>
+              <p class="text-lg font-bold font-mono text-emerald-400">{{ syncCategoryState.updated }}</p>
+            </div>
+            <div class="p-3 bg-zinc-950/70 border border-zinc-800 rounded-xl">
+              <p class="text-[11px] text-zinc-400 mb-1">Dilewati (Sudah Sesuai)</p>
+              <p class="text-lg font-bold font-mono text-zinc-300">{{ syncCategoryState.skipped }}</p>
+            </div>
+            <div class="p-3 bg-zinc-950/70 border border-rose-900/50 rounded-xl">
+              <p class="text-[11px] text-zinc-400 mb-1">Gagal</p>
+              <p class="text-lg font-bold font-mono text-rose-400">{{ syncCategoryState.failed }}</p>
+            </div>
+          </div>
+
+          <!-- Live Log Console -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px] text-zinc-400 px-1">
+              <span>Log Terminal Realtime:</span>
+              <span class="text-[10px] text-zinc-500">Auto-refresh tiap 2.5s</span>
+            </div>
+            <div class="bg-black/90 text-zinc-300 font-mono text-[11px] p-3 rounded-xl border border-zinc-800 h-40 overflow-y-auto space-y-1 select-text">
+              <div v-for="(l, i) in syncCategoryState.recent_logs" :key="i"
+                   :class="l.includes('Berhasil') ? 'text-emerald-400 font-semibold' : l.includes('UPDATE') ? 'text-amber-300' : l.includes('OK') ? 'text-zinc-400' : 'text-zinc-300'">
+                {{ l }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2 border-t border-zinc-800">
+            <button @click="showSyncCategoryModal = false" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold cursor-pointer">
+              Tutup Modal (Proses Tetap Berjalan)
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- UNIFIED CHECKSHEET STUDIO (Full Screen Studio View - No Double Layer) -->
       <div v-if="showExcelStudio && activeChecksheet" class="fixed inset-0 z-50 bg-zinc-950 flex flex-col w-screen h-screen overflow-hidden select-none">
         <div class="bg-zinc-950 w-full h-full flex flex-col overflow-hidden relative">
@@ -2341,19 +2863,30 @@
                   <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
                           class="px-2.5 py-1 rounded text-[11px] font-semibold border cursor-pointer focus:outline-none bg-zinc-900 text-zinc-100"
                           :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-600 text-emerald-300' :
-                                  activeChecksheet.status === 'Reviewed' ? 'border-sky-600 text-sky-300' :
-                                  activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review' ? 'border-amber-600 text-amber-300' :
-                                  activeChecksheet.status === 'Butuh Revisi' ? 'border-purple-600 text-purple-300' :
-                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-500 text-zinc-300' :
+                                  (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'border-sky-600 text-sky-300' :
+                                  (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'border-zinc-600 text-zinc-300' :
+                                  (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'border-amber-600 text-amber-300' :
+                                  activeChecksheet.status === 'Perlu Revisi Gambar' ? 'border-purple-600 text-purple-300' :
+                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-700 text-zinc-400' :
                                   'border-rose-600 text-rose-300'">
-                    <option value="Belum di review">Belum di review</option>
-                    <option value="Belum Di Input">Belum Di Input</option>
-                    <option value="Reviewed">Reviewed</option>
+                    <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                    <option value="Siap Kirim">Siap Kirim</option>
+                    <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
+                    <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
                     <option value="Checksheet Done">Checksheet Done</option>
-                    <option value="Butuh Revisi">Butuh Revisi</option>
                     <option value="Tidak Ada Part">Tidak Ada Part</option>
                     <option value="Canceled">Canceled</option>
-                    <option value="DRAFT">DRAFT</option>
+                  </select>
+                  <!-- Quick Category Dropdown -->
+                  <select v-model="activeChecksheet.category" @change="saveChecksheetMeta"
+                          class="px-2.5 py-1 rounded text-[11px] font-semibold border border-indigo-700/80 bg-zinc-900 text-indigo-300 cursor-pointer focus:outline-none"
+                          title="Kategori Template FactoryHub">
+                    <option value="Accuracy">Accuracy</option>
+                    <option value="Accuracy SSW">Accuracy SSW</option>
+                    <option value="Incomming Material">Incomming Material</option>
+                    <option value="Incomming Std Part">Incomming Std Part</option>
+                    <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                    <option value="General">General</option>
                   </select>
                   <!-- Quick Assignee Dropdown -->
                   <select v-model="activeChecksheet.assigned_to" @change="saveChecksheetMeta"
@@ -2484,9 +3017,9 @@
                 <!-- Left: Title & Page Badge -->
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-zinc-200">Sketsa Drawing</span>
-                  <span v-if="activeChecksheet.images && activeChecksheet.images.length"
+                  <span v-if="studioImagesList.length"
                         class="px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700/80 text-[10px] font-mono text-zinc-300">
-                    {{ activeSketchIdx + 1 }} / {{ activeChecksheet.images.length }}
+                    {{ activeSketchIdx + 1 }} / {{ studioImagesList.length }}
                   </span>
                 </div>
 
@@ -2495,10 +3028,10 @@
                   <!-- Upload / Change Button -->
                   <button @click="$refs.imageFileInput.click()"
                           type="button"
-                          :title="activeChecksheet.images && activeChecksheet.images.length ? 'Ganti atau tambah file gambar baru' : 'Upload file gambar sketsa'"
+                          :title="hasActiveStudioImage ? 'Ganti atau tambah file gambar baru' : 'Upload file gambar sketsa'"
                           class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-700 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-sm">
                     <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    <span>{{ activeChecksheet.images && activeChecksheet.images.length ? 'Ganti / Tambah' : 'Upload' }}</span>
+                    <span>{{ hasActiveStudioImage ? 'Ganti / Tambah' : 'Upload' }}</span>
                   </button>
 
                   <!-- Paste Button -->
@@ -2511,21 +3044,21 @@
                   </button>
 
                   <!-- Delete Actions (Only shown if image exists) -->
-                  <template v-if="activeChecksheet.images && activeChecksheet.images.length">
+                  <template v-if="hasActiveStudioImage">
                     <button @click="deleteCurrentImage"
                             type="button"
-                            :title="activeChecksheet.images.length > 1 ? 'Hapus gambar yang sedang ditampilkan ini' : 'Hapus gambar sketsa ini'"
+                            :title="studioImagesList.length > 1 ? 'Hapus gambar yang sedang ditampilkan ini' : 'Hapus gambar sketsa ini'"
                             class="px-2 py-1 bg-rose-950/50 hover:bg-rose-900 text-rose-300 hover:text-rose-100 border border-rose-800/70 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors">
                       <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                       <span>Hapus</span>
                     </button>
 
-                    <button v-if="activeChecksheet.images.length > 1"
+                    <button v-if="studioImagesList.length > 1"
                             @click="deleteAllImages"
                             type="button"
                             title="Hapus semua gambar sketsa checksheet ini sekaligus"
                             class="px-2 py-1 bg-red-950/30 hover:bg-red-950 text-red-400 hover:text-red-200 border border-red-900/60 rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors">
-                      <span>Semua ({{ activeChecksheet.images.length }})</span>
+                      <span>Semua ({{ studioImagesList.length }})</span>
                     </button>
                   </template>
 
@@ -2559,10 +3092,10 @@
                    @drop.prevent="handleImageDrop">
 
                 <!-- Image Present -->
-                <div v-if="activeChecksheet.images && activeChecksheet.images.length" class="transition-transform duration-100 origin-center" :style="{ transform: `scale(${sketchZoom})` }">
-                  <img :src="typeof activeChecksheet.images[activeSketchIdx] === 'string' ? activeChecksheet.images[activeSketchIdx] : (activeChecksheet.images[activeSketchIdx].image_url || activeChecksheet.images[activeSketchIdx].image_path)"
-                       :alt="'Sketsa ' + activeChecksheet.part_number"
-                       loading="lazy"
+                <div v-if="hasActiveStudioImage" class="transition-transform duration-100 origin-center" :style="{ transform: `scale(${sketchZoom})` }">
+                  <img :src="activeSketchUrl"
+                       :alt="'Sketsa ' + (activeChecksheet.part_number || '')"
+                       fetchpriority="high"
                        decoding="async"
                        :class="studioPanelMode === 'image-focus' ? 'max-h-[68vh]' : 'max-h-[44vh]'"
                        class="max-w-full object-contain rounded-lg border border-zinc-800 shadow-md">
@@ -2596,26 +3129,38 @@
               </div>
 
               <!-- Multi-Image Pagination Strip (Only shown when multiple images exist) -->
-              <div v-if="activeChecksheet.images && activeChecksheet.images.length > 1"
+              <div v-if="studioImagesList.length > 1"
                    class="px-3 py-1.5 border-t border-zinc-800/80 bg-zinc-950/80 flex items-center gap-2 overflow-x-auto shrink-0">
                 <span class="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider shrink-0">Halaman:</span>
-                <button v-for="(img, idx) in activeChecksheet.images" :key="idx"
+                <button v-for="(img, idx) in studioImagesList" :key="idx"
                         @click="activeSketchIdx = idx"
                         :class="activeSketchIdx === idx ? 'border-indigo-500 ring-1 ring-indigo-500/50 bg-indigo-950/30 text-indigo-300' : 'border-zinc-800 opacity-60 hover:opacity-100 bg-zinc-900 text-zinc-400'"
                         class="h-9 px-2 rounded-md border flex items-center gap-1.5 shrink-0 transition-all cursor-pointer">
-                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" loading="lazy" decoding="async" class="w-6 h-6 object-cover rounded">
+                  <img :src="typeof img === 'string' ? img : (img.image_url || img.image_path)" decoding="async" class="w-6 h-6 object-cover rounded">
                   <span class="text-[11px] font-medium">Gambar #{{ idx + 1 }}</span>
                 </button>
               </div>
 
               <!-- Metadata & Revision Notes Section -->
               <div class="p-3 border-t border-zinc-800/80 bg-zinc-900/30 space-y-2.5 text-xs">
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div>
                     <label class="block text-zinc-500 font-medium mb-1">No. Dokumen</label>
                     <input v-model="activeChecksheet.doc_number" @change="saveChecksheetMeta"
                            type="text" placeholder="Contoh: Form 1"
                            class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg font-mono text-zinc-200 focus:border-zinc-600 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-zinc-500 font-medium mb-1">Kategori FactoryHub</label>
+                    <select v-model="activeChecksheet.category" @change="saveChecksheetMeta"
+                            class="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-indigo-300 font-medium focus:border-zinc-600 focus:outline-none cursor-pointer">
+                      <option value="Accuracy">Accuracy</option>
+                      <option value="Accuracy SSW">Accuracy SSW</option>
+                      <option value="Incomming Material">Incomming Material</option>
+                      <option value="Incomming Std Part">Incomming Std Part</option>
+                      <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                      <option value="General">General</option>
+                    </select>
                   </div>
                   <div>
                     <label class="block text-zinc-500 font-medium mb-1">Customer / Model</label>
@@ -2951,15 +3496,12 @@
               <span>‹ Prev Part</span>
             </button>
 
-            <!-- Counter & Active Part Indicator -->
-            <div class="px-3 py-0.5 text-center font-mono">
-              <div class="text-[11px] font-bold text-zinc-100 flex items-center justify-center gap-1">
+            <!-- Counter Indicator -->
+            <div class="px-3 py-1 text-center font-mono">
+              <div class="text-xs font-bold text-zinc-200 flex items-center justify-center gap-1">
                 <span class="text-indigo-400 font-extrabold">{{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }}</span>
                 <span class="text-zinc-500 font-normal">/</span>
                 <span class="text-zinc-400">{{ totalStudioParts }}</span>
-              </div>
-              <div class="text-[10px] text-zinc-400 truncate max-w-[120px] font-semibold" :title="activeChecksheet.part_number">
-                {{ activeChecksheet.part_number }}
               </div>
             </div>
 
@@ -2978,22 +3520,53 @@
             <!-- Separator -->
             <div class="h-6 w-px bg-zinc-700/80 mx-0.5"></div>
 
-            <!-- Toggle Reviewed Status Button -->
-            <button @click="toggleReviewStatus"
-                    type="button"
-                    :title="activeChecksheet.status === 'Reviewed' ? 'Checksheet ini telah diverifikasi. Klik untuk membatalkan status Reviewed.' : 'Tandai checksheet ini sudah diverifikasi gambarnya dan siap dikirim batch'"
-                    class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 border"
-                    :class="activeChecksheet.status === 'Reviewed' 
-                      ? 'bg-sky-600 hover:bg-sky-500 text-white ring-2 ring-sky-400/50 border-sky-400' 
-                      : 'bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200 border-zinc-700/60 hover:border-sky-500 hover:text-sky-300'">
-              <svg v-if="activeChecksheet.status === 'Reviewed'" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <svg v-else class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{{ activeChecksheet.status === 'Reviewed' ? 'Status: Reviewed ✓' : 'Tandai Reviewed' }}</span>
-            </button>
+            <!-- Studio Status Actions (Siap Kirim, Revisi Isi, Revisi Gambar) -->
+            <div class="flex items-center gap-1.5">
+              <!-- Button 1: Siap Kirim -->
+              <button @click="toggleReviewStatus"
+                      type="button"
+                      :title="(activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'Klik untuk membatalkan status Siap Kirim' : 'Tandai checksheet ini sudah diverifikasi dan siap dikirim batch'"
+                      class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 border"
+                      :class="(activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') 
+                        ? 'bg-sky-600 hover:bg-sky-500 text-white ring-2 ring-sky-400/50 border-sky-400' 
+                        : 'bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200 border-zinc-700/60 hover:border-sky-500 hover:text-sky-300'">
+                <svg v-if="activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed'" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'Siap Kirim' : 'Tandai Siap Kirim' }}</span>
+              </button>
+
+              <!-- Button 2: Revisi Isi -->
+              <button @click="setStudioStatus(activeChecksheet.status === 'Perlu Revisi Isi' ? 'Belum Dikerjakan' : 'Perlu Revisi Isi')"
+                      type="button"
+                      :title="activeChecksheet.status === 'Perlu Revisi Isi' ? 'Batalkan status revisi isi' : 'Tandai checksheet butuh perbaikan teks/poin inspeksi'"
+                      class="px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-sm"
+                      :class="activeChecksheet.status === 'Perlu Revisi Isi'
+                        ? 'bg-amber-950 text-amber-200 border-amber-500 ring-2 ring-amber-400/50 font-bold'
+                        : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/60 hover:border-amber-500 hover:text-amber-300'">
+                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Revisi Isi</span>
+              </button>
+
+              <!-- Button 3: Revisi Gambar -->
+              <button @click="setStudioStatus(activeChecksheet.status === 'Perlu Revisi Gambar' ? 'Belum Dikerjakan' : 'Perlu Revisi Gambar')"
+                      type="button"
+                      :title="activeChecksheet.status === 'Perlu Revisi Gambar' ? 'Batalkan status revisi gambar' : 'Tandai gambar drawing kurang/kurang jelas/perlu ganti'"
+                      class="px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-sm"
+                      :class="activeChecksheet.status === 'Perlu Revisi Gambar'
+                        ? 'bg-purple-950 text-purple-200 border-purple-500 ring-2 ring-purple-400/50 font-bold'
+                        : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/60 hover:border-purple-500 hover:text-purple-300'">
+                <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Revisi Gambar</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -3063,7 +3636,7 @@
               <label class="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center justify-between">
                 <span>Area Tempel (Tekan Ctrl+V di kotak ini):</span>
                 <button @click="readClipboardDirectly" type="button" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer">
-                  📋 Salin Otomatis dari Clipboard
+                  Salin Otomatis dari Clipboard
                 </button>
               </label>
               <textarea v-model="rawPasteText"
@@ -3198,10 +3771,16 @@
             <span>Kirim Batch ke FactoryHub ({{ selectedIds.length }})</span>
           </button>
 
-          <!-- If non-reviewed items exist in selection, show clean info pill instead of button -->
+          <!-- If other people's parts or unassigned items exist in selection, show warning pill -->
+          <div v-else-if="selectedOtherUsersCount > 0" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/60 rounded-xl border border-rose-800/80 text-[11px] text-rose-300 shrink-0" title="Anda hanya bisa batch part tugas Anda sendiri">
+            <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>{{ selectedOtherUsersCount }} part bukan milik Anda</span>
+          </div>
+
+          <!-- If non-ready items exist in selection, show clean info pill instead of button -->
           <div v-else-if="selectedNonReviewedCount > 0" class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-950/60 rounded-xl border border-zinc-800/80 text-[11px] text-zinc-400 shrink-0">
             <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>{{ selectedNonReviewedCount }} part belum 'Reviewed'</span>
+            <span>{{ selectedNonReviewedCount }} part belum 'Siap Kirim'</span>
           </div>
 
           <!-- Batch Ubah Status / Kategori Popover Button -->
@@ -3232,13 +3811,43 @@
                   <span>Ganti Status ({{ selectedIds.length }} Part):</span>
                 </div>
                 <div class="space-y-1 mt-1">
-                  <!-- Canceled -->
-                  <button @click="batchChangeStatus('Canceled')"
-                          class="w-full text-left px-2.5 py-2 hover:bg-zinc-800 text-zinc-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
-                    <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 group-hover:ring-2 group-hover:ring-zinc-400/30"></span>
+                  <!-- Siap Kirim -->
+                  <button @click="batchChangeStatus('Siap Kirim')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-sky-950/40 text-sky-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 group-hover:ring-2 group-hover:ring-sky-500/30"></span>
                     <div class="flex flex-col">
-                      <span class="font-bold text-zinc-200">Canceled</span>
-                      <span class="text-[10px] text-zinc-500 font-normal">Batalkan checksheet part ini</span>
+                      <span class="font-bold text-sky-300">Siap Kirim</span>
+                      <span class="text-[10px] text-sky-500/80 font-normal">Ditinjau & siap submit batch</span>
+                    </div>
+                  </button>
+
+                  <!-- Belum Dikerjakan -->
+                  <button @click="batchChangeStatus('Belum Dikerjakan')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-zinc-800 text-zinc-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 group-hover:ring-2 group-hover:ring-amber-400/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-zinc-200">Belum Dikerjakan</span>
+                      <span class="text-[10px] text-zinc-400 font-normal">Kembalikan ke antrean pengerjaan</span>
+                    </div>
+                  </button>
+
+                  <!-- Perlu Revisi Isi -->
+                  <button @click="batchChangeStatus('Perlu Revisi Isi')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-amber-950/40 text-amber-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 group-hover:ring-2 group-hover:ring-amber-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-amber-300">Perlu Revisi Isi</span>
+                      <span class="text-[10px] text-amber-400/80 font-normal">Perlu perbaikan teks/poin inspeksi</span>
+                    </div>
+                  </button>
+
+                  <!-- Perlu Revisi Gambar -->
+                  <button @click="batchChangeStatus('Perlu Revisi Gambar')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-purple-950/40 text-purple-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 group-hover:ring-2 group-hover:ring-purple-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-purple-300">Perlu Revisi Gambar</span>
+                      <span class="text-[10px] text-purple-400/80 font-normal">Perlu perbaikan sketsa drawing</span>
                     </div>
                   </button>
 
@@ -3252,36 +3861,6 @@
                     </div>
                   </button>
 
-                  <!-- Reviewed -->
-                  <button @click="batchChangeStatus('Reviewed')"
-                          class="w-full text-left px-2.5 py-2 hover:bg-sky-950/40 text-sky-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
-                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 group-hover:ring-2 group-hover:ring-sky-500/30"></span>
-                    <div class="flex flex-col">
-                      <span class="font-bold text-sky-300">Reviewed</span>
-                      <span class="text-[10px] text-sky-500/80 font-normal">Ditinjau & siap submit batch</span>
-                    </div>
-                  </button>
-
-                  <!-- Belum di review -->
-                  <button @click="batchChangeStatus('Belum di review')"
-                          class="w-full text-left px-2.5 py-2 hover:bg-amber-950/40 text-amber-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 group-hover:ring-2 group-hover:ring-amber-500/30"></span>
-                    <div class="flex flex-col">
-                      <span class="font-bold text-amber-300">Belum di review</span>
-                      <span class="text-[10px] text-amber-500/80 font-normal">Kembalikan ke antrean review</span>
-                    </div>
-                  </button>
-
-                  <!-- Butuh Revisi -->
-                  <button @click="batchChangeStatus('Butuh Revisi')"
-                          class="w-full text-left px-2.5 py-2 hover:bg-purple-950/40 text-purple-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
-                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 group-hover:ring-2 group-hover:ring-purple-500/30"></span>
-                    <div class="flex flex-col">
-                      <span class="font-bold text-purple-300">Butuh Revisi</span>
-                      <span class="text-[10px] text-purple-400/80 font-normal">Perlu perbaikan drawing/titik</span>
-                    </div>
-                  </button>
-
                   <!-- Tidak Ada Part -->
                   <button @click="batchChangeStatus('Tidak Ada Part')"
                           class="w-full text-left px-2.5 py-2 hover:bg-rose-950/40 text-rose-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
@@ -3289,6 +3868,16 @@
                     <div class="flex flex-col">
                       <span class="font-bold text-rose-300">Tidak Ada Part</span>
                       <span class="text-[10px] text-rose-500/80 font-normal">Tidak ditemukan di master web</span>
+                    </div>
+                  </button>
+
+                  <!-- Canceled -->
+                  <button @click="batchChangeStatus('Canceled')"
+                          class="w-full text-left px-2.5 py-2 hover:bg-zinc-800 text-zinc-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 group-hover:ring-2 group-hover:ring-zinc-400/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-zinc-300">Canceled</span>
+                      <span class="text-[10px] text-zinc-500 font-normal">Batalkan checksheet part ini</span>
                     </div>
                   </button>
                 </div>
@@ -3513,12 +4102,40 @@
         const isCreatingUser = ref(false);
         const newUserForm = ref({ username: '', name: '', nik: '', password: '', role: 'operator' });
 
+        // FactoryHub Sync Category Live Progress State
+        const syncCategoryState = ref({
+          active: false,
+          is_finished: false,
+          current: 0,
+          total: 475,
+          percent: 0,
+          current_part: '-',
+          updated: 0,
+          skipped: 0,
+          failed: 0,
+          recent_logs: []
+        });
+        const showSyncCategoryModal = ref(false);
+
+        const fetchSyncCategoryProgress = async () => {
+          try {
+            const res = await fetch('/api/system/sync-categories/progress');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.current > 0 || data.active) {
+              syncCategoryState.value = data;
+            }
+          } catch (_) {}
+        };
+
         // Checksheets Data & Filters
         const checksheets = ref([]);
         const isLoading = ref(false);
         const activeTeam = ref('Semua');
         const searchQuery = ref('');
         const statusFilter = ref('ALL');
+        const categoryFilter = ref('ALL');
+        const workflowTab = ref('TODO');
         const selectedIds = ref([]);
 
         // Visual Image Review Mode & Quick Lightbox (Default: ALWAYS ON / TRUE)
@@ -4089,6 +4706,49 @@
         };
         const sketchZoom = ref(1.0);
         const activeSketchIdx = ref(0);
+        const studioDetailCache = new Map();
+        const preloadedImageUrls = new Set();
+        let prefetchAdjacentTimeout = null;
+
+        const studioImagesList = computed(() => {
+          if (!activeChecksheet.value) return [];
+          if (activeChecksheet.value.images && activeChecksheet.value.images.length > 0) {
+            return activeChecksheet.value.images;
+          }
+          if (activeChecksheet.value.image_urls && activeChecksheet.value.image_urls.length > 0) {
+            return activeChecksheet.value.image_urls;
+          }
+          if (activeChecksheet.value.thumbnail_url) {
+            return [activeChecksheet.value.thumbnail_url];
+          }
+          return [];
+        });
+
+        const hasActiveStudioImage = computed(() => {
+          return studioImagesList.value.length > 0;
+        });
+
+        const activeSketchUrl = computed(() => {
+          const list = studioImagesList.value;
+          if (!list || !list.length) return '';
+          const idx = (activeSketchIdx.value >= 0 && activeSketchIdx.value < list.length) ? activeSketchIdx.value : 0;
+          const item = list[idx];
+          if (!item) return '';
+          if (typeof item === 'string') return item;
+          return item.image_url || item.image_path || '';
+        });
+
+        const preloadChecksheetImages = (images) => {
+          if (!Array.isArray(images)) return;
+          for (const img of images) {
+            const src = typeof img === 'string' ? img : (img?.image_url || img?.image_path);
+            if (src && typeof src === 'string' && !preloadedImageUrls.has(src)) {
+              preloadedImageUrls.add(src);
+              const imgObj = new Image();
+              imgObj.src = src;
+            }
+          }
+        };
         const isDraggingImage = ref(false);
         const isUploadingImage = ref(false);
         const isInlineEditing = ref(false);
@@ -4164,10 +4824,43 @@
           }
         });
 
+        const updateDocumentTitle = () => {
+          if (showExcelStudio.value && activeChecksheet.value?.part_number) {
+            document.title = activeChecksheet.value.part_number;
+            return;
+          }
+          if (activeChecksheet.value?.part_number) {
+            document.title = activeChecksheet.value.part_number;
+            return;
+          }
+          switch (activePage.value) {
+            case 'checksheets':
+              document.title = 'Daftar Checksheet | FaketoryHub';
+              break;
+            case 'master_part':
+              document.title = 'Master Part | FaketoryHub';
+              break;
+            case 'team':
+              document.title = 'Manajemen Tim | FaketoryHub';
+              break;
+            case 'batch_submit':
+              document.title = 'Batch Submit | FaketoryHub';
+              break;
+            case 'analytics':
+              document.title = 'Analitik | FaketoryHub';
+              break;
+            case 'dashboard':
+            default:
+              document.title = 'Dashboard QC | FaketoryHub';
+              break;
+          }
+        };
+
         const navigate = (page, replaceHistory = false) => {
           if (!VALID_PAGES.includes(page)) page = 'dashboard';
           activePage.value = page;
           isMobileSidebarOpen.value = false;
+          updateDocumentTitle();
           const newPath = '/' + page;
           if (window.location.pathname !== newPath) {
             if (replaceHistory) {
@@ -4179,13 +4872,68 @@
         };
 
         const goToChecksheetsWithStatus = (st) => {
-          statusFilter.value = st;
+          if (!st || st === 'ALL') {
+            workflowTab.value = 'ALL';
+            statusFilter.value = 'ALL';
+          } else {
+            const s = st.toLowerCase().trim();
+            if (s === 'siap kirim' || s === 'reviewed') {
+              workflowTab.value = 'READY';
+              statusFilter.value = 'ALL';
+            } else if (s === 'checksheet done') {
+              workflowTab.value = 'DONE';
+              statusFilter.value = 'ALL';
+            } else if (s === 'tidak ada part' || s === 'canceled') {
+              workflowTab.value = 'ISSUES';
+              statusFilter.value = 'ALL';
+            } else if (s === 'perlu revisi isi' || s === 'butuh revisi') {
+              workflowTab.value = 'TODO';
+              statusFilter.value = 'Perlu Revisi Isi';
+            } else if (s === 'perlu revisi gambar') {
+              workflowTab.value = 'TODO';
+              statusFilter.value = 'Perlu Revisi Gambar';
+            } else if (s === 'belum dikerjakan' || s === 'belum di review' || s === 'belum di input') {
+              workflowTab.value = 'TODO';
+              statusFilter.value = 'Belum Dikerjakan';
+            } else {
+              workflowTab.value = 'TODO';
+              statusFilter.value = 'ALL';
+            }
+          }
           navigate('checksheets');
         };
 
         const goToChecksheetsWithTeam = (team) => {
           activeTeam.value = team;
           navigate('checksheets');
+        };
+
+        const goToChecksheetsWithCategory = (cat) => {
+          categoryFilter.value = cat || 'ALL';
+          workflowTab.value = 'ALL';
+          statusFilter.value = 'ALL';
+          navigate('checksheets');
+        };
+
+        const countGlobalCategory = (cat) => {
+          if (!checksheets.value || checksheets.value.length === 0) return 0;
+          if (!cat || cat === 'ALL') return checksheets.value.length;
+          const target = cat.toLowerCase().trim();
+          return checksheets.value.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target).length;
+        };
+
+        const getCategoryProgress = (cat) => {
+          if (!checksheets.value || checksheets.value.length === 0) return { total: 0, done: 0, percent: 0, ready: 0 };
+          const target = cat.toLowerCase().trim();
+          const items = checksheets.value.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target);
+          const done = items.filter(c => (c.status || '').toLowerCase().trim() === 'checksheet done').length;
+          const ready = items.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'siap kirim' || s === 'reviewed';
+          }).length;
+          const total = items.length;
+          const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+          return { total, done, percent, ready };
         };
 
         // Customer Stats
@@ -4199,9 +4947,10 @@
           checksheets.value.forEach(c => {
             const cust = list.find(l => c.customer && c.customer.includes(l.name.replace('PT. ', ''))) || list[0];
             cust.total += 1;
-            if (c.status === 'Checksheet Done') cust.done += 1;
-            else if (c.status === 'Belum Di Input') cust.ready += 1;
-            else if (c.status === 'Tidak Ada Part') cust.noPart += 1;
+            const csStatus = (c.status || '').toLowerCase().trim();
+            if (csStatus === 'checksheet done') cust.done += 1;
+            else if (csStatus === 'siap kirim' || csStatus === 'reviewed') cust.ready += 1;
+            else if (csStatus === 'tidak ada part') cust.noPart += 1;
           });
 
           return list.map(l => ({
@@ -4222,21 +4971,144 @@
         const countStatus = (st) => {
           if (!st) return 0;
           const s = st.toLowerCase().trim();
-          if (s === 'belum di review' || s === 'belum di input') {
-            return checksheets.value.filter(c => c.status === 'Belum Di Input' || c.status === 'Belum di review').length;
+          if (s === 'belum dikerjakan' || s === 'belum di review' || s === 'belum di input') {
+            return checksheets.value.filter(c => ['belum dikerjakan', 'belum di input', 'belum di review'].includes((c.status || '').toLowerCase().trim())).length;
+          }
+          if (s === 'siap kirim' || s === 'reviewed') {
+            return checksheets.value.filter(c => ['siap kirim', 'reviewed'].includes((c.status || '').toLowerCase().trim())).length;
+          }
+          if (s === 'perlu revisi isi' || s === 'butuh revisi') {
+            return checksheets.value.filter(c => ['perlu revisi isi', 'butuh revisi'].includes((c.status || '').toLowerCase().trim())).length;
+          }
+          if (s === 'perlu revisi gambar') {
+            return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'perlu revisi gambar').length;
           }
           if (s === 'checksheet done') {
-            return checksheets.value.filter(c => c.status && c.status.toLowerCase() === 'checksheet done').length;
+            return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'checksheet done').length;
+          }
+          if (s === 'tidak ada part') {
+            return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'tidak ada part').length;
           }
           if (s === 'canceled') {
-            return checksheets.value.filter(c => c.status && c.status.toLowerCase() === 'canceled').length;
+            return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'canceled').length;
           }
-          return checksheets.value.filter(c => c.status === st).length;
+          return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === s).length;
         };
 
         const countByTeam = (member) => {
           if (member === 'Semua') return checksheets.value.length;
           return checksheets.value.filter(c => c.assigned_to === member).length;
+        };
+
+        const countCategory = (cat) => {
+          if (!checksheets.value) return 0;
+          const target = (cat || '').toLowerCase().trim();
+          return checksheets.value.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target).length;
+        };
+
+        const countCategoryInWorkflow = (cat) => {
+          if (!checksheets.value || checksheets.value.length === 0) return 0;
+          let list = checksheets.value;
+          if (workflowTab.value === 'TODO') {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s === 'belum dikerjakan' || s === 'belum di review' || s === 'belum di input' || s === 'perlu revisi isi' || s === 'perlu revisi gambar' || s === 'butuh revisi';
+            });
+          } else if (workflowTab.value === 'READY') {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s === 'siap kirim' || s === 'reviewed';
+            });
+          } else if (workflowTab.value === 'DONE') {
+            list = list.filter(c => (c.status || '').toLowerCase().trim() === 'checksheet done');
+          } else if (workflowTab.value === 'ISSUES') {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s === 'tidak ada part' || s === 'canceled';
+            });
+          }
+
+          if (!cat || cat === 'ALL') return list.length;
+          const target = cat.toLowerCase().trim();
+          return list.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target).length;
+        };
+
+        const toggleCategoryFilter = (cat) => {
+          if (cat === 'ALL' || categoryFilter.value === cat) {
+            categoryFilter.value = 'ALL';
+          } else {
+            categoryFilter.value = cat;
+          }
+          currentPage.value = 1;
+        };
+
+        const countTodo = computed(() => {
+          if (!checksheets.value) return 0;
+          return checksheets.value.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'belum dikerjakan' || s === 'belum di review' || s === 'belum di input' || s === 'perlu revisi isi' || s === 'perlu revisi gambar' || s === 'butuh revisi';
+          }).length;
+        });
+
+        const countReady = computed(() => {
+          if (!checksheets.value) return 0;
+          return checksheets.value.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'siap kirim' || s === 'reviewed';
+          }).length;
+        });
+
+        const countDone = computed(() => {
+          if (!checksheets.value) return 0;
+          return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'checksheet done').length;
+        });
+
+        const countIssues = computed(() => {
+          if (!checksheets.value) return 0;
+          return checksheets.value.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'tidak ada part' || s === 'canceled';
+          }).length;
+        });
+
+        const formatCategoryShort = (cat) => {
+          if (!cat) return 'Accuracy';
+          if (cat === 'Incomming Subcont Part') return 'Subcont';
+          if (cat === 'Incomming Material') return 'Material';
+          if (cat === 'Incomming Std Part') return 'Std Part';
+          return cat;
+        };
+
+        const partTemplateCountMap = computed(() => {
+          const map = {};
+          if (!checksheets.value) return map;
+          for (const c of checksheets.value) {
+            const p = (c.part_number || '').trim().toUpperCase();
+            if (p) {
+              map[p] = (map[p] || 0) + 1;
+            }
+          }
+          return map;
+        });
+
+        const getCategoryBadgeClass = (cat) => {
+          const c = (cat || 'Accuracy').toLowerCase();
+          if (c.includes('ssw')) return 'bg-indigo-950/80 text-indigo-300 border-indigo-700/80';
+          if (c.includes('subcont')) return 'bg-amber-950/80 text-amber-300 border-amber-700/80';
+          if (c.includes('material')) return 'bg-cyan-950/80 text-cyan-300 border-cyan-700/80';
+          if (c.includes('std')) return 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80';
+          if (c.includes('general')) return 'bg-zinc-800 text-zinc-300 border-zinc-700';
+          return 'bg-blue-950/80 text-blue-300 border-blue-700/80';
+        };
+
+        const getCategoryDotClass = (cat) => {
+          const c = (cat || 'Accuracy').toLowerCase();
+          if (c.includes('ssw')) return 'bg-indigo-400';
+          if (c.includes('subcont')) return 'bg-amber-400';
+          if (c.includes('material')) return 'bg-cyan-400';
+          if (c.includes('std')) return 'bg-emerald-400';
+          if (c.includes('general')) return 'bg-zinc-400';
+          return 'bg-blue-400';
         };
 
         const isUnassigned = (cs) => {
@@ -4282,26 +5154,52 @@
               else matchTeam = c.assigned_to === activeTeam.value;
             }
 
+            let matchWorkflow = true;
+            const cStatus = (c.status || '').toLowerCase().trim();
+            if (workflowTab.value === 'TODO') {
+              matchWorkflow = cStatus === 'belum dikerjakan' || cStatus === 'belum di review' || cStatus === 'belum di input' || cStatus === 'perlu revisi isi' || cStatus === 'perlu revisi gambar' || cStatus === 'butuh revisi';
+            } else if (workflowTab.value === 'READY') {
+              matchWorkflow = cStatus === 'siap kirim' || cStatus === 'reviewed';
+            } else if (workflowTab.value === 'DONE') {
+              matchWorkflow = cStatus === 'checksheet done';
+            } else if (workflowTab.value === 'ISSUES') {
+              matchWorkflow = cStatus === 'tidak ada part' || cStatus === 'canceled';
+            }
+
             let matchStatus = true;
             if (statusFilter.value && statusFilter.value !== 'ALL') {
               const sf = statusFilter.value.toLowerCase().trim();
-              if (sf === 'belum di review' || sf === 'belum di input') {
-                matchStatus = c.status === 'Belum Di Input' || c.status === 'Belum di review';
+              if (sf === 'belum dikerjakan' || sf === 'belum di review' || sf === 'belum di input') {
+                matchStatus = ['belum dikerjakan', 'belum di input', 'belum di review'].includes(cStatus);
+              } else if (sf === 'siap kirim' || sf === 'reviewed') {
+                matchStatus = ['siap kirim', 'reviewed'].includes(cStatus);
+              } else if (sf === 'perlu revisi isi' || sf === 'butuh revisi') {
+                matchStatus = ['perlu revisi isi', 'butuh revisi'].includes(cStatus);
+              } else if (sf === 'perlu revisi gambar') {
+                matchStatus = cStatus === 'perlu revisi gambar';
               } else if (sf === 'checksheet done') {
-                matchStatus = c.status && c.status.toLowerCase() === 'checksheet done';
+                matchStatus = cStatus === 'checksheet done';
+              } else if (sf === 'tidak ada part') {
+                matchStatus = cStatus === 'tidak ada part';
               } else if (sf === 'canceled') {
-                matchStatus = c.status && c.status.toLowerCase() === 'canceled';
+                matchStatus = cStatus === 'canceled';
               } else {
-                matchStatus = c.status === statusFilter.value;
+                matchStatus = cStatus === sf;
               }
+            }
+
+            let matchCategory = true;
+            if (categoryFilter.value && categoryFilter.value !== 'ALL') {
+              matchCategory = (c.category || 'Accuracy').toLowerCase().trim() === categoryFilter.value.toLowerCase().trim();
             }
 
             const q = searchQuery.value.toLowerCase().trim();
             const matchQuery = !q ||
               c.part_number.toLowerCase().includes(q) ||
               (c.part_name && c.part_name.toLowerCase().includes(q)) ||
-              (c.model && c.model.toLowerCase().includes(q));
-            return matchTeam && matchStatus && matchQuery;
+              (c.model && c.model.toLowerCase().includes(q)) ||
+              (c.category && c.category.toLowerCase().includes(q));
+            return matchTeam && matchWorkflow && matchStatus && matchCategory && matchQuery;
           });
         });
 
@@ -4341,6 +5239,8 @@
         const resetFilters = () => {
           searchQuery.value = '';
           statusFilter.value = 'ALL';
+          categoryFilter.value = 'ALL';
+          workflowTab.value = 'TODO';
           activeTeam.value = currentUser.value?.role === 'operator' ? currentUser.value.name : 'Semua';
           currentPage.value = 1;
         };
@@ -4354,25 +5254,51 @@
         });
 
         const selectedReviewedCount = computed(() => {
-          return selectedItems.value.filter(c => c.status === 'Reviewed').length;
+          return selectedItems.value.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'siap kirim' || s === 'reviewed';
+          }).length;
+        });
+
+        const selectedOtherUsersCount = computed(() => {
+          if (!currentUser.value) return selectedItems.value.length;
+          const curName = (currentUser.value.name || '').toLowerCase().trim();
+          const curUser = (currentUser.value.username || '').toLowerCase().trim();
+          return selectedItems.value.filter(c => {
+            const assigned = (c.assigned_to || '').toLowerCase().trim();
+            return assigned !== curName && assigned !== curUser;
+          }).length;
         });
 
         const selectedNonReviewedCount = computed(() => {
-          return selectedItems.value.filter(c => c.status !== 'Reviewed').length;
+          return selectedItems.value.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s !== 'siap kirim' && s !== 'reviewed';
+          }).length;
         });
 
         const canBatchSendSelected = computed(() => {
           if (selectedIds.value.length === 0) return false;
+          if (!currentUser.value) return false;
           const items = selectedItems.value;
           if (items.length !== selectedIds.value.length) return false;
-          // All must be Reviewed
-          const allReviewed = items.every(c => c.status === 'Reviewed');
-          if (!allReviewed) return false;
-          // If operator, all must belong to current operator
-          if (currentUser.value?.role === 'operator') {
-            const allMine = items.every(c => c.assigned_to === currentUser.value?.name);
-            if (!allMine) return false;
-          }
+
+          // All selected parts must strictly belong to the current user
+          const curName = (currentUser.value.name || '').toLowerCase().trim();
+          const curUser = (currentUser.value.username || '').toLowerCase().trim();
+          const allMine = items.every(c => {
+            const assigned = (c.assigned_to || '').toLowerCase().trim();
+            return assigned === curName || assigned === curUser;
+          });
+          if (!allMine) return false;
+
+          // All must be Siap Kirim (or legacy Reviewed)
+          const allReady = items.every(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            return s === 'siap kirim' || s === 'reviewed';
+          });
+          if (!allReady) return false;
+
           return true;
         });
 
@@ -4525,15 +5451,6 @@
           }
         };
 
-        const fillLogin = (u, p) => {
-          loginForm.value.username = u;
-          loginForm.value.password = p;
-        };
-
-        const quickLogin = async (u, p) => {
-          fillLogin(u, p);
-          await submitLogin();
-        };
 
         const logout = () => {
           localStorage.removeItem('summit_token');
@@ -4763,23 +5680,39 @@
         const openExcelStudio = async (checksheetOrId) => {
           if (!checksheetOrId) return;
           const id = typeof checksheetOrId === 'object' ? checksheetOrId.id : checksheetOrId;
-          if (typeof checksheetOrId === 'object') {
-            activeChecksheet.value = checksheetOrId;
+          const sourceObj = typeof checksheetOrId === 'object'
+            ? checksheetOrId
+            : (checksheets.value || []).find(c => c.id === id);
+
+          // 1. Instant 0ms cache hit if previously loaded or prefetched
+          let detail = studioDetailCache.get(id);
+
+          if (detail) {
+            activeChecksheet.value = detail;
+          } else if (sourceObj) {
+            // 2. Zero-flash optimistic state with immediate image fallback
+            const fallbackImages = (sourceObj.images && sourceObj.images.length)
+              ? sourceObj.images
+              : (sourceObj.image_urls && sourceObj.image_urls.length
+                  ? sourceObj.image_urls.map((url, i) => ({ id: `opt_${i}`, image_url: url, image_path: url }))
+                  : (sourceObj.thumbnail_url ? [{ id: 'opt_thumb', image_url: sourceObj.thumbnail_url, image_path: sourceObj.thumbnail_url }] : []));
+            activeChecksheet.value = {
+              ...sourceObj,
+              images: fallbackImages
+            };
+            preloadChecksheetImages(fallbackImages);
           }
-          try {
-            const res = await fetch(`/api/checksheets/${id}`);
-            if (res.ok) {
-              activeChecksheet.value = await res.json();
-            }
-          } catch (e) {}
 
-          if (!activeChecksheet.value) return;
+          updateDocumentTitle();
 
-          excelPoints.value = (activeChecksheet.value.points || []).map(p => ({
-            ...p,
-            method: normalizeToolName(p.method || 'Visual')
-          }));
-          if (excelPoints.value.length === 0) {
+          // Immediately setup points if available
+          const existingPoints = detail ? detail.points : (activeChecksheet.value?.points || null);
+          if (existingPoints && existingPoints.length) {
+            excelPoints.value = existingPoints.map(p => ({
+              ...p,
+              method: normalizeToolName(p.method || 'Visual')
+            }));
+          } else if (!detail) {
             excelPoints.value = [{
               item_no: '1',
               inspection_item: '',
@@ -4788,6 +5721,7 @@
               master_data: ''
             }];
           }
+
           isPointsDirty.value = false;
           activeSketchIdx.value = 0;
           studioPanelMode.value = 'split';
@@ -4797,7 +5731,41 @@
           activeCol.value = 0;
           focusCell(0, 0);
 
-          // Push browser history state to protect from accidental swipe-back exit
+          // If detail was not in cache, fetch it now asynchronously
+          if (!detail) {
+            try {
+              const res = await fetch(`/api/checksheets/${id}`);
+              if (res.ok) {
+                detail = await res.json();
+                studioDetailCache.set(id, detail);
+                // Apply if user is still viewing this checksheet
+                if (activeChecksheet.value && activeChecksheet.value.id === id) {
+                  activeChecksheet.value = detail;
+                  updateDocumentTitle();
+                  excelPoints.value = (detail.points || []).map(p => ({
+                    ...p,
+                    method: normalizeToolName(p.method || 'Visual')
+                  }));
+                  if (excelPoints.value.length === 0) {
+                    excelPoints.value = [{
+                      item_no: '1',
+                      inspection_item: '',
+                      standard: '',
+                      method: 'Visual',
+                      master_data: ''
+                    }];
+                  }
+                  preloadChecksheetImages(detail.images);
+                }
+              }
+            } catch (e) {}
+          } else {
+            preloadChecksheetImages(detail.images);
+          }
+
+          // Trigger smart background prefetch for adjacent next (+1) & prev (-1) parts
+          prefetchAdjacentStudioParts();
+
           try {
             window.history.pushState({ studioOpen: true }, '');
           } catch (_) {}
@@ -4817,6 +5785,7 @@
           activeChecksheet.value = null;
           isPointsDirty.value = false;
           suggestionState.visible = false;
+          updateDocumentTitle();
         };
 
         // Studio Part Fast Navigation (Prev & Next Part)
@@ -4882,6 +5851,42 @@
           await openExcelStudio(target);
         };
 
+        const prefetchAdjacentStudioParts = () => {
+          if (prefetchAdjacentTimeout) clearTimeout(prefetchAdjacentTimeout);
+          prefetchAdjacentTimeout = setTimeout(async () => {
+            if (!showExcelStudio.value || !activeChecksheet.value) return;
+            const targets = [];
+            if (nextStudioPart.value) targets.push(nextStudioPart.value);
+            if (prevStudioPart.value) targets.push(prevStudioPart.value);
+
+            for (const target of targets) {
+              if (!target || !target.id) continue;
+              // 1. Immediately preload the thumbnail or drawings from list item summary
+              const quickImgs = (target.image_urls && target.image_urls.length)
+                ? target.image_urls
+                : (target.thumbnail_url ? [target.thumbnail_url] : []);
+              preloadChecksheetImages(quickImgs);
+
+              // 2. Fetch full detail JSON in background if not already in cache
+              if (!studioDetailCache.has(target.id)) {
+                try {
+                  const res = await fetch(`/api/checksheets/${target.id}`);
+                  if (res.ok) {
+                    const detail = await res.json();
+                    studioDetailCache.set(target.id, detail);
+                    preloadChecksheetImages(detail.images);
+                  }
+                } catch (_) {}
+              } else {
+                const cached = studioDetailCache.get(target.id);
+                if (cached?.images) {
+                  preloadChecksheetImages(cached.images);
+                }
+              }
+            }
+          }, 100);
+        };
+
         const uploadImageBase64 = async (base64Data, filename = 'drawing.png') => {
           if (!activeChecksheet.value) return;
           isUploadingImage.value = true;
@@ -4903,10 +5908,18 @@
               activeChecksheet.value.images.push(newImg);
               activeSketchIdx.value = activeChecksheet.value.images.length - 1;
 
+              // Sync with in-memory studio detail cache
+              const cached = studioDetailCache.get(activeChecksheet.value.id);
+              if (cached) {
+                cached.images = [...activeChecksheet.value.images];
+              }
+
               // Sync with parent list
               const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
               if (found) {
                 found.images = activeChecksheet.value.images;
+                found.image_urls = activeChecksheet.value.images.map(img => typeof img === 'string' ? img : (img.image_url || img.image_path));
+                found.thumbnail_url = found.image_urls[0] || null;
               }
               showToast('Gambar sketsa drawing berhasil diunggah!', 'success');
             } else {
@@ -4949,8 +5962,13 @@
         };
 
         const deleteCurrentImage = async () => {
-          if (!activeChecksheet.value || !activeChecksheet.value.images || activeChecksheet.value.images.length === 0) return;
-          const currentImg = activeChecksheet.value.images[activeSketchIdx.value];
+          if (!activeChecksheet.value || !hasActiveStudioImage.value) return;
+          if (!activeChecksheet.value.images || !activeChecksheet.value.images.length) {
+            if (activeChecksheet.value.image_urls) {
+              activeChecksheet.value.images = activeChecksheet.value.image_urls.map((u, i) => ({ id: `img_${i}`, image_url: u, image_path: u }));
+            }
+          }
+          const currentImg = activeChecksheet.value.images ? activeChecksheet.value.images[activeSketchIdx.value] : null;
           if (!currentImg) return;
 
           const imageId = typeof currentImg === 'object' ? currentImg.id : null;
@@ -4971,9 +5989,15 @@
               if (activeSketchIdx.value >= activeChecksheet.value.images.length) {
                 activeSketchIdx.value = Math.max(0, activeChecksheet.value.images.length - 1);
               }
+              const cached = studioDetailCache.get(activeChecksheet.value.id);
+              if (cached) {
+                cached.images = [...activeChecksheet.value.images];
+              }
               const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
               if (found) {
                 found.images = activeChecksheet.value.images;
+                found.image_urls = activeChecksheet.value.images.map(img => typeof img === 'string' ? img : (img.image_url || img.image_path));
+                found.thumbnail_url = found.image_urls[0] || null;
               }
               showToast('Gambar berhasil dihapus.', 'success');
             } else {
@@ -4985,7 +6009,7 @@
         };
 
         const deleteAllImages = async () => {
-          if (!activeChecksheet.value || !activeChecksheet.value.images || activeChecksheet.value.images.length === 0) return;
+          if (!activeChecksheet.value || !hasActiveStudioImage.value) return;
 
           try {
             const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}/images/all`, {
@@ -4995,9 +6019,15 @@
             if (res.ok && data.status === 'success') {
               activeChecksheet.value.images = [];
               activeSketchIdx.value = 0;
+              const cached = studioDetailCache.get(activeChecksheet.value.id);
+              if (cached) {
+                cached.images = [];
+              }
               const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
               if (found) {
                 found.images = [];
+                found.image_urls = [];
+                found.thumbnail_url = null;
               }
               showToast('Semua gambar berhasil dihapus langsung.', 'success');
             } else {
@@ -5097,6 +6127,7 @@
           try {
             const payload = {
               doc_number: activeChecksheet.value.doc_number,
+              category: activeChecksheet.value.category,
               status: activeChecksheet.value.status,
               assigned_to: activeChecksheet.value.assigned_to,
               keterangan: activeChecksheet.value.keterangan
@@ -5107,6 +6138,10 @@
               body: JSON.stringify(payload)
             });
             if (res.ok) {
+              const cached = studioDetailCache.get(activeChecksheet.value.id);
+              if (cached) {
+                Object.assign(cached, payload);
+              }
               const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
               if (found) {
                 Object.assign(found, payload);
@@ -5125,15 +6160,23 @@
 
         const toggleReviewStatus = async () => {
           if (!activeChecksheet.value) return;
-          const isReviewed = activeChecksheet.value.status === 'Reviewed';
-          const newStatus = isReviewed ? 'Belum Di Input' : 'Reviewed';
+          const s = (activeChecksheet.value.status || '').toLowerCase().trim();
+          const isReady = s === 'siap kirim' || s === 'reviewed';
+          const newStatus = isReady ? 'Belum Dikerjakan' : 'Siap Kirim';
           activeChecksheet.value.status = newStatus;
           await saveChecksheetMeta();
-          if (newStatus === 'Reviewed') {
-            showToast(`Part ${activeChecksheet.value.part_number} berhasil ditandai Reviewed dan siap dikirim!`, 'success');
+          if (newStatus === 'Siap Kirim') {
+            showToast(`Part ${activeChecksheet.value.part_number} berhasil ditandai Siap Kirim!`, 'success');
           } else {
-            showToast(`Status Reviewed untuk part ${activeChecksheet.value.part_number} dibatalkan.`, 'info');
+            showToast(`Status part ${activeChecksheet.value.part_number} dikembalikan ke Belum Dikerjakan.`, 'info');
           }
+        };
+
+        const setStudioStatus = async (status) => {
+          if (!activeChecksheet.value) return;
+          activeChecksheet.value.status = status;
+          await saveChecksheetMeta();
+          showToast(`Status part ${activeChecksheet.value.part_number} diubah ke ${status}.`, 'success');
         };
 
         const toggleAutoUpdate = () => {
@@ -5942,6 +6985,10 @@
             if (res.ok) {
               isPointsDirty.value = false;
               activeChecksheet.value.points = JSON.parse(JSON.stringify(excelPoints.value));
+              const cached = studioDetailCache.get(activeChecksheet.value.id);
+              if (cached) {
+                cached.points = JSON.parse(JSON.stringify(excelPoints.value));
+              }
               const found = checksheets.value.find(c => c.id === activeChecksheet.value.id);
               if (found) {
                 found.points = JSON.parse(JSON.stringify(excelPoints.value));
@@ -6154,25 +7201,35 @@
           isDryRunMode.value = false;
           isBatchMinimized.value = false;
 
-          // Operator ownership validation
-          if (currentUser.value?.role === 'operator' && selectedIds.value.length > 0) {
-            const notMine = checksheets.value.filter(c => selectedIds.value.includes(c.id) && c.assigned_to !== currentUser.value?.name);
+          // Strict user ownership validation: Cannot batch other people's parts or unassigned parts
+          if (selectedIds.value.length > 0) {
+            const curName = (currentUser.value?.name || '').toLowerCase().trim();
+            const curUser = (currentUser.value?.username || '').toLowerCase().trim();
+            const notMine = checksheets.value.filter(c => {
+              if (!selectedIds.value.includes(c.id)) return false;
+              const assigned = (c.assigned_to || '').toLowerCase().trim();
+              return assigned !== curName && assigned !== curUser;
+            });
             if (notMine.length > 0) {
               const unassignedCount = notMine.filter(c => isUnassigned(c)).length;
               if (unassignedCount > 0) {
-                showToast(`Ada ${unassignedCount} part yang belum diambil. Silakan klik tombol "Ambil Task" terlebih dahulu sebelum mengirim.`, 'warning');
+                showToast(`Ada ${unassignedCount} part yang belum diambil. Silakan klik tombol "Ambil Task" terlebih dahulu sebelum mengirim batch.`, 'warning');
               } else {
-                showToast(`Ada ${notMine.length} part milik operator lain. Anda hanya bisa mengirim part milik Anda sendiri.`, 'error');
+                showToast(`Ada ${notMine.length} part milik orang lain. Anda hanya bisa menjalankan batch untuk part tugas Anda sendiri.`, 'error');
               }
               return;
             }
           }
 
-          // Strict Reviewed status validation for selected parts
+          // Strict Siap Kirim status validation for selected parts
           if (selectedIds.value.length > 0) {
-            const unreviewed = checksheets.value.filter(c => selectedIds.value.includes(c.id) && c.status !== 'Reviewed');
-            if (unreviewed.length > 0) {
-              showToast(`Ada ${unreviewed.length} part belum berstatus 'Reviewed'. Anda harus meninjau sketsa & data di Review & Edit lalu klik 'Tandai Reviewed' sebelum kirim batch!`, 'warning');
+            const notReady = checksheets.value.filter(c => {
+              if (!selectedIds.value.includes(c.id)) return false;
+              const s = (c.status || '').toLowerCase().trim();
+              return s !== 'siap kirim' && s !== 'reviewed';
+            });
+            if (notReady.length > 0) {
+              showToast(`Ada ${notReady.length} part belum berstatus 'Siap Kirim'. Anda harus meninjau sketsa & data di Review & Edit lalu klik 'Tandai Siap Kirim' sebelum kirim batch!`, 'warning');
               return;
             }
           }
@@ -6237,40 +7294,50 @@
           isDryRunMode.value = false;
 
           let targetIds = [];
+          const curName = (currentUser.value?.name || '').toLowerCase().trim();
+          const curUser = (currentUser.value?.username || '').toLowerCase().trim();
+
           if (selectedIds.value.length > 0) {
             targetIds = [...selectedIds.value];
           } else {
             const pending = checksheets.value.filter(c => {
-              if (c.status !== 'Reviewed') return false;
-              if (currentUser.value?.role === 'admin') return true;
-              return c.assigned_to === currentUser.value?.name;
+              const s = (c.status || '').toLowerCase().trim();
+              if (s !== 'siap kirim' && s !== 'reviewed') return false;
+              const assigned = (c.assigned_to || '').toLowerCase().trim();
+              return assigned === curName || assigned === curUser;
             });
             targetIds = pending.map(c => c.id).slice(0, 10);
           }
 
-          // Strict operator ownership validation
-          if (currentUser.value?.role === 'operator') {
-            const notMine = checksheets.value.filter(c => targetIds.includes(c.id) && c.assigned_to !== currentUser.value?.name);
-            if (notMine.length > 0) {
-              batchLogs.value.push(`[!] Ditolak: Ditemukan ${notMine.length} part yang bukan milik Anda.`);
-              showToast(`Ada ${notMine.length} part yang bukan milik Anda. Anda hanya bisa mengirim part yang sudah Anda ambil.`, 'error');
-              isBatchRunning.value = false;
-              return;
-            }
+          // Strict ownership validation: cannot batch parts of other people or unassigned
+          const notMine = checksheets.value.filter(c => {
+            if (!targetIds.includes(c.id)) return false;
+            const assigned = (c.assigned_to || '').toLowerCase().trim();
+            return assigned !== curName && assigned !== curUser;
+          });
+          if (notMine.length > 0) {
+            batchLogs.value.push(`[!] Ditolak: Ditemukan ${notMine.length} part yang bukan tugas Anda.`);
+            showToast(`Ada ${notMine.length} part milik orang lain. Anda hanya bisa menjalankan batch untuk part tugas Anda sendiri.`, 'error');
+            isBatchRunning.value = false;
+            return;
           }
 
-          // Strict Reviewed status validation
-          const unreviewed = checksheets.value.filter(c => targetIds.includes(c.id) && c.status !== 'Reviewed');
-          if (unreviewed.length > 0) {
-            batchLogs.value.push(`[!] Ditolak: Ditemukan ${unreviewed.length} part yang belum berstatus 'Reviewed'.`);
-            showToast(`Hanya part berstatus 'Reviewed' yang dapat dikirim batch. Tinjau part di Review & Edit dan klik 'Tandai Reviewed' terlebih dahulu.`, 'error');
+          // Strict Siap Kirim status validation
+          const notReady = checksheets.value.filter(c => {
+            if (!targetIds.includes(c.id)) return false;
+            const s = (c.status || '').toLowerCase().trim();
+            return s !== 'siap kirim' && s !== 'reviewed';
+          });
+          if (notReady.length > 0) {
+            batchLogs.value.push(`[!] Ditolak: Ditemukan ${notReady.length} part yang belum berstatus 'Siap Kirim'.`);
+            showToast(`Hanya part berstatus 'Siap Kirim' yang dapat dikirim batch. Tinjau part di Review & Edit dan klik 'Tandai Siap Kirim' terlebih dahulu.`, 'error');
             isBatchRunning.value = false;
             return;
           }
 
           if (!targetIds.length) {
-            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Reviewed" milik Anda untuk diproses.');
-            showToast('Tidak ada checksheet berstatus Reviewed yang siap dikirim.', 'warning');
+            batchLogs.value.push('[!] Tidak ada checksheet berstatus "Siap Kirim" milik Anda untuk diproses.');
+            showToast('Tidak ada checksheet berstatus Siap Kirim yang siap dikirim.', 'warning');
             isBatchRunning.value = false;
             return;
           }
@@ -6429,8 +7496,9 @@
           model: '',
           customer: 'PT. HPM',
           doc_number: 'FO-45-01',
+          category: 'Accuracy',
           assigned_to: 'Unassigned',
-          status: 'Belum di review',
+          status: 'Belum Dikerjakan',
           keterangan: 'Ditambahkan manual oleh admin'
         });
 
@@ -6441,8 +7509,9 @@
             model: '',
             customer: 'PT. HPM',
             doc_number: 'FO-45-01',
+            category: 'Accuracy',
             assigned_to: 'Unassigned',
-            status: 'Belum di review',
+            status: 'Belum Dikerjakan',
             keterangan: 'Ditambahkan manual oleh admin'
           };
           showAddPartModal.value = true;
@@ -6765,26 +7834,20 @@
           }
         });
 
-        watch([searchQuery, statusFilter, activeTeam, pageSize], () => {
+        watch([searchQuery, statusFilter, categoryFilter, activeTeam, pageSize, workflowTab], () => {
           currentPage.value = 1;
         });
 
-        watch([activePage, showExcelStudio, activeChecksheet, focusedCsIndex], () => {
-          if (showExcelStudio.value && activeChecksheet.value?.part_number) {
-            document.title = activeChecksheet.value.part_number;
-          } else if (activePage.value === 'checksheets') {
-            if (activeChecksheet.value?.part_number) {
-              document.title = activeChecksheet.value.part_number;
-            } else {
-              const focused = filteredChecksheets.value[focusedCsIndex.value];
-              document.title = focused?.part_number || 'Checksheets';
-            }
-          } else {
-            document.title = 'FaketoryHub: Quality Checksheet Suite';
-          }
-        }, { immediate: true });
+        watch(
+          [activePage, showExcelStudio, () => activeChecksheet.value?.part_number],
+          () => {
+            updateDocumentTitle();
+          },
+          { immediate: true, deep: true }
+        );
 
         onMounted(() => {
+          updateDocumentTitle();
           window.addEventListener('popstate', () => {
             if (showExcelStudio.value) {
               if (isPointsDirty.value) {
@@ -6800,6 +7863,7 @@
               suggestionState.visible = false;
             }
             activePage.value = getPageFromRoute();
+            updateDocumentTitle();
           });
           window.addEventListener('beforeunload', (e) => {
             if (showExcelStudio.value && isPointsDirty.value) {
@@ -6836,10 +7900,20 @@
               loadChecksheets(true);
             }
           }, 30000);
+          // FactoryHub Category Sync Progress Polling
+          fetchSyncCategoryProgress();
+          setInterval(() => {
+            if (syncCategoryState.value.active) {
+              fetchSyncCategoryProgress();
+            }
+          }, 2500);
           window.addEventListener('paste', handleGlobalPaste);
         });
 
         return {
+          syncCategoryState,
+          showSyncCategoryModal,
+          fetchSyncCategoryProgress,
           activePage,
           isSidebarCollapsed,
           isMobileSidebarOpen,
@@ -6848,6 +7922,9 @@
           navigate,
           goToChecksheetsWithStatus,
           goToChecksheetsWithTeam,
+          goToChecksheetsWithCategory,
+          countGlobalCategory,
+          getCategoryProgress,
           customerStats,
           currentUser,
           authToken,
@@ -6855,8 +7932,7 @@
           isLoggingIn,
           loginError,
           submitLogin,
-          fillLogin,
-          quickLogin,
+          selectedOtherUsersCount,
           logout,
           users,
           operatorUsers,
@@ -6869,8 +7945,21 @@
           activeTeam,
           searchQuery,
           statusFilter,
+          categoryFilter,
+          workflowTab,
+          countTodo,
+          countReady,
+          countDone,
+          countIssues,
+          formatCategoryShort,
           resetFilters,
           countStatus,
+          countCategory,
+          countCategoryInWorkflow,
+          toggleCategoryFilter,
+          partTemplateCountMap,
+          getCategoryBadgeClass,
+          getCategoryDotClass,
           countByTeam,
           countUnassigned,
           countOtherTasks,
@@ -6971,6 +8060,9 @@
           activeCol,
           sketchZoom,
           activeSketchIdx,
+          activeSketchUrl,
+          hasActiveStudioImage,
+          studioImagesList,
           isDraggingImage,
           isUploadingImage,
           uploadImageBase64,
@@ -7023,6 +8115,7 @@
           checkSystemUpdate,
           triggerSystemUpdate,
           toggleReviewStatus,
+          setStudioStatus,
           showAddPartModal,
           isSavingManualPart,
           newPartForm,

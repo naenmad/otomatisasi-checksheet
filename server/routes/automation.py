@@ -169,6 +169,8 @@ async def run_batch_automation(
         raise HTTPException(status_code=400, detail="Daftar checksheet_ids tidak boleh kosong.")
 
     req_user = await resolve_user_from_request(db, None, authorization)
+    if not req_user:
+        raise HTTPException(status_code=401, detail="Autentikasi diperlukan. Silakan login terlebih dahulu.")
 
     logs = []
     success_count = 0
@@ -255,6 +257,11 @@ async def stream_batch_automation_logs(
     cs_ids = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()]
 
     async def event_generator():
+        if not req_user:
+            yield "data: [!] Ditolak: Autentikasi diperlukan. Anda harus login untuk menjalankan batch otomasi.\n\n"
+            yield "data: [DONE] Selesai.\n\n"
+            return
+
         yield f"data: [*] Inisialisasi Batch Otomasi untuk {len(cs_ids)} part...\n\n"
         try:
             async for line in execute_batch_submission(

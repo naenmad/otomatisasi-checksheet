@@ -131,3 +131,75 @@ def execute_system_update():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal melakukan update git pull: {str(e)}")
+
+
+@router.get("/sync-categories/progress")
+def get_sync_categories_progress():
+    """Returns live progress for FactoryHub category sync process."""
+    import glob
+    import re
+
+    candidates = sorted(
+        glob.glob("/Users/mac/.gemini/antigravity-ide/brain/*/.system_generated/tasks/task-*.log"),
+        key=os.path.getmtime,
+        reverse=True
+    )
+    target_file = None
+    for f in candidates:
+        try:
+            with open(f, "r", errors="ignore") as fp:
+                content_sample = fp.read(400)
+                if "FactoryHub" in content_sample and "kategori" in content_sample:
+                    target_file = f
+                    break
+        except Exception:
+            continue
+
+    if not target_file:
+        return {"active": False, "message": "Tidak ada proses sinkronisasi aktif."}
+
+    try:
+        with open(target_file, "r", errors="ignore") as fp:
+            lines = fp.readlines()
+
+        current = 0
+        total = 475
+        current_part = "-"
+        updated = 0
+        skipped = 0
+        failed = 0
+        is_finished = False
+
+        for line in lines:
+            if "Berhasil diupdate di FactoryHub!" in line:
+                updated += 1
+            elif "[OK]" in line:
+                skipped += 1
+            elif "[ERROR]" in line or "[FAIL]" in line:
+                failed += 1
+            elif "RINGKASAN SINKRONISASI KATEGORI FACTORYHUB" in line:
+                is_finished = True
+
+            m = re.search(r'\[(\d+)/(\d+)\]\s*\[(.*?)\]\s*(.*?):', line)
+            if m:
+                current = int(m.group(1))
+                total = int(m.group(2))
+                current_part = m.group(4).strip()
+
+        percent = round((current / total * 100), 1) if total > 0 else 0
+
+        return {
+            "active": not is_finished,
+            "is_finished": is_finished,
+            "current": current,
+            "total": total,
+            "percent": percent,
+            "current_part": current_part,
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "recent_logs": [l.strip() for l in lines[-12:] if l.strip()]
+        }
+    except Exception as e:
+        return {"active": False, "error": str(e)}
+

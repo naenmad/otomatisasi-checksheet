@@ -53,7 +53,7 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     if not user or not valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Username atau password salah. Coba: admin (admin123!), zul (zul123), atau klik akun cepat."
+            detail="Username atau password salah. Pastikan kredensial yang dimasukkan sudah benar."
         )
 
     token = create_token(user_id=user.id, username=user.username, role=user.role)

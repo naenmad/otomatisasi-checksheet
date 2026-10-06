@@ -109,6 +109,8 @@ async def execute_checksheet_submission(
         "model": cs.model or "-",
         "customer": cs.customer or "PT. HPM",
         "doc_number": cs.doc_number or "FO-45-01",
+        "category": cs.category or "Accuracy",
+        "checksheet_category": cs.category or "Accuracy"
     }
 
     mode_str = "Background (Headless)" if headless else "Layar Aktif (Visible)"
@@ -227,12 +229,22 @@ async def execute_batch_submission(
             skipped_count += 1
             continue
 
-        if requesting_user and requesting_user.role == "operator":
-            if cs.assigned_to != requesting_user.name:
-                owner_str = cs.assigned_to or "Unassigned"
-                yield f"[!] Lewati Part {cs.part_number}: Ditugaskan ke '{owner_str}'. Anda hanya bisa batch kirim part milik Anda sendiri. Silakan ambil task terlebih dahulu.\n"
-                skipped_count += 1
-                continue
+        # Strict user ownership check: Cannot batch parts belonging to others or unassigned parts
+        if not requesting_user:
+            yield f"[!] Ditolak: Anda belum login. Batch submission memerlukan autentikasi pengguna.\n"
+            skipped_count += 1
+            continue
+
+        assigned_clean = (cs.assigned_to or "").strip().lower()
+        is_my_part = (
+            assigned_clean == requesting_user.name.strip().lower()
+            or assigned_clean == requesting_user.username.strip().lower()
+        )
+        if not is_my_part:
+            owner_str = cs.assigned_to or "Unassigned"
+            yield f"[!] Lewati Part {cs.part_number}: Ditugaskan ke '{owner_str}'. Anda tidak dapat melakukan batch part milik orang lain. Silakan ambil task terlebih dahulu.\n"
+            skipped_count += 1
+            continue
 
         # Enforce that only parts marked as 'Reviewed' can be submitted in batch
         if cs.status != "Reviewed":
@@ -327,6 +339,8 @@ async def execute_batch_submission(
                         "model": cs.model or "-",
                         "customer": cs.customer or "PT. HPM",
                         "doc_number": cs.doc_number or "FO-45-01",
+                        "category": cs.category or "Accuracy",
+                        "checksheet_category": cs.category or "Accuracy"
                     }
 
                     yield f"[*] Mengisi checksheet master ({len(points_payload)} poin, {len(image_paths)} gambar)...\n"

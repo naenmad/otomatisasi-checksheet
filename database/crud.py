@@ -35,6 +35,7 @@ async def create_checksheet(
     customer: str = "PT. HPM",
     doc_number: str = "Form 1",
     template_type: str = "GENERIC",
+    category: str = "Accuracy",
     status: str = "DRAFT",
     assigned_to: str = "Unassigned",
     keterangan: str = "",
@@ -43,19 +44,28 @@ async def create_checksheet(
     images: Optional[List[str]] = None
 ) -> Checksheet:
     clean_pno = clean_str(part_number)
+    category_val = (category or "Accuracy").strip()
 
-    # Check if part already exists
-    stmt = select(Checksheet).where(Checksheet.clean_part_number == clean_pno)
+    # Check if a template for this part number and category already exists
+    query_filters = [
+        Checksheet.clean_part_number == clean_pno,
+        Checksheet.category == category_val
+    ]
+    if doc_number and doc_number not in ("Form 1", "-"):
+        query_filters.append(Checksheet.doc_number == doc_number)
+
+    stmt = select(Checksheet).where(*query_filters)
     result = await session.execute(stmt)
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Update existing
+        # Update existing template
         existing.part_name = part_name or existing.part_name
         existing.model = model or existing.model
         existing.customer = customer or existing.customer
         existing.doc_number = doc_number or existing.doc_number
         existing.template_type = template_type or existing.template_type
+        existing.category = category_val or existing.category
         if existing.status != "Reviewed":
             if status != "DRAFT" or existing.status == "DRAFT":
                 existing.status = status
@@ -71,6 +81,7 @@ async def create_checksheet(
             customer=customer,
             doc_number=doc_number,
             template_type=template_type,
+            category=category_val,
             status=status,
             assigned_to=assigned_to,
             keterangan=keterangan,
@@ -122,6 +133,7 @@ async def list_checksheets(
     session: AsyncSession,
     assigned_to: Optional[str] = None,
     status: Optional[str] = None,
+    category: Optional[str] = None,
     search: Optional[str] = None,
     limit: int = 1000,
     offset: int = 0
@@ -140,12 +152,20 @@ async def list_checksheets(
             query = query.where(Checksheet.assigned_to == assigned_to)
     if status and status.upper() != "ALL":
         st_clean = status.strip().lower()
-        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
-            query = query.where(Checksheet.status.in_(["Belum Di Input", "Belum di review"]))
+        if st_clean in ("belum dikerjakan", "belum di review", "belum di input", "belum_dikerjakan", "belum_di_review", "belum_di_input"):
+            query = query.where(Checksheet.status.in_(["Belum Dikerjakan", "Belum Di Input", "Belum di review"]))
+        elif st_clean in ("siap kirim", "siap_kirim", "reviewed"):
+            query = query.where(Checksheet.status.in_(["Siap Kirim", "Reviewed", "reviewed"]))
+        elif st_clean in ("perlu revisi isi", "revisi isi", "butuh revisi", "butuh_revisi"):
+            query = query.where(Checksheet.status.in_(["Perlu Revisi Isi", "Butuh Revisi", "butuh revisi"]))
+        elif st_clean in ("perlu revisi gambar", "revisi gambar"):
+            query = query.where(Checksheet.status == "Perlu Revisi Gambar")
         elif st_clean in ("checksheet done", "checksheet_done"):
             query = query.where(Checksheet.status.ilike("Checksheet Done"))
         else:
             query = query.where(Checksheet.status.ilike(status))
+    if category and category.upper() != "ALL":
+        query = query.where(Checksheet.category.ilike(category.strip()))
     if search:
         search_pattern = f"%{search}%"
         query = query.where(
@@ -181,8 +201,9 @@ async def get_checksheets_summary_list(
     session: AsyncSession,
     assigned_to: Optional[str] = None,
     status: Optional[str] = None,
+    category: Optional[str] = None,
     search: Optional[str] = None,
-    limit: int = 2000,
+    limit: int = 5000,
     offset: int = 0
 ) -> List[dict]:
     """High-performance checksheet summary query using SQL aggregates instead of 80,000+ ORM model loads."""
@@ -217,6 +238,8 @@ async def get_checksheets_summary_list(
             Checksheet.model,
             Checksheet.customer,
             Checksheet.doc_number,
+            Checksheet.template_type,
+            Checksheet.category,
             Checksheet.status,
             Checksheet.assigned_to,
             Checksheet.keterangan,
@@ -244,18 +267,27 @@ async def get_checksheets_summary_list(
             query = query.where(Checksheet.assigned_to == assigned_to)
     if status and status.upper() != "ALL":
         st_clean = status.strip().lower()
-        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
-            query = query.where(Checksheet.status.in_(["Belum Di Input", "Belum di review"]))
+        if st_clean in ("belum dikerjakan", "belum di review", "belum di input", "belum_dikerjakan", "belum_di_review", "belum_di_input"):
+            query = query.where(Checksheet.status.in_(["Belum Dikerjakan", "Belum Di Input", "Belum di review"]))
+        elif st_clean in ("siap kirim", "siap_kirim", "reviewed"):
+            query = query.where(Checksheet.status.in_(["Siap Kirim", "Reviewed", "reviewed"]))
+        elif st_clean in ("perlu revisi isi", "revisi isi", "butuh revisi", "butuh_revisi"):
+            query = query.where(Checksheet.status.in_(["Perlu Revisi Isi", "Butuh Revisi", "butuh revisi"]))
+        elif st_clean in ("perlu revisi gambar", "revisi gambar"):
+            query = query.where(Checksheet.status == "Perlu Revisi Gambar")
         elif st_clean in ("checksheet done", "checksheet_done"):
             query = query.where(Checksheet.status.ilike("Checksheet Done"))
         else:
             query = query.where(Checksheet.status.ilike(status))
+    if category and category.upper() != "ALL":
+        query = query.where(Checksheet.category.ilike(category.strip()))
     if search:
         search_pattern = f"%{search}%"
         query = query.where(
             (Checksheet.part_number.ilike(search_pattern)) |
             (Checksheet.part_name.ilike(search_pattern)) |
-            (Checksheet.model.ilike(search_pattern))
+            (Checksheet.model.ilike(search_pattern)) |
+            (Checksheet.category.ilike(search_pattern))
         )
 
     query = query.order_by(Checksheet.id.asc()).offset(offset).limit(limit)
@@ -292,6 +324,8 @@ async def get_checksheets_summary_list(
             "model": r.model,
             "customer": r.customer,
             "doc_number": r.doc_number,
+            "template_type": r.template_type,
+            "category": r.category or "Accuracy",
             "status": r.status,
             "assigned_to": r.assigned_to,
             "keterangan": r.keterangan,

@@ -65,13 +65,20 @@ async def scrape_all_factoryhub_templates(
                         if (!editLink) continue;
 
                         const partCell = tr.cells && tr.cells[0] ? tr.cells[0].innerText.trim() : '';
-                        const formatCell = tr.cells && tr.cells[1] ? tr.cells[1].innerText.trim() : '';
+                        const categoryCell = tr.cells && tr.cells[1] ? tr.cells[1].innerText.trim() : '';
                         const descCell = tr.cells && tr.cells[2] ? tr.cells[2].innerText.trim() : '';
+                        const itemsCountCell = tr.cells && tr.cells[3] ? tr.cells[3].innerText.trim() : '';
+                        const docRevCell = tr.cells && tr.cells[4] ? tr.cells[4].innerText.trim() : '';
+                        const statusCell = tr.cells && tr.cells[5] ? tr.cells[5].innerText.trim() : '';
 
                         items.push({
                             part_number: partCell,
-                            template_name: formatCell,
+                            category: categoryCell,
+                            template_name: partCell,
                             description: descCell,
+                            items_count: itemsCountCell,
+                            doc_rev: docRevCell,
+                            status: statusCell,
                             edit_url: editLink.href
                         });
                     }
@@ -106,8 +113,12 @@ async def scrape_all_factoryhub_templates(
                     templates.append({
                         "part_number": p_num,
                         "clean_part_number": c_num,
+                        "category": item.get("category", ""),
                         "template_name": item.get("template_name", ""),
                         "description": item.get("description", ""),
+                        "items_count": item.get("items_count", ""),
+                        "doc_rev": item.get("doc_rev", ""),
+                        "status": item.get("status", ""),
                         "edit_url": edit_url,
                         "fh_id": fh_id
                     })
@@ -125,6 +136,23 @@ async def scrape_all_factoryhub_templates(
     return templates
 
 
+def normalize_cat_key(c: str) -> str:
+    s = (c or "").lower().strip()
+    if "subcont" in s:
+        return "subcont"
+    if "material" in s:
+        return "material"
+    if "std" in s:
+        return "std"
+    if "ssw" in s:
+        return "ssw"
+    if "accuracy" in s:
+        return "accuracy"
+    if "general" in s:
+        return "general"
+    return s
+
+
 async def run_factoryhub_reconciliation(
     session: AsyncSession,
     headless: bool = True,
@@ -132,16 +160,22 @@ async def run_factoryhub_reconciliation(
 ) -> Dict[str, Any]:
     """
     Executes full two-way audit between FactoryHub and Supabase database.
+    Supports multi-template per part number with category matching.
     """
     t0 = time.time()
     fh_templates = await scrape_all_factoryhub_templates(headless=headless, browser_channel=browser_channel)
 
-    # Index FactoryHub templates by clean part number
-    fh_map: Dict[str, Dict[str, Any]] = {}
+    # Index FactoryHub templates by (clean_part_number, normalized_category) and by clean_part_number
+    from typing import Tuple
+    fh_by_cat: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    fh_by_part: Dict[str, List[Dict[str, Any]]] = {}
+
     for tmpl in fh_templates:
         c_num = tmpl["clean_part_number"]
+        n_cat = normalize_cat_key(tmpl.get("category", ""))
         if c_num:
-            fh_map[c_num] = tmpl
+            fh_by_cat[(c_num, n_cat)] = tmpl
+            fh_by_part.setdefault(c_num, []).append(tmpl)
 
     # Fetch all checksheets from Supabase
     all_cs = (await session.scalars(select(Checksheet))).all()
@@ -152,16 +186,25 @@ async def run_factoryhub_reconciliation(
 
     for cs in all_cs:
         c_num = cs.clean_part_number
-        fh_match = fh_map.get(c_num)
+        cs_cat = normalize_cat_key(cs.category or "Accuracy")
 
-        # Also check sub-parts if part_number contains / or ,
+        # 1. Exact match by clean part number AND category
+        fh_match = fh_by_cat.get((c_num, cs_cat))
+
+        # 2. Also check sub-parts if part_number contains / or ,
         if not fh_match and cs.part_number and ("/" in cs.part_number or "," in cs.part_number):
             sub_parts = [p.strip() for p in re.split(r'[/,]', cs.part_number) if p.strip()]
             for sp in sub_parts:
                 sp_clean = clean_str(sp)
-                if sp_clean in fh_map:
-                    fh_match = fh_map[sp_clean]
+                if (sp_clean, cs_cat) in fh_by_cat:
+                    fh_match = fh_by_cat[(sp_clean, cs_cat)]
                     break
+
+        # 3. Fallback: If no exact category match, but this part only has 1 template on FactoryHub (e.g. legacy 'ACCURACY')
+        if not fh_match and c_num in fh_by_part:
+            candidates = fh_by_part[c_num]
+            if len(candidates) == 1:
+                fh_match = candidates[0]
 
         # Check if part exists on FactoryHub
         if fh_match:

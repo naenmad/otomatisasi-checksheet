@@ -167,6 +167,7 @@ class ChecksheetUpdateSchema(BaseModel):
     model: Optional[str] = None
     customer: Optional[str] = None
     doc_number: Optional[str] = None
+    category: Optional[str] = None
     status: Optional[str] = None
     assigned_to: Optional[str] = None
     keterangan: Optional[str] = None
@@ -180,6 +181,7 @@ class ChecksheetPointsUpdateSchema(BaseModel):
 async def get_checksheets(
     assigned_to: Optional[str] = Query(None, description="Filter by assignee: Zul, Iqbal, Rama, Yogi"),
     status: Optional[str] = Query(None, description="Filter by status: Checksheet Done, Belum Di Input, Tidak Ada Part"),
+    category: Optional[str] = Query(None, description="Filter by category: Accuracy SSW, Incomming Material, Incomming Std Part, Incomming Subcont Part, Accuracy, General"),
     search: Optional[str] = Query(None, description="Search part number or name"),
     limit: int = 1000,
     offset: int = 0,
@@ -228,12 +230,22 @@ async def get_checksheets(
 
     if status and status.upper() != "ALL":
         st_clean = status.strip().lower()
-        if st_clean in ("belum di review", "belum di input", "belum_di_review", "belum_di_input"):
-            filtered = [c for c in filtered if (c.get("status") or "") in ("Belum Di Input", "Belum di review")]
+        if st_clean in ("belum dikerjakan", "belum di review", "belum di input", "belum_di_review", "belum_di_input", "belum_dikerjakan"):
+            filtered = [c for c in filtered if (c.get("status") or "") in ("Belum Dikerjakan", "Belum Di Input", "Belum di review")]
+        elif st_clean in ("siap kirim", "siap_kirim", "reviewed"):
+            filtered = [c for c in filtered if (c.get("status") or "").lower() in ("siap kirim", "reviewed")]
+        elif st_clean in ("perlu revisi isi", "revisi isi", "butuh revisi", "perlu_revisi_isi", "butuh_revisi"):
+            filtered = [c for c in filtered if (c.get("status") or "").lower() in ("perlu revisi isi", "butuh revisi")]
+        elif st_clean in ("perlu revisi gambar", "revisi gambar", "perlu_revisi_gambar"):
+            filtered = [c for c in filtered if (c.get("status") or "").lower() in ("perlu revisi gambar", "revisi gambar")]
         elif st_clean in ("checksheet done", "checksheet_done"):
             filtered = [c for c in filtered if (c.get("status") or "").lower() == "checksheet done"]
         else:
             filtered = [c for c in filtered if (c.get("status") or "").lower() == status.lower()]
+
+    if category and category.upper() != "ALL":
+        cat_clean = category.strip().lower()
+        filtered = [c for c in filtered if (c.get("category") or "accuracy").lower().strip() == cat_clean]
 
     if search:
         s_lower = search.lower().strip()
@@ -242,6 +254,7 @@ async def get_checksheets(
             if s_lower in (c.get("part_number") or "").lower()
             or s_lower in (c.get("part_name") or "").lower()
             or s_lower in (c.get("model") or "").lower()
+            or s_lower in (c.get("category") or "").lower()
         ]
 
     return filtered[offset:offset + limit]
@@ -264,9 +277,12 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
         "model": cs.model,
         "customer": cs.customer,
         "doc_number": cs.doc_number,
+        "template_type": cs.template_type,
+        "category": cs.category or "Accuracy",
         "status": cs.status,
         "assigned_to": cs.assigned_to,
         "keterangan": cs.keterangan,
+        "factoryhub_id": cs.factoryhub_id,
         "factoryhub_url": cs.factoryhub_url,
         "points": [
             {
@@ -406,6 +422,9 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     if payload.doc_number is not None:
         cs.doc_number = payload.doc_number
         cache_updates["doc_number"] = payload.doc_number
+    if payload.category is not None:
+        cs.category = payload.category.strip()
+        cache_updates["category"] = cs.category
     if payload.status is not None and payload.status != cs.status:
         cs.status = payload.status
         cache_updates["status"] = payload.status
@@ -835,8 +854,9 @@ class CreateChecksheetManualSchema(BaseModel):
     model: Optional[str] = "-"
     customer: Optional[str] = "PT. HPM"
     doc_number: Optional[str] = "FO-45-01"
+    category: Optional[str] = "Accuracy"
     assigned_to: Optional[str] = "Unassigned"
-    status: Optional[str] = "Belum di review"
+    status: Optional[str] = "Belum Dikerjakan"
     keterangan: Optional[str] = "Ditambahkan manual oleh admin"
     points: Optional[List[PointItemManualSchema]] = []
 
@@ -861,7 +881,8 @@ async def create_checksheet_manual(
         model=payload.model or "-",
         customer=payload.customer or "PT. HPM",
         doc_number=payload.doc_number or "FO-45-01",
-        status=payload.status or "Belum di review",
+        category=payload.category or "Accuracy",
+        status=payload.status or "Belum Dikerjakan",
         assigned_to=payload.assigned_to or "Unassigned",
         keterangan=payload.keterangan or "Ditambahkan manual oleh admin",
     )
@@ -889,6 +910,8 @@ async def create_checksheet_manual(
         "model": new_cs.model,
         "customer": new_cs.customer,
         "doc_number": new_cs.doc_number,
+        "category": new_cs.category or "Accuracy",
+        "template_type": "MANUAL",
         "status": new_cs.status,
         "assigned_to": new_cs.assigned_to,
         "keterangan": new_cs.keterangan,
