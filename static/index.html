@@ -256,6 +256,23 @@
             </svg>
             <span v-if="!isSidebarCollapsed" class="truncate flex-1">Integrasi & Setelan</span>
           </button>
+
+          <!-- 7. Panduan SOP & Standarisasi (PDF) -->
+          <a href="/static/docs/PANDUAN_DAN_STANDARISASI_CHECKSHEET_QC.pdf"
+             target="_blank"
+             :title="isSidebarCollapsed ? 'Panduan & SOP Checksheet (PDF)' : ''"
+             :class="[
+               isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+             ]"
+             class="w-full flex items-center rounded-lg border border-indigo-900/50 bg-indigo-950/20 text-indigo-300 hover:text-indigo-100 hover:bg-indigo-900/40 text-xs transition-all text-left group">
+            <svg class="w-4 h-4 shrink-0 text-indigo-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span v-if="!isSidebarCollapsed" class="truncate flex-1 font-semibold">Panduan SOP (PDF)</span>
+            <span v-if="!isSidebarCollapsed" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-200 border border-indigo-700/60">
+              v2.0
+            </span>
+          </a>
         </nav>
 
         <!-- Sidebar Footer & User Profile -->
@@ -925,14 +942,17 @@
                     <td class="py-2.5 px-3 text-zinc-400 font-mono">{{ cs.model || '-' }}</td>
                     <td class="py-2.5 px-3 text-zinc-400">{{ cs.customer || '-' }}</td>
                     <td class="py-2.5 px-3">
-                      <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
-                            :class="(cs.category === 'Incomming Subcont Part') ? 'bg-amber-950/80 text-amber-300 border-amber-800/80' :
-                                    (cs.category === 'Incomming Material') ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80' :
-                                    (cs.category === 'Incomming Std Part') ? 'bg-sky-950/80 text-sky-300 border-sky-800/80' :
-                                    (cs.category === 'Accuracy SSW') ? 'bg-indigo-950/80 text-indigo-300 border-indigo-800/80' :
-                                    'bg-violet-950/80 text-violet-300 border-violet-800/80'">
-                        {{ formatCategoryShort(cs.category) }}
-                      </span>
+                      <div class="flex items-center gap-1 flex-wrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
+                              :class="getCategoryBadgeClass(cs.category)">
+                          {{ formatCategoryShort(cs.category) }}
+                        </span>
+                        <span v-if="cs.process_label"
+                              class="px-1.5 py-0.5 rounded text-[9px] font-semibold border"
+                              :class="getProcessBadgeClass(cs.process_label)">
+                          {{ cs.process_label }}
+                        </span>
+                      </div>
                     </td>
                     <td class="py-2.5 px-3">
                       <span class="px-2 py-0.5 rounded text-[10px] font-semibold border"
@@ -1481,11 +1501,18 @@
                             </svg>
                           </button>
                         </div>
-
-                        <!-- Direct Category Tag: Clean, Quiet, Informative -->
-                        <div>
-                          <span class="text-[10px] font-medium text-zinc-400 bg-zinc-800/80 border border-zinc-700/60 px-1.5 py-0.5 rounded inline-block">
+                        <!-- Direct Category & Process Stage Badges -->
+                        <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <span class="text-[10px] font-semibold border px-1.5 py-0.5 rounded inline-block shadow-sm"
+                                :class="getCategoryBadgeClass(cs.category)">
                             {{ formatCategoryShort(cs.category) }}
+                          </span>
+                          <span v-if="cs.process_label"
+                                class="text-[10px] font-semibold border px-1.5 py-0.5 rounded inline-flex items-center gap-1 shadow-sm"
+                                :class="getProcessBadgeClass(cs.process_label)"
+                                :title="'Form Proses: ' + cs.process_label + (cs.doc_number ? ' (' + cs.doc_number + ')' : '')">
+                            <span class="w-1 h-1 rounded-full bg-current opacity-80"></span>
+                            {{ cs.process_label }}
                           </span>
                         </div>
                       </div>
@@ -5111,6 +5138,19 @@
           return 'bg-blue-400';
         };
 
+        const getProcessBadgeClass = (proc) => {
+          if (!proc) return 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60';
+          const p = proc.toLowerCase();
+          if (p.includes('stamping')) return 'bg-amber-950/90 text-amber-300 border-amber-600/70';
+          if (p.includes('spot') || p.includes('ssw')) return 'bg-indigo-950/90 text-indigo-300 border-indigo-600/70';
+          if (p.includes('final')) return 'bg-purple-950/90 text-purple-300 border-purple-600/70';
+          if (p.includes('child')) return 'bg-orange-950/90 text-orange-300 border-orange-600/70';
+          if (p.includes('fg')) return 'bg-sky-950/90 text-sky-300 border-sky-600/70';
+          if (p.includes('subcont')) return 'bg-yellow-950/90 text-yellow-300 border-yellow-600/70';
+          if (p.includes('material')) return 'bg-emerald-950/90 text-emerald-300 border-emerald-600/70';
+          return 'bg-zinc-800 text-zinc-300 border-zinc-700';
+        };
+
         const isUnassigned = (cs) => {
           if (!cs) return false;
           return !cs.assigned_to || cs.assigned_to === 'Unassigned' || cs.assigned_to === 'Belum Ditugaskan';
@@ -7960,6 +8000,7 @@
           partTemplateCountMap,
           getCategoryBadgeClass,
           getCategoryDotClass,
+          getProcessBadgeClass,
           countByTeam,
           countUnassigned,
           countOtherTasks,

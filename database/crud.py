@@ -197,6 +197,34 @@ def _normalize_thumbnail_url(url: Optional[str], path: Optional[str]) -> Optiona
     return raw
 
 
+def extract_process_label(raw_path: Optional[str], doc_number: Optional[str] = None) -> str:
+    """Helper to determine the exact manufacturing/inspection stage badge from file path."""
+    if not raw_path:
+        return ""
+    p = raw_path.upper().replace("\\", "/")
+    if "1. STAMPING" in p or "/STAMPING/" in p:
+        return "IPQC Stamping"
+    if "2. SSW" in p or "SPOT NUT" in p or "SPOT_NUT" in p:
+        return "IPQC Spot Nut"
+    if "3. FINAL" in p or "/FINAL/" in p:
+        return "IPQC Final Assy"
+    if "2. IR CHILD PART" in p or "CHILD PART" in p:
+        return "IR Child Part"
+    if "3. IR MONTHLY FG" in p or "MONTHLY FG" in p:
+        if "REV#NEW EO" in p or "NEW EO" in p:
+            return "IR Monthly FG (EO)"
+        import re
+        m = re.search(r"REV#([0-9A-Z]+)", p)
+        if m:
+            return f"IR Monthly FG (Rev {m.group(1)})"
+        return "IR Monthly FG"
+    if "CS IQC SUBCONT" in p:
+        return "IQC Subcont"
+    if "CS IQC MATERIAL" in p or "CS MATERIAL" in p:
+        return "IQC Material"
+    return ""
+
+
 async def get_checksheets_summary_list(
     session: AsyncSession,
     assigned_to: Optional[str] = None,
@@ -245,6 +273,7 @@ async def get_checksheets_summary_list(
             Checksheet.keterangan,
             Checksheet.factoryhub_url,
             Checksheet.updated_at,
+            Checksheet.raw_file_path,
             func.coalesce(pts_sub.c.cnt, 0).label("points_count"),
             func.coalesce(imgs_sub.c.cnt, 0).label("images_count"),
             first_img.c.image_url.label("first_image_url"),
@@ -334,6 +363,8 @@ async def get_checksheets_summary_list(
             "thumbnail_url": thumb or (all_imgs[0] if all_imgs else None),
             "image_urls": all_imgs,
             "factoryhub_url": r.factoryhub_url,
+            "raw_file_path": r.raw_file_path,
+            "process_label": extract_process_label(r.raw_file_path, r.doc_number),
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         })
     return items

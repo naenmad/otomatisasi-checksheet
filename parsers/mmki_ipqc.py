@@ -70,9 +70,15 @@ class MMKIIPQCParser(BaseParser):
 
         if wb is not None:
             try:
-                ws = wb.active
-                for r in range(1, min(ws.max_row + 1, 20)):
-                    for c in range(1, min(ws.max_column + 1, 30)):
+                # Find target operational sheet (prefer numbered sheets '1', '2', etc., ignore 'Master')
+                valid_sheets = [s for s in wb.sheetnames if s.strip().isdigit()]
+                if not valid_sheets:
+                    valid_sheets = [s for s in wb.sheetnames if s.strip().lower() not in ["master", "cover"]]
+                target_sheet = valid_sheets[0] if valid_sheets else wb.sheetnames[0]
+                ws = wb[target_sheet]
+
+                for r in range(1, min(ws.max_row + 1, 25)):
+                    for c in range(1, min(ws.max_column + 1, 35)):
                         v = str(ws.cell(r, c).value or "").strip()
                         v_u = v.upper()
                         if any(k in v_u for k in ["PART NO", "NO. PART", "NO PART", "PART NUMBER"]) and not part_number:
@@ -113,10 +119,9 @@ class MMKIIPQCParser(BaseParser):
         match = re.search(r"([0-9A-Z]{4,5}[A-Z0-9_-]{3,})", fname)
         if match:
             fn_part = match.group(1).replace("_", "").strip()
-            if not part_number:
+            if not part_number or len(part_number) < 5 or part_number.startswith("5251D"):
                 part_number = fn_part
             elif fn_part.endswith("P") and fn_part != part_number:
-                # E.g. filename has 76757E020P but sheet cell had 76756E020P
                 part_number = fn_part
                 if "LH" in fname.upper() or fn_part[-4] in ["1", "3", "5", "7", "9"]:
                     part_name = part_name.replace("RH", "LH")
@@ -143,112 +148,91 @@ class MMKIIPQCParser(BaseParser):
 
         all_points = []
         try:
-            for sname in wb.sheetnames:
+            # Strictly filter out 'Master' template sheet which contains legacy parts (e.g. 5251D445)
+            valid_sheets = [s for s in wb.sheetnames if s.strip().isdigit()]
+            if not valid_sheets:
+                valid_sheets = [s for s in wb.sheetnames if s.strip().lower() not in ["master", "cover"]]
+
+            item_seq = 1
+            for sname in valid_sheets:
                 ws = wb[sname]
-                is_ipqc = False
-                for r in range(1, min(ws.max_row + 1, 50)):
-                    c_val = str(ws.cell(r, 3).value or "").strip().upper()
-                    h_val = str(ws.cell(r, 8).value or "").strip().upper()
-                    l_val = str(ws.cell(r, 12).value or "").strip().upper()
-                    if ("APPEARANCE" in c_val or "DIMENSION" in c_val) and ("STANDARD" in h_val or "METHOD" in l_val):
-                        is_ipqc = True
-                        break
-
-                if not is_ipqc:
-                    continue
-
-                def _format_tolerance_str(s: str) -> str:
-                    s = s.strip()
-                    m = re.match(r"^([^\+\-\/±]+)?\s*[\+]+\s*([0-9\.]+)\s*\/\s*([\-\+])\s*([0-9\.]+)", s)
-                    if m:
-                        nom = (m.group(1) or "").strip()
-                        u = m.group(2).strip()
-                        sign2 = m.group(3).strip()
-                        l = m.group(4).strip()
-                        return f"{nom} + {u} / {sign2} {l}" if nom else f"+ {u} / {sign2} {l}"
-                    return s
-
-                current_section = ""
-                current_item_no = ""
-                current_item_name = ""
-                current_method = "Visual"
+                current_sec = ""
                 r = 1
-
                 while r <= ws.max_row:
+                    b_val = str(ws.cell(r, 2).value or "").strip()
                     c_val = str(ws.cell(r, 3).value or "").strip()
                     h_val = str(ws.cell(r, 8).value or "").strip()
+                    i_val = str(ws.cell(r, 9).value or "").strip()
                     j_val = str(ws.cell(r, 10).value or "").strip()
                     l_val = str(ws.cell(r, 12).value or "").strip()
-                    b_val = str(ws.cell(r, 2).value or "").strip()
-                    a_val = str(ws.cell(r, 1).value or "").strip()
 
-                    c_upper = c_val.upper()
-                    h_upper = h_val.upper()
-                    l_upper = l_val.upper()
-                    a_upper = a_val.upper()
-
-                    if "APPEARANCE" in c_upper and ("STANDARD" in h_upper or "METHOD" in l_upper):
-                        current_section = "Appearance"
-                        current_method = "Visual"
+                    c_u = c_val.upper()
+                    if "APPEARANCE" in c_u:
+                        current_sec = "A"
                         r += 1
                         continue
-                    elif "DIMENSION" in c_upper and ("STANDARD" in h_upper or "METHOD" in l_upper):
-                        current_section = "Dimension"
-                        current_method = "Feeler Gauge"
+                    elif "DIMENSION" in c_u:
+                        current_sec = "B"
                         r += 1
                         continue
-                    elif "JUDGEMENT" in c_upper or "JML. PROD." in a_upper:
+                    elif any(k in c_u for k in ["JUDGEMENT", "JML. PROD."]):
                         break
 
-                    if current_section:
-                        if any(k in c_upper for k in ["SPESIFIKASI", "WAKTU PENGECEKAN", "APPEARANCE", "DIMENSION"]) or any(k in h_upper for k in ["STANDARD", "AWAL PROSES", "AKHIR PROSES"]):
-                            r += 1
-                            continue
+                    if not current_sec:
+                        r += 1
+                        continue
+                    if any(k in c_u for k in ["SPESIFIKASI", "WAKTU PENGECEKAN", "AWAL PROSES"]):
+                        r += 1
+                        continue
+                    if not c_val:
+                        r += 1
+                        continue
 
-                        if b_val and (b_val.isdigit() or not any(k in b_val.upper() for k in ["NO", "ITEM"])):
-                            current_item_no = b_val
-                        if c_val:
-                            current_item_name = c_val
-                        if l_val:
-                            current_method = l_val
-
-                        datum = ""
-                        if a_val and a_upper not in ["INSPECTOR", "SHIFT", "TGL", "PROSES", "NO.", "NO"]:
-                            datum = a_val.strip()
-
-                        skip_next = False
+                    if current_sec == "A":
+                        std_val = h_val or i_val or "OK / NG"
+                        mth_val = l_val or "Visual"
+                        ino = b_val if b_val.isdigit() else str(item_seq)
+                        item_seq += 1
+                        all_points.append({
+                            "item_no": ino,
+                            "inspection_item": " ".join(c_val.split()),
+                            "standard": " ".join(std_val.split()),
+                            "method": mth_val,
+                            "master_data": ""
+                        })
+                        r += 1
+                    elif current_sec == "B":
+                        nom = i_val or h_val
+                        tol = j_val
                         next_j = str(ws.cell(r + 1, 10).value or "").strip() if r + 1 <= ws.max_row else ""
+                        skip = False
+                        if tol and next_j and (next_j.startswith("-") or next_j.startswith("+") or next_j == "0"):
+                            tol = f"{tol} / {next_j}"
+                            skip = True
+                        full_std = f"{nom} {tol}".strip() if tol and tol not in nom else (nom or "OK / NG")
 
-                        if j_val:
-                            if next_j and (next_j.startswith("-") or next_j.startswith("+")):
-                                u_clean = j_val.lstrip("+").strip()
-                                l_sign = "-" if next_j.startswith("-") else "+"
-                                l_clean = next_j.lstrip("-+").strip()
-                                std_str = f"{h_val} + {u_clean} / {l_sign} {l_clean}".strip()
-                                skip_next = True
-                            else:
-                                std_str = f"{h_val} {j_val}".strip()
-                        else:
-                            std_str = h_val
+                        mth_val = l_val or "Caliper"
+                        if "PIN" in mth_val.upper():
+                            mth_val = "Insert Pin Datum"
+                        elif "FEELER" in mth_val.upper() or "SHIM" in c_u:
+                            mth_val = "Feeler Gg"
+                        elif "TAPPER" in mth_val.upper() or "GAP" in c_u:
+                            mth_val = "Tapper Gg"
+                        elif "STEEL" in mth_val.upper() or "TRIM" in c_u:
+                            mth_val = "Steelrule"
+                        elif "CALIPER" in mth_val.upper() or "CAIPER" in mth_val.upper() or "THICKNESS" in c_u:
+                            mth_val = "Caliper"
 
-                        std_formatted = _format_tolerance_str(std_str)
-                        if not h_val and (std_formatted.startswith("-") or std_formatted.startswith("+")):
-                            r += 1
-                            continue
-
-                        if std_formatted and std_formatted.upper() not in ["STANDARD", "AWAL PROSES", "AKHIR PROSES"] and current_item_name:
-                            item_display = f"{current_item_name} [{datum}]" if datum else current_item_name
-                            all_points.append({
-                                "item_no": current_item_no or "1",
-                                "inspection_item": " ".join(item_display.split()),
-                                "standard": " ".join(std_formatted.split()),
-                                "method": " ".join(current_method.split()),
-                                "master_data": ""
-                            })
-
-                        if skip_next:
-                            r += 1
-                    r += 1
+                        ino = b_val if b_val.isdigit() else str(item_seq)
+                        item_seq += 1
+                        all_points.append({
+                            "item_no": ino,
+                            "inspection_item": " ".join(c_val.split()),
+                            "standard": " ".join(full_std.split()),
+                            "method": mth_val,
+                            "master_data": ""
+                        })
+                        r += (2 if skip else 1)
         finally:
             if should_close:
                 try:

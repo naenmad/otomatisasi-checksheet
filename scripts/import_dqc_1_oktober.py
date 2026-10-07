@@ -66,14 +66,14 @@ def parse_ssw_sheet(ws, sheet_name: str) -> Dict[str, Any]:
     for r in range(15, min(ws.max_row + 1, 40)):
         no_val = str(ws.cell(r, 2).value or "").strip()
         spec_val = str(ws.cell(r, 3).value or "").strip()
-        qty_val = str(ws.cell(r, 4).value or "").strip()
+        qty_val = str(ws.cell(r, 6).value or "").strip()
         tool_val = str(ws.cell(r, 7).value or "").strip()
 
         if not spec_val or any(h in spec_val.upper() for h in ["SPESIFIKASI", "TANGGAL", "APPEARANCE"]):
             continue
         if no_val in ["*", "#"] and "SOP" in spec_val:
             continue
-        if "SHIFT" in spec_val.upper():
+        if "SHIFT" in spec_val.upper() or "MESIN" in spec_val.upper():
             continue
 
         std_val = qty_val if qty_val else "OK / NG"
@@ -81,11 +81,20 @@ def parse_ssw_sheet(ws, sheet_name: str) -> Dict[str, Any]:
         if "MATA" in method_val.upper():
             method_val = "Visual"
 
+        item_name = spec_val
+        if "WELDING STRENGTH" in spec_val.upper():
+            m_nut = re.search(r"(Nut\s*M\d+|Bolt\s*M?\d*)", spec_val, re.I)
+            nut_suffix = f" ({m_nut.group(1)})" if m_nut else ""
+            item_name = f"Welding Strength{nut_suffix}"
+            m_min = re.search(r"\((Min[^)]+)\)", spec_val, re.I)
+            min_val = m_min.group(1).strip() if m_min else "Min 190 Kgf.cm"
+            std_val = f"{min_val} (n = 1 / Lot)"
+
         ino = no_val if no_val.isdigit() else str(balloon)
         balloon += 1
         points.append({
             "item_no": ino,
-            "inspection_item": spec_val,
+            "inspection_item": item_name,
             "standard": std_val,
             "method": method_val,
             "master_data": ""
@@ -99,6 +108,148 @@ def parse_ssw_sheet(ws, sheet_name: str) -> Dict[str, Any]:
         "doc_number": "IPQC SSW - Spot Nut",
         "points": points
     }
+
+
+def parse_final_wb(fp: str) -> tuple[Dict[str, str], List[Dict[str, str]]]:
+    """Parse IPQC Final Assembly workbook (Cols 25-35 on Page 1..4)."""
+    wb = openpyxl.load_workbook(fp, data_only=True)
+    points = []
+    current_balloon = 1
+    last_method = "Caliper"
+
+    fname = os.path.basename(fp)
+    match_pn = re.search(r"([0-9A-Z]{4,5}[A-Z0-9]{3,4}[A-Z0-9])", fname)
+    fn_pn = match_pn.group(1).replace("_", "").strip() if match_pn else ""
+
+    ws_first = wb[wb.sheetnames[0]]
+    cell_pn = str(ws_first.cell(1, 28).value or "").strip()
+    cell_pname = str(ws_first.cell(3, 28).value or "").strip()
+    cell_model = str(ws_first.cell(3, 11).value or "").strip() or "5P45"
+    cell_cust = str(ws_first.cell(1, 11).value or "").strip() or "PT. MMKI"
+    cell_doc = str(ws_first.cell(5, 11).value or "").strip() or "Form 1"
+
+    # Handle 73230 copy-paste anomaly where Page 1 retained 73210
+    if fn_pn and fn_pn != cell_pn:
+        part_number = fn_pn
+        if "73230" in fn_pn:
+            part_name = "RAIL ASSY -ROOF, RR"
+        else:
+            part_name = cell_pname
+    else:
+        part_number = cell_pn or fn_pn
+        part_name = cell_pname
+
+    meta = {
+        "part_number": part_number,
+        "part_name": part_name,
+        "model": cell_model,
+        "customer": cell_cust,
+        "doc_number": cell_doc,
+    }
+
+    for sname in wb.sheetnames:
+        if not sname.lower().startswith("page"):
+            continue
+        ws = wb[sname]
+
+        hdr_row = None
+        for r in range(1, 15):
+            val26 = str(ws.cell(r, 26).value or "").strip().upper()
+            if "INSPECTION ITEM" in val26:
+                hdr_row = r
+                break
+        if not hdr_row:
+            continue
+
+        r = hdr_row + 5  # data usually starts at r=12
+        while r <= ws.max_row:
+            c25 = ws.cell(r, 25).value
+            c26 = ws.cell(r, 26).value
+            c30 = ws.cell(r, 30).value
+            c31 = ws.cell(r, 31).value
+            c32 = ws.cell(r, 32).value
+            c33 = ws.cell(r, 33).value
+            c35 = ws.cell(r, 35).value
+            c38 = ws.cell(r, 38).value
+
+            c26_str = str(c26 or "").strip()
+            c25_str = str(c25 or "").strip()
+
+            if any(k in c26_str.upper() for k in ["JUDGEMENT", "TOTAL POINT", "MMKI"]):
+                break
+            if c25 is None and c26 is None and c30 is None and c31 is None and c32 is None and c33 is None and c35 is None:
+                r += 1
+                continue
+
+            if c25_str and c25_str.isdigit():
+                current_balloon = int(c25_str)
+
+            if not c26_str and not c31 and not c32 and not c33:
+                r += 1
+                continue
+
+            item_name = c26_str
+            coord = str(c30 or "").strip()
+            if coord:
+                item_name = f"{item_name} {coord}".strip()
+
+            tol = str(c33 or "").strip()
+            next_tol = str(ws.cell(r + 1, 33).value or "").strip() if r + 1 <= ws.max_row else ""
+            skip_next = False
+            if tol and next_tol and (next_tol == "0" or next_tol.startswith("-") or next_tol.startswith("+")):
+                tol = f"{tol} / {next_tol}"
+                skip_next = True
+
+            nom = str(c32 or "").strip() if c32 is not None else ""
+            if not nom and c31 is not None:
+                nom = str(c31).strip()
+
+            if tol and tol not in nom:
+                if nom and not nom.upper().startswith("INSERT PIN") and "OK" not in nom.upper():
+                    full_std = f"{nom} {tol}".strip()
+                elif not nom:
+                    full_std = tol
+                else:
+                    full_std = nom
+            else:
+                full_std = nom or "OK / NG"
+
+            mth = str(c35 or "").strip()
+            if mth:
+                last_method = mth
+            else:
+                mth = last_method
+
+            m_u = f"{item_name} {mth}".upper()
+            if "INSERT PIN" in m_u or "DATUM PIN" in m_u:
+                clean_method = "Insert Pin Datum"
+            elif "PIN CHECK" in m_u:
+                clean_method = "Pin Check + Caliper"
+            elif "TAPPER" in m_u or "GAP" in m_u:
+                clean_method = "Tapper Gg"
+            elif "FEELER" in m_u or "SHIM" in m_u:
+                clean_method = "Feeler Gg"
+            elif "STEELRULE" in m_u or "TRIM" in m_u:
+                clean_method = "Steelrule"
+            elif "VISUAL" in m_u:
+                clean_method = "Visual"
+            elif "CALIPER" in m_u:
+                clean_method = "Caliper"
+            else:
+                clean_method = mth or "Caliper"
+
+            if item_name:
+                points.append({
+                    "item_no": str(current_balloon),
+                    "inspection_item": " ".join(item_name.split()),
+                    "standard": " ".join(full_std.split()),
+                    "method": clean_method,
+                    "master_data": str(c38 or "").strip()
+                })
+            r += (2 if skip_next else 1)
+
+    wb.close()
+    return meta, points
 
 
 async def run_import(apply_mode: bool = False):
@@ -161,17 +312,14 @@ async def run_import(apply_mode: bool = False):
                 })
         wb_ssw.close()
 
-    # 3. IPQC Final (Uses MMKIIRParser layout)
+    # 3. IPQC Final
     final_files = sorted(glob.glob("documents/DQC_1 OKTOBER/1. IPQC/3. FINAL/*.xlsx"))
     print(f"[*] Parsing IPQC Final ({len(final_files)} files)...")
     for fp in final_files:
         if os.path.basename(fp).startswith("~$"):
             continue
         try:
-            wb = openpyxl.load_workbook(fp, data_only=True)
-            meta = ir_parser.extract_metadata(fp, wb=wb)
-            raw_pts = ir_parser.extract_inspection_points(fp, wb=wb)
-            wb.close()
+            meta, raw_pts = parse_final_wb(fp)
         except Exception as e:
             print(f"[!] Error parsing {fp}: {e}")
             meta = {"part_number": os.path.splitext(os.path.basename(fp))[0], "part_name": "", "doc_number": "Form 1"}
@@ -263,9 +411,9 @@ async def run_import(apply_mode: bool = False):
             doc_no = item["doc_number"]
             tt = item["template_type"]
 
-            # Standardize inspection points
+            # Standardize inspection points directly without defect explosion slop
             raw_pts = item["raw_points"]
-            std_pts = TextNormalizer.expand_points(raw_pts) if raw_pts else []
+            std_pts = raw_pts if raw_pts else []
 
             # Check if record already exists by raw_file_path OR (clean_part_number and doc_number)
             stmt = select(Checksheet).where(
