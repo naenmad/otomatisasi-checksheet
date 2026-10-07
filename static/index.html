@@ -2123,6 +2123,31 @@
                   </button>
                 </div>
 
+                <!-- 3b. Sync Gambar Lokal ke Cloud -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                      <h4 class="text-xs font-bold text-zinc-200">Sync Gambar Lokal ke Cloud</h4>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Otomatis unggah semua gambar yang pernah di-paste di laptop ini ke Supabase Cloud Storage & sinkronkan database.
+                    </p>
+                  </div>
+                  <button @click="syncLocalImagesToCloud"
+                          :disabled="isSyncingImages"
+                          class="w-full py-2 px-3 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-200 border border-cyan-800/60 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50">
+                    <svg v-if="!isSyncingImages" class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <svg v-else class="w-3.5 h-3.5 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span>{{ isSyncingImages ? 'Sedang Menyinkronkan...' : 'Sync Gambar ke Cloud' }}</span>
+                  </button>
+                </div>
+
                 <!-- 4. Unduh Excel Rekap Lengkap -->
                 <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
                   <div>
@@ -6746,6 +6771,27 @@
           }, 350);
         };
 
+        const isSyncingImages = ref(false);
+        const syncLocalImagesToCloud = async () => {
+          if (isSyncingImages.value) return;
+          isSyncingImages.value = true;
+          showToast('Memindai & mengunggah gambar lokal ke Supabase Cloud...', 'info');
+          try {
+            const res = await fetch('/api/tools/sync-local-images', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              showToast(data.message || 'Sinkronisasi gambar selesai!', 'success');
+              await triggerHardRefresh();
+            } else {
+              showToast(data.detail || data.message || 'Gagal sinkronisasi gambar.', 'error');
+            }
+          } catch (e) {
+            showToast('Terjadi kesalahan jaringan: ' + e.message, 'error');
+          } finally {
+            isSyncingImages.value = false;
+          }
+        };
+
         const checkServerVersionPoll = async () => {
           try {
             const res = await fetch('/api/system/version', { cache: 'no-store' });
@@ -8652,6 +8698,8 @@
           deleteAllImages,
           pasteImageFromClipboard,
           triggerHardRefresh,
+          isSyncingImages,
+          syncLocalImagesToCloud,
           checkServerVersionPoll,
           hasNewServerVersion,
           newServerVersionInfo,

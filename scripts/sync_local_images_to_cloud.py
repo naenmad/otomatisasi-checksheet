@@ -177,6 +177,14 @@ async def sync_disk_to_cloud():
     print("=" * 60, flush=True)
     print("Sekarang semua laptop dapat melihat seluruh gambar secara instan!\n", flush=True)
 
+    return {
+        "status": "success",
+        "total_uploaded": total_uploaded,
+        "total_linked": total_linked,
+        "total_skipped": total_skipped,
+        "message": f"Sukses! {total_uploaded} gambar lokal terupload & {total_linked} gambar disinkronkan ke Supabase Cloud."
+    }
+
 
 if __name__ == "__main__":
     asyncio.run(sync_disk_to_cloud())
