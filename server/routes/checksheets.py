@@ -390,43 +390,6 @@ def _build_checksheet_images(cs: Checksheet) -> list:
             "filename": filename
         })
 
-    # Fallback: scan existing server storage folders if not yet linked in DB
-    if not res:
-        from database.crud import clean_str
-        clean_p = clean_str(cs.part_number)
-        norm_p = re.sub(r"[^0-9A-Za-z_-]", "_", cs.part_number)
-        file_stem = os.path.splitext(os.path.basename(cs.raw_file_path or ""))[0]
-        clean_file_stem = re.sub(r"^(CS\s*IQC\s*)", "", file_stem, flags=re.I).strip()
-        norm_stem = re.sub(r"[^0-9A-Za-z_-]", "_", clean_file_stem)
-
-        candidate_dirs = [cs.part_number, norm_p, clean_p, clean_file_stem, norm_stem]
-        seen_cand = set()
-
-        for folder in candidate_dirs:
-            if not folder or len(folder) < 3 or folder in seen_cand:
-                continue
-            seen_cand.add(folder)
-
-            for base_dir, url_prefix in [("storage/images", "/media/images"), ("extracted_images", "/media/extracted")]:
-                dir_path = os.path.join(base_dir, folder)
-                if os.path.isdir(dir_path):
-                    for f in sorted(os.listdir(dir_path)):
-                        if f.lower().endswith((".webp", ".png", ".jpg", ".jpeg")):
-                            f_path = os.path.join(dir_path, f)
-                            img_info = get_cached_image_info(f_path)
-                            if img_info.get("is_logo", False):
-                                continue
-                            res.append({
-                                "id": f,
-                                "image_url": f"{url_prefix}/{folder}/{f}",
-                                "image_path": f_path,
-                                "filename": f
-                            })
-                    if res:
-                        break
-            if res:
-                break
-
     return res
 
 
