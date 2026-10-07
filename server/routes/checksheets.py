@@ -658,15 +658,20 @@ async def upload_checksheet_image(
     # Always store as forward-slash relative path for cross-platform compatibility
     db_path = target_path.replace("\\", "/")
     url_sub = f"/media/images/{clean_p}/{safe_name}"
-    try:
-        from services.supabase_storage_service import upload_image_to_supabase
+
+    # MANDATORY CLOUD STORAGE UPLOAD:
+    # Mencegah gambar hanya tersimpan di disk lokal satu laptop.
+    from services.supabase_storage_service import upload_image_to_supabase, SUPABASE_URL
+    if SUPABASE_URL:
         remote_url = upload_image_to_supabase(target_path, clean_p, safe_name)
-        if remote_url:
-            url_sub = remote_url
-        else:
-            logger.warning(f"Supabase upload returned None for {target_path}, falling back to local URL.")
-    except Exception as e:
-        logger.error(f"Error uploading image {target_path} to Supabase Storage: {e}")
+        if not remote_url:
+            raise HTTPException(
+                status_code=502,
+                detail="Gagal mengunggah gambar ke Supabase Cloud Storage. Mohon periksa koneksi internet."
+            )
+        url_sub = remote_url
+    else:
+        logger.warning(f"SUPABASE_URL tidak disetel. Gambar disimpan lokal: {db_path}")
 
     existing_img = None
     for img in cs.images:
