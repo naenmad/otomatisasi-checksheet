@@ -199,3 +199,17 @@ async def compress_images_to_webp(
         "saved_percent": saved_pct,
         "converted_files": converted_files
     }
+
+
+@router.post("/sync-local-images")
+async def trigger_sync_local_images():
+    """Trigger synchronization of all local disk images to Supabase Cloud Storage & PostgreSQL."""
+    try:
+        from scripts.sync_local_images_to_cloud import sync_disk_to_cloud
+        asyncio.create_task(sync_disk_to_cloud())
+        return {
+            "status": "success",
+            "message": "Sinkronisasi gambar lokal ke Supabase Cloud sedang berjalan di latar belakang."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
