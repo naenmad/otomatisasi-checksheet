@@ -235,9 +235,11 @@ async def execute_batch_submission(
             skipped_count += 1
             continue
 
+        is_admin = getattr(requesting_user, "role", "") == "admin"
         assigned_clean = (cs.assigned_to or "").strip().lower()
         is_my_part = (
-            assigned_clean == requesting_user.name.strip().lower()
+            is_admin
+            or assigned_clean == requesting_user.name.strip().lower()
             or assigned_clean == requesting_user.username.strip().lower()
         )
         if not is_my_part:
@@ -246,9 +248,10 @@ async def execute_batch_submission(
             skipped_count += 1
             continue
 
-        # Enforce that only parts marked as 'Reviewed' can be submitted in batch
-        if cs.status != "Reviewed":
-            yield f"[!] Lewati Part {cs.part_number}: Status saat ini '{cs.status}'. Batch hanya mengizinkan part berstatus 'Reviewed' (telah diverifikasi di Review & Edit).\n"
+        # Enforce that only parts marked as 'Reviewed' or 'Siap Kirim' can be submitted in batch
+        status_clean = (cs.status or "").strip().lower()
+        if status_clean not in ("reviewed", "siap kirim", "siap_kirim"):
+            yield f"[!] Lewati Part {cs.part_number}: Status saat ini '{cs.status}'. Batch hanya mengizinkan part berstatus 'Siap Kirim' / 'Reviewed' (telah diverifikasi di Review & Edit).\n"
             skipped_count += 1
             continue
 
