@@ -123,8 +123,32 @@ async def sync_disk_to_cloud():
 
             for f in files:
                 local_file = os.path.join(folder_path, f)
-                remote_path = f"{clean_p}/{f}"
-                rel_path = f"storage/images/{folder_name}/{f}".replace("\\", "/")
+                ext = os.path.splitext(f)[1].lower()
+                upload_filename = f
+
+                # Otomatis konversi file PNG/JPG ke WebP agar hemat bandwidth & storage
+                if ext != ".webp":
+                    stem = os.path.splitext(f)[0]
+                    upload_filename = f"{stem}.webp"
+                    webp_path = os.path.join(folder_path, upload_filename)
+                    try:
+                        from PIL import Image
+                        with Image.open(local_file) as im:
+                            if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+                                im_c = im.convert("RGBA")
+                            else:
+                                im_c = im.convert("RGB")
+                            w, h = im_c.size
+                            if w > 1920 or h > 1920:
+                                im_c.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
+                            im_c.save(webp_path, "WEBP", quality=82, method=6)
+                        local_file = webp_path
+                    except Exception as e:
+                        print(f"    [!] Gagal konversi {f} ke WebP: {e}, tetap upload original", flush=True)
+                        upload_filename = f
+
+                remote_path = f"{clean_p}/{upload_filename}"
+                rel_path = f"storage/images/{folder_name}/{upload_filename}".replace("\\", "/")
 
                 # Upload to Supabase Storage (upsert)
                 remote_url = upload_file_to_supabase(local_file, remote_path)
