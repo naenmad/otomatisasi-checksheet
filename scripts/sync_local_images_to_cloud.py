@@ -101,14 +101,25 @@ async def sync_disk_to_cloud():
             if not cs_db:
                 continue
 
-            existing_img_filenames = set()
-            for img in cs_db.images:
-                fn = os.path.basename((img.image_path or img.image_url or "").replace("\\", "/"))
-                if fn:
-                    existing_img_filenames.add(fn.lower())
-
+            local_filenames_lower = {f.lower() for f in files}
             clean_p = clean_str(cs_db.part_number) or folder_name
             cs_modified = False
+
+            # 1. Hapus gambar lama/usang dari DB jika di folder lokal Iqbal sudah dihapus (AGAR TIDAK KEGABUNG/DUPLIKAT)
+            for existing_img in list(cs_db.images):
+                raw_target = (existing_img.image_path or existing_img.image_url or "").split("?")[0].replace("\\", "/")
+                fn = os.path.basename(raw_target)
+                if fn and fn.lower() not in local_filenames_lower:
+                    print(f"    [-] Hapus gambar lama di DB: {fn} (Part {cs_db.part_number}) agar tidak kegabung", flush=True)
+                    await session.delete(existing_img)
+                    cs_modified = True
+
+            existing_img_filenames = set()
+            for img in cs_db.images:
+                raw_target = (img.image_path or img.image_url or "").split("?")[0].replace("\\", "/")
+                fn = os.path.basename(raw_target)
+                if fn and fn.lower() in local_filenames_lower:
+                    existing_img_filenames.add(fn.lower())
 
             for f in files:
                 local_file = os.path.join(folder_path, f)
