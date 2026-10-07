@@ -167,7 +167,7 @@ class MMKIIPQCParser(BaseParser):
                     l_val = str(ws.cell(r, 12).value or "").strip()
 
                     c_u = c_val.upper()
-                    if "APPEARANCE" in c_u:
+                    if not current_sec and "APPEARANCE" in c_u and not any(x in c_u for x in ["(+", "BURRY", "CRACK"]):
                         current_sec = "A"
                         r += 1
                         continue
@@ -191,6 +191,11 @@ class MMKIIPQCParser(BaseParser):
                     if current_sec == "A":
                         std_val = h_val or i_val or "OK / NG"
                         mth_val = l_val or "Visual"
+                        if "MATA" in mth_val.upper() or "VISUAL" in mth_val.upper():
+                            mth_val = "Visual"
+                        elif "CALIPER" in mth_val.upper() or "CAIPER" in mth_val.upper():
+                            mth_val = "Caliper"
+
                         ino = b_val if b_val.isdigit() else str(item_seq)
                         item_seq += 1
                         all_points.append({
@@ -212,16 +217,21 @@ class MMKIIPQCParser(BaseParser):
                         full_std = f"{nom} {tol}".strip() if tol and tol not in nom else (nom or "OK / NG")
 
                         mth_val = l_val or "Caliper"
-                        if "PIN" in mth_val.upper():
+                        m_u = mth_val.upper()
+                        if "PIN GO" in m_u:
+                            mth_val = "Pin Go/No Go"
+                        elif "PIN" in m_u:
                             mth_val = "Insert Pin Datum"
-                        elif "FEELER" in mth_val.upper() or "SHIM" in c_u:
+                        elif "FEELER" in m_u or "SHIM" in c_u:
                             mth_val = "Feeler Gg"
-                        elif "TAPPER" in mth_val.upper() or "GAP" in c_u:
+                        elif "TAPPER" in m_u or "GAP" in c_u:
                             mth_val = "Tapper Gg"
-                        elif "STEEL" in mth_val.upper() or "TRIM" in c_u:
+                        elif "STEEL" in m_u or "TRIM" in c_u:
                             mth_val = "Steelrule"
-                        elif "CALIPER" in mth_val.upper() or "CAIPER" in mth_val.upper() or "THICKNESS" in c_u:
+                        elif "CALIPER" in m_u or "CAIPER" in m_u or "THICKNESS" in c_u:
                             mth_val = "Caliper"
+                        elif "VISUAL" in m_u or "MATA" in m_u:
+                            mth_val = "Visual"
 
                         ino = b_val if b_val.isdigit() else str(item_seq)
                         item_seq += 1

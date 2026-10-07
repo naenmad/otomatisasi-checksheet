@@ -4,6 +4,7 @@ Checksheets API Router.
 import os
 import re
 import time
+from datetime import datetime
 import asyncio
 import base64
 from typing import List, Optional, Union, Dict, Any
@@ -13,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, update
 
 from database.connection import get_db
-from database.models import Checksheet, InspectionPoint, PartImage, SubmissionQueue, ActivityLog
+from database.models import User, Checksheet, InspectionPoint, PartImage, SubmissionQueue, ActivityLog
+from server.auth import require_admin
 from database.crud import (
     list_checksheets,
     get_checksheet_by_id,
@@ -68,7 +70,7 @@ _checksheets_cache: Dict[str, Any] = {
     "refreshing": False
 }
 _checksheet_detail_cache: Dict[int, Dict[str, Any]] = {}
-CACHE_TTL = 300.0  # 5 minutes default TTL, kept synchronized via in-place mutation
+CACHE_TTL = 60.0  # 60 seconds TTL, kept synchronized for fast collaborative updates
 
 
 def get_cache_lock():
@@ -183,6 +185,7 @@ async def get_checksheets(
     status: Optional[str] = Query(None, description="Filter by status: Checksheet Done, Belum Di Input, Tidak Ada Part"),
     category: Optional[str] = Query(None, description="Filter by category: Accuracy SSW, Incomming Material, Incomming Std Part, Incomming Subcont Part, Accuracy, General"),
     search: Optional[str] = Query(None, description="Search part number or name"),
+    refresh: bool = Query(False, description="Force refresh cache from database"),
     limit: int = 1000,
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
@@ -190,8 +193,22 @@ async def get_checksheets(
     now = time.time()
     cached = _checksheets_cache.get("data")
 
+    if refresh:
+        # Explicit refresh requested: fetch synchronously from database
+        raw_list = await get_checksheets_summary_list(
+            session=db,
+            assigned_to=None,
+            status=None,
+            search=None,
+            limit=5000,
+            offset=0
+        )
+        if raw_list:
+            _checksheets_cache["data"] = raw_list
+            _checksheets_cache["timestamp"] = now
+            _save_cache_to_disk(raw_list)
     # Fast-path 1: Memory cache hit (< 0.001ms)
-    if cached is not None and len(cached) > 0:
+    elif cached is not None and len(cached) > 0:
         raw_list = cached
         # Stale-While-Revalidate: If older than CACHE_TTL, trigger background refresh without blocking
         if (now - _checksheets_cache.get("timestamp", 0.0) >= CACHE_TTL) and not _checksheets_cache.get("refreshing"):
@@ -261,10 +278,16 @@ async def get_checksheets(
 
 
 @router.get("/{checksheet_id}")
-async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(get_db)):
-    cached_detail = _checksheet_detail_cache.get(checksheet_id)
-    if cached_detail is not None:
-        return cached_detail
+async def get_checksheet_detail(
+    checksheet_id: int,
+    refresh: bool = Query(False, description="Bypass cache and get fresh detail"),
+    db: AsyncSession = Depends(get_db)
+):
+    now = time.time()
+    cached_entry = _checksheet_detail_cache.get(checksheet_id)
+    if not refresh and cached_entry is not None:
+        if (now - cached_entry.get("_cached_at", 0)) < 15.0:
+            return cached_entry.get("data")
 
     cs = await get_checksheet_by_id(db, checksheet_id)
     if not cs:
@@ -297,7 +320,10 @@ async def get_checksheet_detail(checksheet_id: int, db: AsyncSession = Depends(g
         ],
         "images": _build_checksheet_images(cs)
     }
-    _checksheet_detail_cache[checksheet_id] = detail
+    _checksheet_detail_cache[checksheet_id] = {
+        "data": detail,
+        "_cached_at": now
+    }
     return detail
 
 
@@ -305,6 +331,9 @@ def _build_checksheet_images(cs: Checksheet) -> list:
     import os
     import re
     from core.extractor import get_cached_image_info
+
+    # Cache-busting version based on checksheet's last update time
+    cache_ver = str(int(cs.updated_at.timestamp())) if cs.updated_at else ""
 
     res = []
     for img in cs.images:
@@ -338,11 +367,13 @@ def _build_checksheet_images(cs: Checksheet) -> list:
                 sub = url.split("storage/images", 1)[1].lstrip("/")
                 url = f"/media/images/{sub}"
 
-        # Supabase CDN URLs are always valid — no local disk check needed
-        if is_remote_url:
-            pass  # cloud-hosted, always include
-        elif path and not os.path.exists(path):
-            continue  # local path does not exist on this machine
+        # If local path does not exist on this machine, skip it
+        if not is_remote_url and path and not os.path.exists(path):
+            continue
+
+        # Append cache-buster to prevent stale CDN/browser cache after image re-upload
+        if cache_ver and "?" not in url:
+            url = f"{url}?v={cache_ver}"
 
         # Exclude company logos / header banners (only applicable for local files)
         if not is_remote_url and path and os.path.exists(path):
@@ -632,8 +663,10 @@ async def upload_checksheet_image(
         remote_url = upload_image_to_supabase(target_path, clean_p, safe_name)
         if remote_url:
             url_sub = remote_url
+        else:
+            logger.warning(f"Supabase upload returned None for {target_path}, falling back to local URL.")
     except Exception as e:
-        pass
+        logger.error(f"Error uploading image {target_path} to Supabase Storage: {e}")
 
     existing_img = None
     for img in cs.images:
@@ -650,15 +683,19 @@ async def upload_checksheet_image(
             image_url=url_sub
         )
         db.add(new_part_img)
+        cs.updated_at = datetime.utcnow()
         await db.commit()
         await db.refresh(cs)
         update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": url_sub})
+        invalidate_checksheet_detail(cs.id)
         new_part_img_id = new_part_img.id
     else:
         existing_img.image_url = url_sub
+        cs.updated_at = datetime.utcnow()
         await db.commit()
         await db.refresh(cs)
         update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": url_sub})
+        invalidate_checksheet_detail(cs.id)
         new_part_img_id = existing_img.id
 
     new_img_dict = {
@@ -753,8 +790,10 @@ async def delete_checksheet_image(
         except Exception:
             pass
 
+    cs.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(cs)
+    invalidate_checksheet_detail(cs.id)
     updated_images = _build_checksheet_images(cs)
     thumb_url = updated_images[0]["image_url"] if updated_images else None
     update_checksheet_in_cache(cs.id, {"images_count": len(cs.images), "thumbnail_url": thumb_url})
@@ -782,7 +821,9 @@ async def delete_all_checksheet_images(
         await db.delete(img)
         deleted_count += 1
 
+    cs.updated_at = datetime.utcnow()
     await db.commit()
+    invalidate_checksheet_detail(cs.id)
     update_checksheet_in_cache(cs.id, {"images_count": 0, "thumbnail_url": None})
 
     return {
@@ -791,6 +832,25 @@ async def delete_all_checksheet_images(
         "deleted_count": deleted_count,
         "images": []
     }
+
+
+@router.post("/cache/refresh")
+async def refresh_all_cache(db: AsyncSession = Depends(get_db)):
+    """Explicitly invalidate and refresh all caches from database."""
+    _checksheet_detail_cache.clear()
+    raw_list = await get_checksheets_summary_list(
+        session=db,
+        assigned_to=None,
+        status=None,
+        search=None,
+        limit=5000,
+        offset=0
+    )
+    if raw_list:
+        _checksheets_cache["data"] = raw_list
+        _checksheets_cache["timestamp"] = time.time()
+        _save_cache_to_disk(raw_list)
+    return {"status": "success", "count": len(raw_list) if raw_list else 0}
 
 
 @router.post("/sync-images")
@@ -939,9 +999,10 @@ async def create_checksheet_manual(
 @router.delete("/{checksheet_id}")
 async def delete_checksheet_endpoint(
     checksheet_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin)
 ):
-    """Delete a checksheet and its associated inspection points, images, and queue entries."""
+    """Delete a checksheet and its associated inspection points, images, and queue entries (Admin only)."""
     cs = await get_checksheet_base_by_id(db, checksheet_id)
     if not cs:
         raise HTTPException(status_code=404, detail="Checksheet not found")
@@ -952,9 +1013,9 @@ async def delete_checksheet_endpoint(
     entry = ActivityLog(
         action="DELETE CHECKSHEET",
         part_number=pn,
-        operator="Admin",
+        operator=admin_user.name or "Admin",
         status="SUCCESS",
-        details=f"Checksheet #{checksheet_id} ({pn}) berhasil dihapus dari database"
+        details=f"Checksheet #{checksheet_id} ({pn}) berhasil dihapus dari database oleh Admin ({admin_user.name})"
     )
     db.add(entry)
     await db.commit()
@@ -973,9 +1034,10 @@ class BulkDeleteSchema(BaseModel):
 @router.post("/bulk-delete")
 async def bulk_delete_checksheets(
     payload: BulkDeleteSchema,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin)
 ):
-    """Delete multiple checksheets at once."""
+    """Delete multiple checksheets at once (Admin only)."""
     if not payload.checksheet_ids:
         return {"status": "success", "deleted_count": 0}
 
@@ -987,9 +1049,9 @@ async def bulk_delete_checksheets(
     entry = ActivityLog(
         action="BULK DELETE",
         part_number=f"{deleted_count} Part",
-        operator="Admin",
+        operator=admin_user.name or "Admin",
         status="SUCCESS",
-        details=f"Bulk delete berhasil menghapus {deleted_count} checksheet"
+        details=f"Bulk delete berhasil menghapus {deleted_count} checksheet oleh Admin ({admin_user.name})"
     )
     db.add(entry)
     await db.commit()

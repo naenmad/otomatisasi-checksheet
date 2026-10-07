@@ -52,28 +52,44 @@ def upload_file_to_supabase(local_path: str, remote_path: str) -> Optional[str]:
     if not mime_type:
         mime_type = "image/webp" if local_path.lower().endswith(".webp") else "image/png"
 
+    import time
+    import ssl
     try:
-        with open(local_path, "rb") as f:
-            file_data = f.read()
+        ssl_ctx = ssl.create_default_context()
+    except Exception:
+        ssl_ctx = ssl._create_unverified_context()
 
-        req = urllib.request.Request(
-            endpoint,
-            data=file_data,
-            headers={
-                "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}",
-                "Content-Type": mime_type,
-                "x-upsert": "true"
-            },
-            method="POST"
-        )
+    for attempt in range(3):
+        try:
+            with open(local_path, "rb") as f:
+                file_data = f.read()
 
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            if resp.status in (200, 201):
-                return get_public_url(remote_path)
-    except Exception as e:
-        logger.warning(f"Failed uploading {local_path} to Supabase: {e}")
-        return None
+            req = urllib.request.Request(
+                endpoint,
+                data=file_data,
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_KEY}",
+                    "Content-Type": mime_type,
+                    "x-upsert": "true"
+                },
+                method="POST"
+            )
+
+            try:
+                with urllib.request.urlopen(req, timeout=30, context=ssl_ctx) as resp:
+                    if resp.status in (200, 201):
+                        return get_public_url(remote_path)
+            except (urllib.error.URLError, ssl.SSLError):
+                # Fallback to unverified SSL context if OS has missing certificates (common on Windows)
+                fallback_ctx = ssl._create_unverified_context()
+                with urllib.request.urlopen(req, timeout=30, context=fallback_ctx) as resp:
+                    if resp.status in (200, 201):
+                        return get_public_url(remote_path)
+        except Exception as e:
+            logger.warning(f"Attempt {attempt + 1}/3 failed uploading {local_path} to Supabase: {e}")
+            if attempt < 2:
+                time.sleep(0.5)
 
     return None
 

@@ -221,10 +221,14 @@ def parse_final_wb(fp: str) -> tuple[Dict[str, str], List[Dict[str, str]]]:
                 mth = last_method
 
             m_u = f"{item_name} {mth}".upper()
-            if "INSERT PIN" in m_u or "DATUM PIN" in m_u:
+            if "PIN GO" in m_u:
+                clean_method = "Pin Go/No Go"
+            elif "INSERT PIN" in m_u or "DATUM PIN" in m_u:
                 clean_method = "Insert Pin Datum"
             elif "PIN CHECK" in m_u:
                 clean_method = "Pin Check + Caliper"
+            elif "MARK" in m_u and "CTR" in m_u:
+                clean_method = "Marking Center Line"
             elif "TAPPER" in m_u or "GAP" in m_u:
                 clean_method = "Tapper Gg"
             elif "FEELER" in m_u or "SHIM" in m_u:
@@ -233,15 +237,19 @@ def parse_final_wb(fp: str) -> tuple[Dict[str, str], List[Dict[str, str]]]:
                 clean_method = "Steelrule"
             elif "VISUAL" in m_u:
                 clean_method = "Visual"
-            elif "CALIPER" in m_u:
+            elif "CALIPER" in m_u or "CAIPER" in m_u:
                 clean_method = "Caliper"
             else:
                 clean_method = mth or "Caliper"
 
+            clean_item_name = " ".join(item_name.split())
+            if clean_item_name.upper().startswith("HOEL POSITION"):
+                clean_item_name = clean_item_name.replace("HOEL", "HOLE").replace("Hoel", "Hole")
+
             if item_name:
                 points.append({
                     "item_no": str(current_balloon),
-                    "inspection_item": " ".join(item_name.split()),
+                    "inspection_item": clean_item_name,
                     "standard": " ".join(full_std.split()),
                     "method": clean_method,
                     "master_data": str(c38 or "").strip()
@@ -463,12 +471,29 @@ async def run_import(apply_mode: bool = False):
                 # Clear old points and insert standardized points
                 await session.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == cs.id))
                 for idx, pt in enumerate(std_pts):
+                    raw_item = pt.get("inspection_item") or f"Point {idx + 1}"
+                    if raw_item.upper().startswith("HOEL POSITION"):
+                        raw_item = raw_item.replace("HOEL", "HOLE").replace("Hoel", "Hole")
+
+                    raw_mth = (pt.get("method") or "Visual").strip()
+                    mth_low = raw_mth.lower()
+                    if mth_low == "caiper":
+                        raw_mth = "Caliper"
+                    elif mth_low == "tapper":
+                        raw_mth = "Tapper Gg"
+                    elif "marking ctr" in mth_low:
+                        raw_mth = "Marking Center Line"
+                    elif "pin go" in mth_low:
+                        raw_mth = "Pin Go/No Go"
+                    elif mth_low == "caliper/micrometer":
+                        raw_mth = "Caliper / Micrometer"
+
                     ip = InspectionPoint(
                         checksheet_id=cs.id,
                         item_no=pt.get("item_no") or str(idx + 1),
-                        inspection_item=pt.get("inspection_item") or f"Point {idx + 1}",
+                        inspection_item=raw_item,
                         standard=pt.get("standard") or "-",
-                        method=pt.get("method") or "Visual",
+                        method=raw_mth,
                         master_data=pt.get("master_data") or "",
                         order_index=idx
                     )

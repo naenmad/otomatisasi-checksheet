@@ -177,7 +177,7 @@
           </button>
 
           <!-- 2. Checksheet Workspace -->
-          <button @click="navigate('checksheets')"
+          <button @click="openChecksheetsWorkspace()"
                   :title="isSidebarCollapsed ? 'Daftar Checksheet (' + checksheets.length + ')' : ''"
                   :class="[
                     activePage === 'checksheets' ? 'bg-indigo-600/15 text-indigo-300 border-indigo-700/60 font-semibold' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent',
@@ -347,76 +347,16 @@
           </div>
 
           <!-- Global Action Buttons -->
-          <div class="flex items-center gap-2">
-            <!-- Live FactoryHub Category Sync Progress Badge -->
-            <button v-if="syncCategoryState.active || syncCategoryState.is_finished"
-                    @click="showSyncCategoryModal = true"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer shadow-sm"
-                    :class="syncCategoryState.active 
-                      ? 'bg-amber-950/80 text-amber-200 border-amber-700/80 hover:bg-amber-900/90 ring-1 ring-amber-500/40' 
-                      : 'bg-emerald-950/80 text-emerald-200 border-emerald-700/80 hover:bg-emerald-900/90'"
-                    :title="syncCategoryState.active ? 'Klik untuk melihat live progress sinkronisasi FactoryHub' : 'Sinkronisasi kategori FactoryHub selesai. Klik untuk detail.'">
-              <span v-if="syncCategoryState.active" class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-              <span v-else class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Sync Kategori: {{ syncCategoryState.percent }}%</span>
-              <span class="font-mono text-[10px] bg-zinc-950/60 px-1.5 py-0.5 rounded text-zinc-300">
-                {{ syncCategoryState.current }}/{{ syncCategoryState.total }}
-              </span>
-            </button>
-
-            <!-- Hard Refresh Button -->
-            <button @click="triggerHardRefresh"
-                    class="px-2.5 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="Bersihkan cache browser dan muat ulang halaman versi terbaru (Hard Refresh / Ctrl+F5)">
-              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          <div class="flex items-center gap-2">            <!-- Settings Navigation Button -->
+            <button @click="navigate('settings')"
+                    class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Buka Pengaturan Sistem, Sinkronisasi & Ekspor Data">
+              <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span class="hidden xl:inline">Hard Refresh</span>
+              <span class="hidden sm:inline">Pengaturan</span>
             </button>
-
-            <!-- Google Sheet Sync -->
-            <div class="flex items-center gap-1">
-              <button @click="syncGoogleSheet" :disabled="isSyncing"
-                      class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                      title="Sinkronkan seluruh data ke Google Sheet">
-                <svg v-if="isSyncing" class="animate-spin w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <svg v-else class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span class="hidden sm:inline">{{ isSyncing ? 'Menyinkronkan...' : 'Sync Sheet' }}</span>
-              </button>
-              <a href="https://docs.google.com/spreadsheets/d/1iHoOMUJryHYAnjjC0-n6HN2zrcpU_y7u6TCoceLrTUY/edit?usp=sharing" target="_blank"
-                 class="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
-                 title="Buka Google Spreadsheet">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              </a>
-            </div>
-
-            <!-- FactoryHub Audit & Reconciliation -->
-            <button @click="runAuditFactoryHub" :disabled="isAuditing"
-                    class="px-3 py-1.5 bg-blue-950/80 hover:bg-blue-900/90 text-blue-200 border border-blue-800/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                    title="Audit dan rekonsiliasi status dua arah antara FactoryHub dan Database Supabase">
-              <svg v-if="isAuditing" class="animate-spin w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <svg v-else class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              <span class="hidden sm:inline">{{ isAuditing ? 'Auditing...' : 'Audit FactoryHub' }}</span>
-            </button>
-
-            <!-- Export Excel -->
-            <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
-               class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-               title="Unduh rekapitulasi data checksheet lengkap">
-              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              <span class="hidden md:inline">Unduh Excel</span>
-            </a>
-
-            <!-- Export Excel Part Belum Ada -->
-            <a href="/api/export/excel/tidak-ada-part" download
-               class="px-3 py-1.5 bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-               title="Unduh daftar 374 part yang belum terdaftar di FactoryHub Master Part">
-              <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-              <span class="hidden md:inline">Part Belum Ada (Excel)</span>
-            </a>
 
             <!-- Admin Upload Checksheet -->
             <button v-if="currentUser.role === 'admin'" @click="showUploadModal = true"
@@ -495,7 +435,7 @@
             </div>
 
             <div class="flex items-center gap-2.5 shrink-0">
-              <button @click="navigate('checksheets')"
+              <button @click="openChecksheetsWorkspace()"
                       class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer">
                 <span>Buka Antrean Tugas</span>
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -1035,10 +975,11 @@
                         :class="workflowTab === 'ALL' 
                           ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-sm' 
                           : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-zinc-800'"
-                        class="px-3.5 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer">
+                        class="px-3.5 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                        :title="hideNoPart ? ('Menampilkan part aktif (' + (checksheets.length - countIssues) + ' part). ' + countIssues + ' part \'Tidak Ada Part\' disembunyikan.') : 'Menampilkan seluruh ' + checksheets.length + ' part'">
                   <span>Semua Part</span>
                   <span class="font-mono text-xs px-2 py-0.5 rounded text-zinc-300 bg-zinc-950/80">
-                    {{ checksheets.length }}
+                    {{ hideNoPart ? (checksheets.length - countIssues) : checksheets.length }}
                   </span>
                 </button>
 
@@ -1047,7 +988,7 @@
                      :class="workflowTab === 'ISSUES' ? 'bg-rose-950 border-rose-700' : 'border-zinc-800 bg-zinc-950/40'">
                   <button @click="workflowTab = 'ISSUES'; statusFilter = 'ALL'"
                           :class="workflowTab === 'ISSUES' ? 'text-rose-200 font-bold' : 'text-rose-400/80 hover:text-rose-300 hover:bg-zinc-800/60'"
-                          class="px-3 py-2 text-xs sm:text-sm transition-colors flex items-center gap-2 rounded-l-lg cursor-pointer"
+                          class="px-3 py-2 text-xs sm:text-sm transition-colors flex items-center gap-2 rounded-lg cursor-pointer"
                           title="Part yang belum ada di Master atau Dibatalkan">
                     <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                     <span>Masalah / Pending</span>
@@ -1056,23 +997,73 @@
                       {{ countIssues }}
                     </span>
                   </button>
-                  <a href="/api/export/excel/tidak-ada-part" download
-                     class="px-2.5 py-2 text-rose-400 hover:text-rose-200 hover:bg-rose-900/40 rounded-r-lg border-l border-zinc-800 transition-colors"
-                     title="Unduh Excel khusus part belum terdaftar di Master Web">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                  </a>
                 </div>
               </div>
 
-              <!-- Active Filter Reset Button if any filter active -->
-              <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name)"
-                      @click="resetFilters"
-                      class="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition-colors flex items-center gap-1.5 shrink-0 ml-auto cursor-pointer">
-                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                <span>Reset Filter</span>
-              </button>
+              <!-- Statistik Kemajuan Part Kita (Berapa Part Kita, Sudah Berapa, Sisa Berapa) -->
+              <div class="flex items-center gap-2.5 bg-zinc-950/90 px-3 py-1.5 rounded-xl border border-zinc-800 shadow-sm shrink-0 ml-auto flex-wrap">
+                <!-- Label & Total Part Kita -->
+                <div class="flex items-center gap-1.5" title="Total part aktif dalam antrean kerja">
+                  <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                  <span class="text-xs font-bold text-zinc-300">{{ myQueueStats.title }}:</span>
+                  <span class="font-mono text-xs font-extrabold text-white bg-indigo-950/90 border border-indigo-700/70 px-2 py-0.5 rounded shadow-sm">
+                    {{ myQueueStats.total }}
+                  </span>
+                </div>
+
+                <span class="h-4 w-px bg-zinc-800 hidden sm:block"></span>
+
+                <!-- Sudah Selesai (Siap Kirim & Done) -->
+                <button type="button"
+                        @click="workflowTab = 'READY'; statusFilter = 'ALL'"
+                        class="flex items-center gap-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity" 
+                        title="Klik untuk melihat part yang sudah Siap Kirim atau Selesai">
+                  <span class="text-zinc-400">Sudah:</span>
+                  <span class="font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
+                    {{ myQueueStats.finished }}
+                  </span>
+                </button>
+
+                <!-- Sisa (Belum Dikerjakan & Revisi) -->
+                <button type="button"
+                        @click="workflowTab = 'TODO'; statusFilter = 'ALL'"
+                        class="flex items-center gap-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity" 
+                        title="Klik untuk melihat sisa part yang belum selesai atau perlu revisi">
+                  <span class="text-zinc-400">Sisa:</span>
+                  <span class="font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.5 rounded">
+                    {{ myQueueStats.remaining }}
+                  </span>
+                </button>
+
+                <!-- Mini Progress Bar & Persentase -->
+                <div class="flex items-center gap-2 pl-1 border-l border-zinc-800/80">
+                  <div class="w-14 sm:w-20 h-2 bg-zinc-800 rounded-full overflow-hidden flex shadow-inner">
+                    <div class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full transition-all duration-300 rounded-full"
+                         :style="{ width: myQueueStats.percent + '%' }"></div>
+                  </div>
+                  <span class="font-mono text-xs font-extrabold text-indigo-300">{{ myQueueStats.percent }}%</span>
+                </div>
+
+                <!-- Reset Filter jika aktif -->
+                <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name)"
+                        @click="resetFilters"
+                        class="px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer ml-1"
+                        title="Reset semua filter">
+                  <svg class="w-3 h-3 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Reset</span>
+                </button>
+
+                <!-- Tombol Refresh Data Terbaru (Bypass Cache & Sync Supabase) -->
+                <button @click="loadChecksheets(false, true)"
+                        :disabled="isLoading"
+                        class="px-2.5 py-1 text-xs text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg border border-zinc-700/60 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ml-1 shadow-sm disabled:opacity-50"
+                        title="Ambil data & gambar drawing terbaru dari database Supabase (sinkronisasi multi-user)">
+                  <svg :class="{ 'animate-spin': isLoading }" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span class="hidden sm:inline">Refresh Data</span>
+                </button>
+              </div>
             </div>
 
             <!-- Sub-filter Status Detail (Saat berada di tab Perlu Dikerjakan) -->
@@ -1319,17 +1310,6 @@
                   </svg>
                   <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
                 </button>
-
-                <!-- Admin Bulk Delete Button -->
-                <button v-if="selectedIds.length > 0 && currentUser.role === 'admin'"
-                        @click="confirmBulkDelete"
-                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
-                        :title="'Hapus ' + selectedIds.length + ' checksheet terpilih secara permanen'">
-                  <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  <span>Hapus ({{ selectedIds.length }}) Part</span>
-                </button>
               </div>
             </div>
 
@@ -1350,8 +1330,23 @@
                 </div>
               </div>
 
-              <!-- View Controls: Mode Gambar & Ukuran Tinggi -->
-              <div class="flex items-center gap-2 ml-auto shrink-0">
+              <!-- View Controls: Hide No-Part, Mode Gambar & Ukuran Tinggi -->
+              <div class="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
+                <!-- Toggle Sembunyikan Tidak Ada Part -->
+                <button type="button"
+                        @click="toggleHideNoPart"
+                        :class="hideNoPart 
+                          ? 'bg-amber-950/60 text-amber-300 border-amber-600/70 shadow-sm ring-1 ring-amber-500/30 font-semibold' 
+                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
+                        class="px-2.5 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+                        :title="hideNoPart ? ('Sedang menyembunyikan part \'Tidak Ada Part\' & \'Canceled\' (' + countIssues + ' part). Klik untuk menampilkan semua.') : 'Klik untuk menyembunyikan part \'Tidak Ada Part\' agar tidak terbuka di antrean kerja'">
+                  <svg class="w-3.5 h-3.5" :class="hideNoPart ? 'text-amber-400' : 'text-zinc-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path v-if="hideNoPart" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    <path v-else stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>{{ hideNoPart ? 'Hidden: Tidak Ada Part (' + countIssues + ')' : 'Sembunyikan: Tidak Ada Part' }}</span>
+                </button>
+
                 <button type="button"
                         @click="toggleImageThumbnails"
                         :class="showImageThumbnails 
@@ -1407,16 +1402,55 @@
                         </svg>
                       </button>
                     </th>
-                    <th class="py-3 px-3 w-12 text-center">No</th>
-                    <th class="py-3 px-4 w-64 min-w-[210px]">Part & Kategori</th>
+                    <th class="py-3 px-3 w-12 text-center select-none cursor-pointer hover:text-zinc-200 transition-colors"
+                        @click="toggleSort('id')"
+                        title="Klik untuk mengurutkan berdasarkan ID/Nomor">
+                      <div class="flex items-center justify-center gap-1">
+                        <span>No</span>
+                        <span v-if="sortBy === 'id'" class="text-indigo-400 text-[10px]">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                      </div>
+                    </th>
+                    <th class="py-3 px-4 w-64 min-w-[210px] select-none cursor-pointer hover:text-zinc-200 transition-colors"
+                        @click="toggleSort('category')"
+                        title="Klik untuk mengelompokkan & mengurutkan berdasarkan Kategori Part">
+                      <div class="flex items-center gap-1.5">
+                        <span>Part & Kategori</span>
+                        <span v-if="sortBy === 'category'" class="text-indigo-400 text-[10px]">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                        <span v-else class="text-zinc-600 text-[10px]">↕</span>
+                      </div>
+                    </th>
                     <th v-if="showImageThumbnails" 
                         class="py-3 px-3 text-center transition-all select-none"
                         :class="thumbnailSize === 'xl' ? 'w-96 min-w-[360px]' : (thumbnailSize === 'normal' ? 'w-56 min-w-[220px]' : 'w-72 min-w-[280px]')">
                       Drawing
                     </th>
-                    <th class="py-3 px-4 min-w-[220px]">Nama Part & Detail</th>
-                    <th class="py-3 px-3 w-36">Penanggung Jawab</th>
-                    <th class="py-3 px-3 w-36">Status</th>
+                    <th class="py-3 px-4 min-w-[220px] select-none cursor-pointer hover:text-zinc-200 transition-colors"
+                        @click="toggleSort('part_name')"
+                        title="Klik untuk mengurutkan berdasarkan Nama Part">
+                      <div class="flex items-center gap-1.5">
+                        <span>Nama Part & Detail</span>
+                        <span v-if="sortBy === 'part_name'" class="text-indigo-400 text-[10px]">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                        <span v-else class="text-zinc-600 text-[10px]">↕</span>
+                      </div>
+                    </th>
+                    <th class="py-3 px-3 w-36 select-none cursor-pointer hover:text-zinc-200 transition-colors"
+                        @click="toggleSort('assigned_to')"
+                        title="Klik untuk mengelompokkan berdasarkan Penanggung Jawab Operator">
+                      <div class="flex items-center gap-1.5">
+                        <span>Penanggung Jawab</span>
+                        <span v-if="sortBy === 'assigned_to'" class="text-indigo-400 text-[10px]">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                        <span v-else class="text-zinc-600 text-[10px]">↕</span>
+                      </div>
+                    </th>
+                    <th class="py-3 px-3 w-36 select-none cursor-pointer hover:text-zinc-200 transition-colors"
+                        @click="toggleSort('status')"
+                        title="Klik untuk mengurutkan berdasarkan Status">
+                      <div class="flex items-center gap-1.5">
+                        <span>Status</span>
+                        <span v-if="sortBy === 'status'" class="text-indigo-400 text-[10px]">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                        <span v-else class="text-zinc-600 text-[10px]">↕</span>
+                      </div>
+                    </th>
                     <th class="py-3 px-3 w-28 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -1484,7 +1518,7 @@
                     <td class="py-3 px-4">
                       <div class="flex flex-col gap-1">
                         <div class="flex items-center gap-1.5 group/pn">
-                          <span class="font-mono font-bold text-zinc-100 text-xs tracking-tight">{{ cs.part_number }}</span>
+                          <span class="font-mono font-bold text-zinc-100 text-sm tracking-tight">{{ cs.part_number }}</span>
                           <!-- Multi-template Badge -->
                           <span v-if="partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] > 1"
                                 @click.stop="searchQuery = cs.part_number"
@@ -1584,7 +1618,7 @@
                     <!-- Consolidated Column: Nama Part & Detail Metadata -->
                     <td class="py-3 px-4">
                       <div class="flex flex-col gap-0.5">
-                        <span class="font-medium text-zinc-200 text-xs">{{ cs.part_name || '-' }}</span>
+                        <span class="font-semibold text-zinc-100 text-xs sm:text-sm">{{ cs.part_name || '-' }}</span>
                         <!-- Customer & Model Subtitle -->
                         <div class="text-[11px] text-zinc-400 flex items-center gap-1.5">
                           <span v-if="cs.customer" class="text-zinc-400">{{ cs.customer }}</span>
@@ -1672,14 +1706,6 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                           <span class="hidden sm:inline">Review & Edit</span>
-                        </button>
-                        <button v-if="currentUser.role === 'admin'"
-                                @click="deleteSingleChecksheet(cs)"
-                                class="p-1.5 rounded-lg text-rose-400 hover:text-white hover:bg-rose-600 transition-colors cursor-pointer border border-transparent hover:border-rose-500"
-                                title="Hapus checksheet ini secara permanen">
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
                         </button>
                       </div>
                     </td>
@@ -2018,6 +2044,123 @@
               <p class="text-xs text-zinc-400 mt-1">Konfigurasi sinkronisasi cloud, Google Spreadsheet, dan sistem penyimpanan.</p>
             </div>
 
+            <!-- Section: Sinkronisasi, Rekonsiliasi & Ekspor Data (Pindahan dari Appbar) -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-indigo-950/80 border border-indigo-800 flex items-center justify-center text-indigo-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-zinc-100">Sinkronisasi, Rekonsiliasi & Ekspor Data</h3>
+                    <p class="text-xs text-zinc-400">Pusat kontrol audit FactoryHub, sinkronisasi kategori, pembersihan cache, dan unduh rekap data Excel</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                <!-- 1. Audit FactoryHub -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                      <h4 class="text-xs font-bold text-zinc-200">Audit & Rekonsiliasi FactoryHub</h4>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Audit status dua arah antara database internal dan FactoryHub resmi untuk rekonsiliasi data.
+                    </p>
+                  </div>
+                  <button @click="runAuditFactoryHub" :disabled="isAuditing"
+                          class="w-full py-2 px-3 bg-blue-950 hover:bg-blue-900 text-blue-200 border border-blue-800 rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                    <svg v-if="isAuditing" class="animate-spin w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg v-else class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span>{{ isAuditing ? 'Sedang Audit...' : 'Audit FactoryHub' }}</span>
+                  </button>
+                </div>
+
+                <!-- 2. Sync Kategori FactoryHub -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full" :class="syncCategoryState.active ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'"></span>
+                        <h4 class="text-xs font-bold text-zinc-200">Sync Kategori FactoryHub</h4>
+                      </div>
+                      <span class="font-mono text-[10px] bg-zinc-950 px-1.5 py-0.5 rounded text-zinc-300 border border-zinc-800">
+                        {{ syncCategoryState.percent }}%
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Sinkronisasi mapping kategori part (Accuracy, Material, Subcont) ke sistem FactoryHub.
+                    </p>
+                  </div>
+                  <button @click="showSyncCategoryModal = true"
+                          class="w-full py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                    <span class="w-2 h-2 rounded-full" :class="syncCategoryState.active ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'"></span>
+                    <span>Buka Status Sync ({{ syncCategoryState.current }}/{{ syncCategoryState.total }})</span>
+                  </button>
+                </div>
+
+                <!-- 3. Hard Refresh Cache -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                      <h4 class="text-xs font-bold text-zinc-200">Hard Refresh Browser Cache</h4>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Bersihkan cache browser dan muat ulang halaman dengan file script & css paling baru (Ctrl+F5).
+                    </p>
+                  </div>
+                  <button @click="triggerHardRefresh"
+                          class="w-full py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Hard Refresh Cache</span>
+                  </button>
+                </div>
+
+                <!-- 4. Unduh Excel Rekap Lengkap -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      <h4 class="text-xs font-bold text-zinc-200">Ekspor Excel Checksheet Lengkap</h4>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Download file format Excel (.xlsx) untuk seluruh rekapitulasi data checksheet operasional.
+                    </p>
+                  </div>
+                  <a :href="'/api/export/excel?assigned_to=' + activeTeam" download
+                     class="w-full py-2 px-3 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Unduh Excel Rekap Lengkap</span>
+                  </a>
+                </div>
+
+                <!-- 5. Unduh Excel Part Belum Ada -->
+                <div class="p-4 bg-zinc-900/80 border border-zinc-800/90 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                      <h4 class="text-xs font-bold text-zinc-200">Ekspor Part Belum Ada (Master Web)</h4>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                      Download daftar part yang berstatus 'Tidak Ada Part' / belum terdaftar di FactoryHub Master Part.
+                    </p>
+                  </div>
+                  <a href="/api/export/excel/tidak-ada-part" download
+                     class="w-full py-2 px-3 bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Unduh Excel Part Belum Ada</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
             <!-- Google Sheet Section -->
             <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-3">
               <div class="flex items-center justify-between">
@@ -2125,6 +2268,49 @@
                     https://drive.google.com/drive/u/{{ googleDriveUserIndex }}/search?q=743F4E000P parent:{{ googleDriveFolderId }}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <!-- Checksheet View & Workflow Filter Section -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-amber-950/80 border border-amber-800 flex items-center justify-center text-amber-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-bold text-zinc-100">Filter Tampilan Checksheet</h3>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold border transition-colors"
+                            :class="hideNoPart ? 'bg-amber-950 text-amber-300 border-amber-800' : 'bg-zinc-800 text-zinc-400 border-zinc-700'">
+                        {{ hideNoPart ? 'Hidden Aktif' : 'Semua Ditampilkan' }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">Penyaringan part yang belum terdaftar di master FactoryHub</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sembunyikan Tidak Ada Part Switch -->
+              <div class="flex items-center justify-between p-4 bg-zinc-900/90 border border-zinc-800 rounded-xl transition-all">
+                <div class="space-y-0.5 max-w-xl">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-zinc-100">Sembunyikan Part 'Tidak Ada Part' & Canceled ({{ countIssues }} Part)</span>
+                  </div>
+                  <p class="text-[11px] text-zinc-400 leading-relaxed">
+                    Menyembunyikan part yang belum ada di Master FactoryHub dari tabel utama dan mencegah part tersebut terbuka saat navigasi Next/Prev di Excel Studio. Seluruh part ini tetap dapat diakses di tab <strong>Masalah / Pending</strong>.
+                  </p>
+                </div>
+                <button type="button" @click="toggleHideNoPart" role="switch" :aria-checked="hideNoPart"
+                        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        :class="hideNoPart ? 'bg-amber-600' : 'bg-zinc-700'">
+                  <span class="sr-only">Sembunyikan part tidak ada part</span>
+                  <span aria-hidden="true"
+                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="hideNoPart ? 'translate-x-5' : 'translate-x-0'"></span>
+                </button>
               </div>
             </div>
 
@@ -2275,6 +2461,35 @@
                           class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5">
                     <svg v-if="isIngestingImages" class="animate-spin w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     <span>{{ isIngestingImages ? 'Sinkronisasi...' : 'Sinkron Gambar' }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Admin Data Deletion Control (Danger Zone) -->
+            <div v-if="currentUser && currentUser.role === 'admin'" class="p-5 bg-rose-950/20 border border-rose-900/40 rounded-xl space-y-4">
+              <div class="flex items-center gap-3 pb-3 border-b border-rose-900/30">
+                <div class="w-9 h-9 rounded-lg bg-rose-950 border border-rose-800 flex items-center justify-center text-rose-400 shrink-0">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-rose-300">Pengelolaan Hapus Part (Khusus Hak Admin)</h3>
+                  <p class="text-xs text-zinc-400">Tombol hapus cepat pada tabel dan ruang kerja telah dinonaktifkan demi keamanan operasional.</p>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p class="text-xs text-zinc-400">Untuk menghapus part, ketik Part Number secara lengkap di bawah ini lalu klik tombol cari:</p>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input v-model="adminDeletePartQuery" type="text"
+                         @keyup.enter="adminSearchAndDeletePart"
+                         placeholder="Masukkan Part Number yang ingin dihapus (contoh: TEST-PART)..."
+                         class="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-200 placeholder-zinc-500 focus:border-rose-500 focus:outline-none">
+                  <button type="button" @click="adminSearchAndDeletePart"
+                          class="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0">
+                    Cari & Konfirmasi Hapus
                   </button>
                 </div>
               </div>
@@ -2996,18 +3211,6 @@
                 <span>{{ isSavingPoints ? 'Menyimpan...' : 'Simpan (Ctrl+S)' }}</span>
               </button>
 
-              <!-- Admin Delete Checksheet Button in Studio -->
-              <button v-if="currentUser.role === 'admin'"
-                      @click="deleteChecksheetFromStudio"
-                      type="button"
-                      title="Hapus checksheet ini secara permanen dari sistem"
-                      class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800 transition-colors flex items-center gap-1.5 cursor-pointer ml-1">
-                <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span class="hidden xl:inline">Hapus Part</span>
-              </button>
-
               <!-- Close Studio Button -->
               <button @click="closeExcelStudio" 
                       aria-label="Tutup Studio"
@@ -3033,7 +3236,8 @@
 
             <!-- LEFT PANEL: Sketch Drawing Viewer & Metadata -->
             <div v-show="studioPanelMode !== 'table-focus'"
-                 :class="studioPanelMode === 'image-focus' ? 'w-full flex-1' : 'w-full md:w-[42%] shrink-0'"
+                 :class="studioPanelMode === 'image-focus' ? 'w-full flex-1' : 'w-full md:w-1/2 flex-1 min-w-0'"
+                 :style="studioPanelMode === 'split' ? { flex: '1 1 50%', maxWidth: '50%', minWidth: '0' } : {}"
                  class="border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950 flex flex-col overflow-y-auto transition-all duration-200">
               
               <!-- Hidden Image File Input for Manual Picker -->
@@ -3223,7 +3427,8 @@
 
             <!-- RIGHT PANEL: Interactive Excel Grid -->
             <div v-show="studioPanelMode !== 'image-focus'"
-                 :class="studioPanelMode === 'table-focus' ? 'w-full flex-1' : 'flex-1 min-w-0'"
+                 :class="studioPanelMode === 'table-focus' ? 'w-full flex-1' : 'w-full md:w-1/2 flex-1 min-w-0'"
+                 :style="studioPanelMode === 'split' ? { flex: '1 1 50%', maxWidth: '50%', minWidth: '0' } : {}"
                  class="flex flex-col bg-zinc-900/50 transition-all duration-200">
               
               <!-- Excel Grid Action Bar -->
@@ -3524,11 +3729,21 @@
             </button>
 
             <!-- Counter Indicator -->
-            <div class="px-3 py-1 text-center font-mono">
+            <div class="px-2.5 py-1 text-center font-mono select-none">
               <div class="text-xs font-bold text-zinc-200 flex items-center justify-center gap-1">
                 <span class="text-indigo-400 font-extrabold">{{ currentStudioIndex >= 0 ? (currentStudioIndex + 1) : 1 }}</span>
                 <span class="text-zinc-500 font-normal">/</span>
                 <span class="text-zinc-400">{{ totalStudioParts }}</span>
+              </div>
+              <div v-if="isCurrentPartNonFactoryHub" class="text-[9px] text-amber-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-0.5" title="Part ini berstatus 'Tidak Ada Part' di FactoryHub. Tombol Next/Prev akan otomatis loncat ke part aktif yang terdaftar di FactoryHub.">
+                <span>⚠️ Non-FactoryHub (Skip)</span>
+              </div>
+              <div v-else-if="studioSkipNoPart" @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer font-sans font-medium leading-none mt-0.5 flex items-center justify-center gap-1" title="Navigasi hanya melewati part aktif yang terdaftar di FactoryHub. Klik jika ingin menyertakan part arsip.">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                <span>Part Aktif ({{ totalStudioParts }})</span>
+              </div>
+              <div v-else @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-zinc-400 hover:text-zinc-300 cursor-pointer font-sans font-medium leading-none mt-0.5" title="Semua status termasuk 'Tidak Ada Part' dimasukkan. Klik untuk memfilter kembali.">
+                Semua Part
               </div>
             </div>
 
@@ -3952,16 +4167,6 @@
                 </div>
               </div>
             </transition>
-
-            <!-- Admin Bulk Delete Button in Dock -->
-            <button @click="confirmBulkDelete"
-                    class="ml-2 px-3.5 py-2 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                    title="Hapus semua checksheet yang dicentang secara permanen">
-              <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span>Hapus ({{ selectedIds.length }})</span>
-            </button>
           </div>
 
           <!-- Operator Quick Take Task -->
@@ -4165,6 +4370,32 @@
         const workflowTab = ref('TODO');
         const selectedIds = ref([]);
 
+        // Smart Table Sorting State (Default: Grouped by Category & Assigned Operator)
+        const sortBy = ref('category'); // 'category', 'assigned_to', 'status', 'part_name', 'id'
+        const sortOrder = ref('asc');   // 'asc', 'desc'
+        const toggleSort = (col) => {
+          if (sortBy.value === col) {
+            sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortBy.value = col;
+            sortOrder.value = 'asc';
+          }
+        };
+
+        // Hide "Tidak Ada Part" & Canceled State (Persisted in localStorage, default: true)
+        const savedHideNoPart = localStorage.getItem('summit_hide_no_part_v3');
+        const hideNoPart = ref(savedHideNoPart !== 'false');
+        if (savedHideNoPart === null) {
+          localStorage.setItem('summit_hide_no_part_v3', 'true');
+          localStorage.setItem('summit_hide_no_part', 'true');
+        }
+        const toggleHideNoPart = () => {
+          hideNoPart.value = !hideNoPart.value;
+          localStorage.setItem('summit_hide_no_part_v3', hideNoPart.value ? 'true' : 'false');
+          localStorage.setItem('summit_hide_no_part', hideNoPart.value ? 'true' : 'false');
+          showToast(hideNoPart.value ? 'Part "Tidak Ada Part" sekarang disembunyikan.' : 'Part "Tidak Ada Part" sekarang ditampilkan.', 'info');
+        };
+
         // Visual Image Review Mode & Quick Lightbox (Default: ALWAYS ON / TRUE)
         const savedThumbPref = localStorage.getItem('showImageThumbnails_v2');
         const showImageThumbnails = ref(savedThumbPref !== 'false');
@@ -4173,15 +4404,15 @@
           localStorage.setItem('showImageThumbnails_v2', showImageThumbnails.value ? 'true' : 'false');
         };
 
-        // Thumbnail Size: 'normal' (112px), 'large' (160px - default), 'xl' (224px)
-        const thumbnailSize = ref(localStorage.getItem('thumbnailSize') || 'large');
+        // Thumbnail Size: 'normal' (112px - default), 'large' (160px), 'xl' (224px)
+        const thumbnailSize = ref(localStorage.getItem('thumbnailSize') || 'normal');
         const thumbnailSizeLabel = computed(() => {
           if (thumbnailSize.value === 'normal') return 'Sedang (112px)';
           if (thumbnailSize.value === 'xl') return 'Ekstra (224px)';
           return 'Besar (160px)';
         });
         const cycleThumbnailSize = () => {
-          const sizes = ['large', 'xl', 'normal'];
+          const sizes = ['normal', 'large', 'xl'];
           const nextIdx = (sizes.indexOf(thumbnailSize.value) + 1) % sizes.length;
           thumbnailSize.value = sizes[nextIdx];
           localStorage.setItem('thumbnailSize', thumbnailSize.value);
@@ -4223,7 +4454,7 @@
             zoom: 1.0,
           };
           try {
-            const res = await fetch(`/api/checksheets/${cs.id}`);
+            const res = await fetch(`/api/checksheets/${cs.id}?refresh=true&_t=${Date.now()}`);
             if (res.ok) {
               const data = await res.json();
               if (data.images && data.images.length > 0) {
@@ -4231,6 +4462,7 @@
                 if (startIdx < data.images.length) {
                   quickReviewModal.value.activeIdx = startIdx;
                 }
+                preloadChecksheetImages(data.images);
               }
             }
           } catch (e) {
@@ -4942,6 +5174,16 @@
           navigate('checksheets');
         };
 
+        const openChecksheetsWorkspace = () => {
+          if (workflowTab.value === 'ALL') {
+            workflowTab.value = 'TODO';
+          }
+          if (currentUser.value?.role === 'operator') {
+            activeTeam.value = currentUser.value.name;
+          }
+          navigate('checksheets');
+        };
+
         const countGlobalCategory = (cat) => {
           if (!checksheets.value || checksheets.value.length === 0) return 0;
           if (!cat || cat === 'ALL') return checksheets.value.length;
@@ -5023,14 +5265,28 @@
         };
 
         const countByTeam = (member) => {
-          if (member === 'Semua') return checksheets.value.length;
-          return checksheets.value.filter(c => c.assigned_to === member).length;
+          let list = checksheets.value || [];
+          if (hideNoPart.value && workflowTab.value !== 'ISSUES') {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s !== 'tidak ada part' && s !== 'canceled';
+            });
+          }
+          if (member === 'Semua') return list.length;
+          return list.filter(c => c.assigned_to === member).length;
         };
 
         const countCategory = (cat) => {
           if (!checksheets.value) return 0;
+          let list = checksheets.value;
+          if (hideNoPart.value && workflowTab.value !== 'ISSUES') {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s !== 'tidak ada part' && s !== 'canceled';
+            });
+          }
           const target = (cat || '').toLowerCase().trim();
-          return checksheets.value.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target).length;
+          return list.filter(c => (c.category || 'Accuracy').toLowerCase().trim() === target).length;
         };
 
         const countCategoryInWorkflow = (cat) => {
@@ -5052,6 +5308,11 @@
             list = list.filter(c => {
               const s = (c.status || '').toLowerCase().trim();
               return s === 'tidak ada part' || s === 'canceled';
+            });
+          } else if (workflowTab.value === 'ALL' && hideNoPart.value) {
+            list = list.filter(c => {
+              const s = (c.status || '').toLowerCase().trim();
+              return s !== 'tidak ada part' && s !== 'canceled';
             });
           }
 
@@ -5096,6 +5357,51 @@
             const s = (c.status || '').toLowerCase().trim();
             return s === 'tidak ada part' || s === 'canceled';
           }).length;
+        });
+
+        // Telemetry & Queue Statistics for Operator & Workspace (Part Kita, Sudah, Sisa)
+        const myQueueStats = computed(() => {
+          const list = checksheets.value || [];
+          const isOp = currentUser.value?.role === 'operator';
+          const targetPic = isOp ? currentUser.value?.name : (activeTeam.value !== 'Semua' ? activeTeam.value : null);
+
+          // Only consider active parts (exclude Tidak Ada Part and Canceled)
+          const activeList = list.filter(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            if (s === 'tidak ada part' || s === 'canceled') return false;
+            if (targetPic) {
+              if (targetPic === 'Unassigned') return isUnassigned(c);
+              return c.assigned_to === targetPic;
+            }
+            return true;
+          });
+
+          const total = activeList.length;
+          let done = 0;
+          let ready = 0;
+          let todo = 0;
+
+          activeList.forEach(c => {
+            const s = (c.status || '').toLowerCase().trim();
+            if (s === 'checksheet done') done++;
+            else if (s === 'siap kirim' || s === 'reviewed') ready++;
+            else todo++;
+          });
+
+          const finished = done + ready;
+          const remaining = todo;
+          const percent = total > 0 ? Math.round((finished / total) * 100) : 0;
+
+          return {
+            title: targetPic ? (isOp ? 'Part Kita' : `Part ${targetPic}`) : 'Part Kita',
+            targetPic,
+            total,
+            finished,
+            done,
+            ready,
+            remaining,
+            percent
+          };
         });
 
         const formatCategoryShort = (cat) => {
@@ -5233,14 +5539,64 @@
               matchCategory = (c.category || 'Accuracy').toLowerCase().trim() === categoryFilter.value.toLowerCase().trim();
             }
 
+            let matchHideNoPart = true;
+            if (hideNoPart.value && workflowTab.value !== 'ISSUES' && statusFilter.value !== 'Tidak Ada Part') {
+              if (cStatus === 'tidak ada part' || cStatus === 'canceled') {
+                matchHideNoPart = false;
+              }
+            }
+
             const q = searchQuery.value.toLowerCase().trim();
             const matchQuery = !q ||
               c.part_number.toLowerCase().includes(q) ||
               (c.part_name && c.part_name.toLowerCase().includes(q)) ||
               (c.model && c.model.toLowerCase().includes(q)) ||
               (c.category && c.category.toLowerCase().includes(q));
-            return matchTeam && matchWorkflow && matchStatus && matchCategory && matchQuery;
+            return matchTeam && matchWorkflow && matchStatus && matchCategory && matchHideNoPart && matchQuery;
           });
+
+          // Smart Sorting & Grouping
+          const list = [...filtered];
+          const ord = sortOrder.value === 'desc' ? -1 : 1;
+          const col = sortBy.value;
+
+          list.sort((a, b) => {
+            if (col === 'category') {
+              const catA = (a.category || 'Accuracy').toLowerCase();
+              const catB = (b.category || 'Accuracy').toLowerCase();
+              if (catA !== catB) return catA.localeCompare(catB) * ord;
+              const opA = (a.assigned_to || 'Unassigned').toLowerCase();
+              const opB = (b.assigned_to || 'Unassigned').toLowerCase();
+              if (opA !== opB) return opA.localeCompare(opB);
+              return (a.part_number || '').localeCompare(b.part_number || '');
+            } else if (col === 'assigned_to') {
+              const opA = (a.assigned_to || 'Unassigned').toLowerCase();
+              const opB = (b.assigned_to || 'Unassigned').toLowerCase();
+              if (opA !== opB) return opA.localeCompare(opB) * ord;
+              const catA = (a.category || 'Accuracy').toLowerCase();
+              const catB = (b.category || 'Accuracy').toLowerCase();
+              if (catA !== catB) return catA.localeCompare(catB);
+              return (a.part_number || '').localeCompare(b.part_number || '');
+            } else if (col === 'status') {
+              const stA = (a.status || '').toLowerCase();
+              const stB = (b.status || '').toLowerCase();
+              if (stA !== stB) return stA.localeCompare(stB) * ord;
+              return (a.part_number || '').localeCompare(b.part_number || '');
+            } else if (col === 'part_name') {
+              const pnA = (a.part_name || '').toLowerCase();
+              const pnB = (b.part_name || '').toLowerCase();
+              if (pnA !== pnB) return pnA.localeCompare(pnB) * ord;
+              return (a.part_number || '').localeCompare(b.part_number || '');
+            } else if (col === 'id') {
+              return (a.id - b.id) * ord;
+            } else {
+              const pnA = (a.part_number || '').toLowerCase();
+              const pnB = (b.part_number || '').toLowerCase();
+              return pnA.localeCompare(pnB) * ord;
+            }
+          });
+
+          return list;
         });
 
         // Table Pagination for Maximum Rendering Performance
@@ -5282,6 +5638,8 @@
           categoryFilter.value = 'ALL';
           workflowTab.value = 'TODO';
           activeTeam.value = currentUser.value?.role === 'operator' ? currentUser.value.name : 'Semua';
+          sortBy.value = 'category';
+          sortOrder.value = 'asc';
           currentPage.value = 1;
         };
 
@@ -5502,11 +5860,19 @@
         };
 
         // Load Checksheets & Users
-        const loadChecksheets = async (silent = false) => {
+        const loadChecksheets = async (silent = false, force = false) => {
           if (!silent) isLoading.value = true;
           try {
-            const res = await fetch('/api/checksheets?limit=1000');
-            if (res.ok) checksheets.value = await res.json();
+            const url = force ? `/api/checksheets?limit=1000&refresh=true&_t=${Date.now()}` : '/api/checksheets?limit=1000';
+            const res = await fetch(url);
+            if (res.ok) {
+              const freshList = await res.json();
+              checksheets.value = freshList;
+              if (force) {
+                studioDetailCache.clear();
+                preloadedImageUrls.clear();
+              }
+            }
           } catch (e) {
             console.error('Failed to load checksheets:', e);
           } finally {
@@ -5771,35 +6137,31 @@
           activeCol.value = 0;
           focusCell(0, 0);
 
-          // If detail was not in cache, fetch it now asynchronously
-          if (!detail) {
-            try {
-              const res = await fetch(`/api/checksheets/${id}`);
-              if (res.ok) {
-                detail = await res.json();
-                studioDetailCache.set(id, detail);
-                // Apply if user is still viewing this checksheet
+          // Background revalidation: always fetch fresh detail from database so other users' edits/images are synced immediately
+          const fetchUrl = `/api/checksheets/${id}?refresh=true&_t=${Date.now()}`;
+          fetch(fetchUrl)
+            .then(res => res.ok ? res.json() : null)
+            .then(freshDetail => {
+              if (freshDetail) {
+                studioDetailCache.set(id, freshDetail);
                 if (activeChecksheet.value && activeChecksheet.value.id === id) {
-                  activeChecksheet.value = detail;
+                  activeChecksheet.value = freshDetail;
                   updateDocumentTitle();
-                  excelPoints.value = (detail.points || []).map(p => ({
-                    ...p,
-                    method: normalizeToolName(p.method || 'Visual')
-                  }));
-                  if (excelPoints.value.length === 0) {
-                    excelPoints.value = [{
-                      item_no: '1',
-                      inspection_item: '',
-                      standard: '',
-                      method: 'Visual',
-                      master_data: ''
-                    }];
+                  if (!isPointsDirty.value && freshDetail.points && freshDetail.points.length > 0) {
+                    excelPoints.value = freshDetail.points.map(p => ({
+                      ...p,
+                      method: normalizeToolName(p.method || 'Visual')
+                    }));
                   }
-                  preloadChecksheetImages(detail.images);
+                  if (freshDetail.images && freshDetail.images.length > 0) {
+                    preloadChecksheetImages(freshDetail.images);
+                  }
                 }
               }
-            } catch (e) {}
-          } else {
+            })
+            .catch(e => console.warn('Background detail sync failed:', e));
+
+          if (detail && detail.images) {
             preloadChecksheetImages(detail.images);
           }
 
@@ -5828,44 +6190,113 @@
           updateDocumentTitle();
         };
 
+        const isNonFactoryHub = (c) => {
+          if (!c) return false;
+          const s = (c.status || '').toLowerCase().trim();
+          return s === 'tidak ada part' || s === 'canceled';
+        };
+
+        const isCurrentPartNonFactoryHub = computed(() => {
+          return isNonFactoryHub(activeChecksheet.value);
+        });
+
         // Studio Part Fast Navigation (Prev & Next Part)
+        // Focus strictly on active FactoryHub parts so operators can efficiently review & mark Siap Kirim
+        const studioSkipNoPart = ref(true);
+
         const currentStudioList = computed(() => {
-          if (!filteredChecksheets.value || filteredChecksheets.value.length === 0) {
-            return checksheets.value || [];
+          let list = filteredChecksheets.value;
+          if (!list || list.length === 0) {
+            list = checksheets.value || [];
+          } else if (activeChecksheet.value) {
+            const inFiltered = list.some(c => c.id === activeChecksheet.value.id);
+            if (!inFiltered && !isNonFactoryHub(activeChecksheet.value)) {
+              list = checksheets.value || [];
+            }
           }
-          if (activeChecksheet.value) {
-            const inFiltered = filteredChecksheets.value.some(c => c.id === activeChecksheet.value.id);
-            if (!inFiltered) return checksheets.value || [];
+
+          // Unless user explicitly chose ISSUES workflow tab or 'Tidak Ada Part' filter,
+          // ALWAYS filter out 'Tidak Ada Part' and 'Canceled' parts when studioSkipNoPart is active
+          const isExplicitIssuesTab = workflowTab.value === 'ISSUES' || statusFilter.value === 'Tidak Ada Part';
+          if (studioSkipNoPart.value && !isExplicitIssuesTab) {
+            list = list.filter(c => !isNonFactoryHub(c));
           }
-          return filteredChecksheets.value;
-        });
-
-        const currentStudioIndex = computed(() => {
-          if (!activeChecksheet.value) return -1;
-          const list = currentStudioList.value;
-          return list.findIndex(c => c.id === activeChecksheet.value.id);
-        });
-
-        const totalStudioParts = computed(() => {
-          return currentStudioList.value.length;
+          return list;
         });
 
         const prevStudioPart = computed(() => {
-          const idx = currentStudioIndex.value;
+          if (!activeChecksheet.value) return null;
           const list = currentStudioList.value;
-          if (idx > 0 && list.length > 0) {
-            return list[idx - 1];
+          if (!list || list.length === 0) return null;
+
+          const idx = list.findIndex(c => c.id === activeChecksheet.value.id);
+          if (idx !== -1) {
+            return idx > 0 ? list[idx - 1] : null;
+          }
+
+          // When activeChecksheet is a non-FactoryHub part (not in active studio list):
+          // Find the preceding active part from master list that exists in currentStudioList!
+          const master = checksheets.value || [];
+          const masterIdx = master.findIndex(c => c.id === activeChecksheet.value.id);
+          if (masterIdx > 0) {
+            for (let i = masterIdx - 1; i >= 0; i--) {
+              const candidate = master[i];
+              if (list.some(c => c.id === candidate.id)) {
+                return candidate;
+              }
+            }
           }
           return null;
         });
 
         const nextStudioPart = computed(() => {
-          const idx = currentStudioIndex.value;
+          if (!activeChecksheet.value) return null;
           const list = currentStudioList.value;
-          if (list && idx >= 0 && idx < list.length - 1) {
-            return list[idx + 1];
+          if (!list || list.length === 0) return null;
+
+          const idx = list.findIndex(c => c.id === activeChecksheet.value.id);
+          if (idx !== -1) {
+            return idx < list.length - 1 ? list[idx + 1] : null;
           }
-          return null;
+
+          // When activeChecksheet is a non-FactoryHub part (not in active studio list):
+          // Find the succeeding active part from master list that exists in currentStudioList!
+          const master = checksheets.value || [];
+          const masterIdx = master.findIndex(c => c.id === activeChecksheet.value.id);
+          if (masterIdx !== -1 && masterIdx < master.length - 1) {
+            for (let i = masterIdx + 1; i < master.length; i++) {
+              const candidate = master[i];
+              if (list.some(c => c.id === candidate.id)) {
+                return candidate;
+              }
+            }
+          }
+          return list.length > 0 ? list[0] : null;
+        });
+
+        const currentStudioIndex = computed(() => {
+          if (!activeChecksheet.value) return -1;
+          const list = currentStudioList.value;
+          if (!list || list.length === 0) return -1;
+
+          const idx = list.findIndex(c => c.id === activeChecksheet.value.id);
+          if (idx !== -1) return idx;
+
+          // If current part is non-FactoryHub, locate relative virtual index
+          if (nextStudioPart.value) {
+            const nextIdx = list.findIndex(c => c.id === nextStudioPart.value.id);
+            if (nextIdx > 0) return nextIdx - 1;
+            return 0;
+          }
+          if (prevStudioPart.value) {
+            const prevIdx = list.findIndex(c => c.id === prevStudioPart.value.id);
+            return prevIdx;
+          }
+          return 0;
+        });
+
+        const totalStudioParts = computed(() => {
+          return currentStudioList.value.length;
         });
 
         const navigateStudioPart = async (direction) => {
@@ -5883,9 +6314,9 @@
           }
 
           const list = currentStudioList.value;
-          const newIdx = currentStudioIndex.value + direction;
-          if (newIdx >= 0 && newIdx < list.length) {
-            focusedCsIndex.value = newIdx;
+          const targetIdx = list.findIndex(c => c.id === target.id);
+          if (targetIdx !== -1) {
+            focusedCsIndex.value = targetIdx;
           }
 
           await openExcelStudio(target);
@@ -5941,12 +6372,14 @@
             });
             const data = await res.json();
             if (res.ok && data.status === 'success') {
-              if (!activeChecksheet.value.images) {
-                activeChecksheet.value.images = [];
+              if (data.images && data.images.length > 0) {
+                activeChecksheet.value.images = data.images;
+              } else if (data.image) {
+                if (!activeChecksheet.value.images) activeChecksheet.value.images = [];
+                activeChecksheet.value.images.push(data.image);
               }
-              const newImg = data.image;
-              activeChecksheet.value.images.push(newImg);
-              activeSketchIdx.value = activeChecksheet.value.images.length - 1;
+              activeSketchIdx.value = Math.max(0, activeChecksheet.value.images.length - 1);
+              preloadChecksheetImages(activeChecksheet.value.images);
 
               // Sync with in-memory studio detail cache
               const cached = studioDetailCache.get(activeChecksheet.value.id);
@@ -5961,7 +6394,7 @@
                 found.image_urls = activeChecksheet.value.images.map(img => typeof img === 'string' ? img : (img.image_url || img.image_path));
                 found.thumbnail_url = found.image_urls[0] || null;
               }
-              showToast('Gambar sketsa drawing berhasil diunggah!', 'success');
+              showToast('Gambar sketsa drawing berhasil diunggah & disinkronkan!', 'success');
             } else {
               showToast(data.detail || 'Gagal mengunggah gambar sketsa.', 'error');
             }
@@ -6295,13 +6728,15 @@
           }
         };
 
-        const triggerHardRefresh = () => {
-          showToast('Membersihkan cache browser & memuat ulang versi terbaru...', 'info');
+        const triggerHardRefresh = async () => {
+          showToast('Membersihkan cache backend & browser...', 'info');
           try {
+            await fetch('/api/checksheets/cache/refresh', { method: 'POST' }).catch(() => {});
+            studioDetailCache.clear();
+            preloadedImageUrls.clear();
             if ('caches' in window) {
-              caches.keys().then(keys => {
-                keys.forEach(k => caches.delete(k));
-              });
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
             }
           } catch (e) {}
           setTimeout(() => {
@@ -7592,27 +8027,54 @@
         const deleteTargetType = ref('single');
         const deleteTargetItem = ref(null);
         const isDeleting = ref(false);
+        const adminDeletePartQuery = ref('');
+
+        const adminSearchAndDeletePart = () => {
+          if (!currentUser.value || currentUser.value.role !== 'admin') {
+            showToast('Hanya akun Admin yang memiliki wewenang menghapus data.', 'error');
+            return;
+          }
+          const query = adminDeletePartQuery.value.trim().toLowerCase();
+          if (!query) {
+            showToast('Ketik Part Number yang ingin dihapus terlebih dahulu.', 'warning');
+            return;
+          }
+          const target = checksheets.value.find(c => 
+            (c.part_number && c.part_number.toLowerCase() === query) || 
+            (c.clean_part_number && c.clean_part_number.toLowerCase() === query)
+          );
+          if (!target) {
+            showToast(`Part "${adminDeletePartQuery.value}" tidak ditemukan di database.`, 'error');
+            return;
+          }
+          deleteTargetItem.value = target;
+          deleteTargetType.value = 'single';
+          showDeleteConfirmModal.value = true;
+        };
 
         const deleteSingleChecksheet = async (cs) => {
           if (!cs || isDeleting.value) return;
+          if (!currentUser.value || currentUser.value.role !== 'admin') {
+            showToast('Hanya admin yang dapat menghapus checksheet.', 'error');
+            return;
+          }
           deleteTargetType.value = 'single';
           deleteTargetItem.value = cs;
-          await executeConfirmedDelete();
+          showDeleteConfirmModal.value = true;
         };
 
         const confirmBulkDelete = async () => {
           if (!selectedIds.value || selectedIds.value.length === 0 || isDeleting.value) {
-            alert('Pilih setidaknya satu checksheet untuk dihapus.');
+            showToast('Pilih setidaknya satu checksheet untuk dihapus.', 'warning');
+            return;
+          }
+          if (!currentUser.value || currentUser.value.role !== 'admin') {
+            showToast('Hanya admin yang dapat menghapus checksheet.', 'error');
             return;
           }
           deleteTargetType.value = 'bulk';
           deleteTargetItem.value = null;
-          await executeConfirmedDelete();
-        };
-
-        const deleteChecksheetFromStudio = async () => {
-          if (!activeChecksheet.value) return;
-          await deleteSingleChecksheet(activeChecksheet.value);
+          showDeleteConfirmModal.value = true;
         };
 
         const executeConfirmedDelete = async () => {
@@ -7874,7 +8336,7 @@
           }
         });
 
-        watch([searchQuery, statusFilter, categoryFilter, activeTeam, pageSize, workflowTab], () => {
+        watch([searchQuery, statusFilter, categoryFilter, activeTeam, pageSize, workflowTab, sortBy, sortOrder, hideNoPart], () => {
           currentPage.value = 1;
         });
 
@@ -7940,6 +8402,12 @@
               loadChecksheets(true);
             }
           }, 30000);
+          // Auto-sync when switching back to this tab
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !showExcelStudio.value) {
+              loadChecksheets(true);
+            }
+          });
           // FactoryHub Category Sync Progress Polling
           fetchSyncCategoryProgress();
           setInterval(() => {
@@ -7960,6 +8428,7 @@
           pageTitle,
           pageSubtitle,
           navigate,
+          openChecksheetsWorkspace,
           goToChecksheetsWithStatus,
           goToChecksheetsWithTeam,
           goToChecksheetsWithCategory,
@@ -7986,11 +8455,17 @@
           searchQuery,
           statusFilter,
           categoryFilter,
+          sortBy,
+          sortOrder,
+          toggleSort,
+          hideNoPart,
+          toggleHideNoPart,
           workflowTab,
           countTodo,
           countReady,
           countDone,
           countIssues,
+          myQueueStats,
           formatCategoryShort,
           resetFilters,
           countStatus,
@@ -8081,6 +8556,8 @@
           prevStudioPart,
           nextStudioPart,
           navigateStudioPart,
+          studioSkipNoPart,
+          isCurrentPartNonFactoryHub,
           studioPanelMode,
           setStudioPanelMode,
           toggleSketchPanel,
@@ -8168,7 +8645,8 @@
           isDeleting,
           deleteSingleChecksheet,
           confirmBulkDelete,
-          deleteChecksheetFromStudio,
+          adminDeletePartQuery,
+          adminSearchAndDeletePart,
           executeConfirmedDelete,
           copyToClipboard,
           deleteAllImages,

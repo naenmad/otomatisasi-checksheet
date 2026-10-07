@@ -179,22 +179,26 @@ async def list_checksheets(
     return result.scalars().all()
 
 
-def _normalize_thumbnail_url(url: Optional[str], path: Optional[str]) -> Optional[str]:
+def _normalize_thumbnail_url(url: Optional[str], path: Optional[str], cache_version: Optional[str] = None) -> Optional[str]:
     raw = url or path or ""
     if not raw:
         return None
     raw = raw.strip().replace("\\", "/")
+    res = raw
     if raw.startswith("http://") or raw.startswith("https://"):
-        return raw
-    if "storage/images" in raw:
+        res = raw
+    elif "storage/images" in raw:
         sub = raw.split("storage/images", 1)[1].lstrip("/")
-        return f"/media/images/{sub}"
-    if "extracted_images" in raw:
+        res = f"/media/images/{sub}"
+    elif "extracted_images" in raw:
         sub = raw.split("extracted_images", 1)[1].lstrip("/")
-        return f"/media/extracted/{sub}"
-    if raw.startswith("/media/"):
-        return raw
-    return raw
+        res = f"/media/extracted/{sub}"
+    elif raw.startswith("/media/"):
+        res = raw
+
+    if cache_version and "?" not in res:
+        res = f"{res}?v={cache_version}"
+    return res
 
 
 def extract_process_label(raw_path: Optional[str], doc_number: Optional[str] = None) -> str:
@@ -326,6 +330,10 @@ async def get_checksheets_summary_list(
     # Pre-fetch all images for these checksheets so multiple drawings can be previewed/scrolled directly in the row
     cs_ids = [r.id for r in rows]
     cs_images_map: Dict[int, List[str]] = {}
+    # Build lookup: checksheet_id -> updated_at for cache-busting CDN URLs
+    cs_updated_map: Dict[int, str] = {}
+    for r in rows:
+        cs_updated_map[r.id] = str(int(r.updated_at.timestamp())) if r.updated_at else ""
     if cs_ids:
         imgs_res = await session.execute(
             select(PartImage.checksheet_id, PartImage.image_url, PartImage.image_path)
@@ -333,13 +341,15 @@ async def get_checksheets_summary_list(
             .order_by(PartImage.id.asc())
         )
         for p_cs_id, p_url, p_path in imgs_res.all():
-            norm_url = _normalize_thumbnail_url(p_url, p_path)
+            cv = cs_updated_map.get(p_cs_id, "")
+            norm_url = _normalize_thumbnail_url(p_url, p_path, cache_version=cv)
             if norm_url:
                 cs_images_map.setdefault(p_cs_id, []).append(norm_url)
 
     items = []
     for r in rows:
-        thumb = _normalize_thumbnail_url(r.first_image_url, r.first_image_path)
+        cv = cs_updated_map.get(r.id, "")
+        thumb = _normalize_thumbnail_url(r.first_image_url, r.first_image_path, cache_version=cv)
         all_imgs = cs_images_map.get(r.id)
         if not all_imgs and thumb:
             all_imgs = [thumb]
