@@ -184,12 +184,9 @@ async def find_existing_template(page: Page, part_no: str, target_category: Opti
             }
 
             // If targetCat was specified and no exact category match found:
-            // Check if there is only 1 template for this part and its category is 'ACCURACY' (FactoryHub legacy default)
-            if (targetCat && partMatches.length === 1) {
-                const single = partMatches[0];
-                if ((single.category || '').toUpperCase() === 'ACCURACY') {
-                    return single; // Upgrade legacy template to target category in EDIT mode
-                }
+            // Always reuse and update the existing template on FactoryHub to avoid duplicate part number error
+            if (targetCat && partMatches.length > 0) {
+                return partMatches[0]; // Upgrade/sync existing template to target category in EDIT mode
             }
 
             // If no target category was specified, return the first match
