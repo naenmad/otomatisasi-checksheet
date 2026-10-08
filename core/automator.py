@@ -655,19 +655,20 @@ async def fill_checksheet_form(
 
         # 3. Handle Reference Images in EDIT mode
         # Menghapus gambar lama di FactoryHub dan mengunggah sketsa baru (overwrite total)
-        if images:
-            removed_count = await page.evaluate("""() => {
-                const checkboxes = document.querySelectorAll('input[name="remove_images[]"]');
-                checkboxes.forEach(cb => {
-                    cb.checked = true;
-                    cb.dispatchEvent(new Event('input', { bubbles: true }));
-                    cb.dispatchEvent(new Event('change', { bubbles: true }));
-                });
-                return checkboxes.length;
-            }""")
-            if removed_count > 0:
-                print(f"[*] Menandai {removed_count} gambar lama di FactoryHub untuk dihapus (menimpa gambar lama)...")
+        removed_count = await page.evaluate("""() => {
+            const checkboxes = document.querySelectorAll('input[name="remove_images[]"]');
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                cb.setAttribute('checked', 'checked');
+                cb.dispatchEvent(new Event('input', { bubbles: true }));
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            return checkboxes.length;
+        }""")
+        if removed_count > 0:
+            print(f"[*] Menandai {removed_count} gambar lama di FactoryHub untuk dihapus (auto-replace/overwrite)...")
 
+        if images:
             print(f"[*] Uploading {len(images)} reference image(s)...")
             img_input = await page.query_selector('input[name="images[]"]')
             if img_input:
