@@ -1364,11 +1364,11 @@
                         type="button"
                         @click="cycleThumbnailSize"
                         class="px-2.5 py-1.5 rounded-lg border border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-300 text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                        title="Klik untuk rotasi ukuran tinggi drawing: Sedang (112px), Besar (160px), Ekstra (224px)">
+                        title="Klik untuk rotasi ukuran drawing: Sedang (112px), Besar (150px), Ekstra (190px)">
                   <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                   </svg>
-                  <span>Tinggi: <strong class="text-indigo-300">{{ thumbnailSizeLabel }}</strong></span>
+                  <span>Ukuran: <strong class="text-indigo-300">{{ thumbnailSizeLabel }}</strong></span>
                 </button>
               </div>
             </div>
@@ -1421,7 +1421,7 @@
                     </th>
                     <th v-if="showImageThumbnails" 
                         class="py-3 px-3 text-center transition-all select-none"
-                        :class="thumbnailSize === 'xl' ? 'w-96 min-w-[360px]' : (thumbnailSize === 'normal' ? 'w-56 min-w-[220px]' : 'w-72 min-w-[280px]')">
+                        :class="thumbnailSize === 'xl' ? 'w-[340px] min-w-[340px]' : (thumbnailSize === 'large' ? 'w-[280px] min-w-[280px]' : 'w-[220px] min-w-[220px]')">
                       Drawing
                     </th>
                     <th class="py-3 px-4 min-w-[220px] select-none cursor-pointer hover:text-zinc-200 transition-colors"
@@ -1465,8 +1465,8 @@
                       <div class="w-24 h-3 bg-zinc-800/60 rounded"></div>
                     </td>
                     <td v-if="showImageThumbnails" class="p-2 text-center">
-                      <div class="bg-zinc-800 rounded-xl mx-auto transition-all"
-                           :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"></div>
+                      <div class="bg-zinc-800/70 rounded-xl mx-auto transition-all"
+                           :class="thumbnailSize === 'xl' ? 'w-[320px] h-[190px]' : (thumbnailSize === 'large' ? 'w-[260px] h-[150px]' : 'w-[200px] h-[112px]')"></div>
                     </td>
                     <td class="p-3">
                       <div class="w-48 h-4 bg-zinc-800 rounded mb-1.5"></div>
@@ -1553,65 +1553,107 @@
                     </td>
 
                     <!-- Quick Review Thumbnail Column (Optional) -->
-                    <td v-if="showImageThumbnails" class="py-2.5 px-3 text-center align-middle" @click.stop>
-                      <!-- Multiple Drawings (Horizontal Scroll Strip) -->
-                      <div v-if="cs.image_urls && cs.image_urls.length > 1"
-                           @wheel.prevent="handleDrawingScroll($event)"
-                           class="flex items-center gap-2 overflow-x-auto p-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 scrollbar-thin scrollbar-thumb-zinc-700/80 scrollbar-track-transparent snap-x select-none mx-auto"
-                           :class="thumbnailSize === 'xl' ? 'max-w-[420px]' : (thumbnailSize === 'normal' ? 'max-w-[280px]' : 'max-w-[340px]')"
-                           style="scrollbar-width: thin;"
-                           title="Scroll mouse / geser ke kiri & kanan untuk melihat semua drawing part ini">
-                        <div v-for="(imgUrl, imgIdx) in cs.image_urls" :key="imgIdx"
-                             @click.stop="openQuickImageReview(cs, imgIdx)"
-                             class="relative shrink-0 snap-start inline-flex items-center justify-center bg-zinc-950 border border-zinc-700/80 rounded-lg p-1 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-500/40 transition-all cursor-zoom-in group/subthumb shadow-sm overflow-hidden"
-                             :class="thumbnailSize === 'xl' ? 'w-56 h-52' : (thumbnailSize === 'normal' ? 'w-36 h-26' : 'w-48 h-36')">
-                          <img :src="imgUrl" 
-                               alt="Drawing"
-                               loading="lazy"
-                               class="w-full h-full object-contain filter group-hover/subthumb:brightness-110 transition-transform duration-150 group-hover/subthumb:scale-105" />
-                          <span class="absolute top-1 left-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-black/80 text-zinc-200 border border-white/10 shadow">
-                            {{ imgIdx + 1 }}/{{ cs.image_urls.length }}
-                          </span>
-                          <div class="absolute inset-0 bg-indigo-950/20 opacity-0 group-hover/subthumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                            <span class="px-2 py-0.5 rounded bg-black/80 text-[10px] text-white flex items-center gap-1 shadow">
-                              <svg class="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    <td v-if="showImageThumbnails" class="py-2.5 px-2.5 text-center align-middle" @click.stop>
+                      <div class="relative mx-auto rounded-xl border transition-all duration-200 overflow-hidden select-none"
+                           :class="[
+                             thumbnailSize === 'xl' ? 'w-[320px] h-[190px]' : (thumbnailSize === 'large' ? 'w-[260px] h-[150px]' : 'w-[200px] h-[112px]'),
+                             hasDrawing(cs)
+                               ? 'bg-zinc-950/90 border-zinc-800/90 shadow-sm hover:border-indigo-500/80 hover:ring-2 hover:ring-indigo-500/20 cursor-pointer group/thumb'
+                               : 'bg-zinc-950/40 border-dashed border-zinc-800/80 text-zinc-600'
+                           ]"
+                           @click="hasDrawing(cs) && openQuickImageReview(cs, getActiveDrawingIdx(cs.id, getDrawingList(cs).length))"
+                           :title="hasDrawing(cs) ? 'Klik untuk Quick Review drawing: ' + cs.part_number : 'Belum ada gambar drawing untuk part ini'">
+
+                        <!-- STATE 1: HAS DRAWING(S) -->
+                        <template v-if="hasDrawing(cs)">
+                          <!-- Centered Drawing Image Canvas -->
+                          <div class="w-full h-full p-1.5 flex items-center justify-center">
+                            <img :src="getCurrentDrawingUrl(cs)" 
+                                 :alt="'Drawing ' + cs.part_number"
+                                 loading="lazy"
+                                 class="w-full h-full object-contain filter group-hover/thumb:brightness-105 transition-transform duration-200 group-hover/thumb:scale-[1.02]" />
+                          </div>
+
+                          <!-- Multi-drawing Badges & Controls (if > 1 drawing) -->
+                          <template v-if="getDrawingList(cs).length > 1">
+                            <!-- Top Left: Page Index Counter -->
+                            <div class="absolute top-1.5 left-1.5 z-10 pointer-events-none">
+                              <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-black/85 backdrop-blur-sm text-zinc-200 border border-white/10 shadow flex items-center gap-1">
+                                <span>{{ getActiveDrawingIdx(cs.id, getDrawingList(cs).length) + 1 }}</span>
+                                <span class="text-zinc-500">/</span>
+                                <span>{{ getDrawingList(cs).length }}</span>
+                              </span>
+                            </div>
+
+                            <!-- Top Right: Multi-sheet Badge -->
+                            <div class="absolute top-1.5 right-1.5 z-10 pointer-events-none">
+                              <span class="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-indigo-950/90 backdrop-blur-sm text-indigo-300 border border-indigo-700/60 shadow flex items-center gap-1">
+                                <svg class="w-2.5 h-2.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                  <rect x="7" y="7" width="14" height="14" rx="2" ry="2"></rect>
+                                  <path d="M3 17V5a2 2 0 0 1 2-2h12"></path>
+                                </svg>
+                                <span>{{ getDrawingList(cs).length }} Lbr</span>
+                              </span>
+                            </div>
+
+                            <!-- Left Arrow Button (visible on hover) -->
+                            <button type="button"
+                                    @click.stop="prevDrawingIdx(cs.id, getDrawingList(cs).length)"
+                                    class="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/80 backdrop-blur-sm border border-white/15 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 hover:bg-indigo-600 hover:border-indigo-500 transition-all z-20 cursor-pointer shadow-md"
+                                    title="Drawing sebelumnya">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                               </svg>
-                              Zoom
+                            </button>
+
+                            <!-- Right Arrow Button (visible on hover) -->
+                            <button type="button"
+                                    @click.stop="nextDrawingIdx(cs.id, getDrawingList(cs).length)"
+                                    class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/80 backdrop-blur-sm border border-white/15 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 hover:bg-indigo-600 hover:border-indigo-500 transition-all z-20 cursor-pointer shadow-md"
+                                    title="Drawing berikutnya">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+
+                            <!-- Bottom Pagination Dot Indicators -->
+                            <div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-full border border-white/10 z-20 shadow-sm"
+                                 @click.stop>
+                              <button v-for="(imgItem, dIdx) in getDrawingList(cs)" :key="dIdx"
+                                      type="button"
+                                      @click.stop="setActiveDrawingIdx(cs.id, dIdx)"
+                                      @mouseenter="setActiveDrawingIdx(cs.id, dIdx)"
+                                      class="rounded-full transition-all duration-200 cursor-pointer focus:outline-none"
+                                      :class="dIdx === getActiveDrawingIdx(cs.id, getDrawingList(cs).length)
+                                        ? 'w-4 h-1.5 bg-indigo-400 ring-1 ring-indigo-300/50'
+                                        : 'w-1.5 h-1.5 bg-zinc-500/80 hover:bg-zinc-300'"
+                                      :title="'Lihat lembar drawing ke-' + (dIdx + 1)">
+                              </button>
+                            </div>
+                          </template>
+
+                          <!-- Center Hover Overlay: Quick Review -->
+                          <div class="absolute inset-0 bg-indigo-950/25 backdrop-blur-[0.5px] opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-150 flex items-center justify-center pointer-events-none z-10">
+                            <span class="px-2.5 py-1 rounded-lg bg-black/85 backdrop-blur-sm text-zinc-100 text-[11px] font-semibold flex items-center gap-1.5 shadow-lg border border-zinc-700/60 group-hover/thumb:scale-105 transition-transform duration-150">
+                              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                              Quick Review
                             </span>
                           </div>
-                        </div>
-                      </div>
+                        </template>
 
-                      <!-- Single Drawing -->
-                      <div v-else-if="cs.thumbnail_url" 
-                           @click.stop="openQuickImageReview(cs, 0)"
-                           class="relative inline-flex items-center justify-center bg-zinc-950/90 border border-zinc-700/80 rounded-xl p-1.5 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-500/40 transition-all cursor-zoom-in group/thumb shadow-md overflow-hidden mx-auto"
-                           :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"
-                           :title="'Klik untuk Quick Review drawing: ' + cs.part_number">
-                        <img :src="cs.thumbnail_url" 
-                             alt="Drawing"
-                             loading="lazy"
-                             class="w-full h-full object-contain filter group-hover/thumb:brightness-110 transition-transform duration-200 group-hover/thumb:scale-105" />
-                        <div class="absolute inset-0 bg-indigo-950/25 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                          <span class="px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-sm text-zinc-100 text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-zinc-700/50">
-                            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                            </svg>
-                            Zoom
-                          </span>
-                        </div>
-                      </div>
-
-                      <!-- No Drawing -->
-                      <div v-else 
-                           class="inline-flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800/80 bg-zinc-950/40 text-zinc-600 select-none mx-auto transition-all"
-                           :class="thumbnailSize === 'xl' ? 'w-72 h-56' : (thumbnailSize === 'normal' ? 'w-44 h-28' : 'w-56 h-40')"
-                           title="Belum ada gambar drawing untuk part ini">
-                        <svg class="w-8 h-8 opacity-35 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-xs font-medium text-zinc-500 tracking-tight">Tidak Ada Drawing</span>
+                        <!-- STATE 2: EMPTY STATE (NO DRAWING) -->
+                        <template v-else>
+                          <div class="w-full h-full flex flex-col items-center justify-center p-2 text-center group/nothumb hover:bg-zinc-950/60 transition-colors">
+                            <div class="w-7 h-7 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-center mb-1 text-zinc-500 group-hover/nothumb:text-zinc-400 group-hover/nothumb:border-zinc-700 transition-colors">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <span class="text-[10px] font-medium text-zinc-500 group-hover/nothumb:text-zinc-400 tracking-tight">Tidak Ada Drawing</span>
+                          </div>
+                        </template>
                       </div>
                     </td>
 
@@ -4404,18 +4446,68 @@
           localStorage.setItem('showImageThumbnails_v2', showImageThumbnails.value ? 'true' : 'false');
         };
 
-        // Thumbnail Size: 'normal' (112px - default), 'large' (160px), 'xl' (224px)
+        // Thumbnail Size: 'normal' (112px - default), 'large' (150px), 'xl' (190px)
         const thumbnailSize = ref(localStorage.getItem('thumbnailSize') || 'normal');
         const thumbnailSizeLabel = computed(() => {
           if (thumbnailSize.value === 'normal') return 'Sedang (112px)';
-          if (thumbnailSize.value === 'xl') return 'Ekstra (224px)';
-          return 'Besar (160px)';
+          if (thumbnailSize.value === 'xl') return 'Ekstra (190px)';
+          return 'Besar (150px)';
         });
         const cycleThumbnailSize = () => {
           const sizes = ['normal', 'large', 'xl'];
           const nextIdx = (sizes.indexOf(thumbnailSize.value) + 1) % sizes.length;
           thumbnailSize.value = sizes[nextIdx];
           localStorage.setItem('thumbnailSize', thumbnailSize.value);
+        };
+
+        // Table Drawing Gallery Utilities
+        const activeDrawingMap = ref({});
+
+        const getDrawingList = (cs) => {
+          if (!cs) return [];
+          if (Array.isArray(cs.image_urls) && cs.image_urls.length > 0) {
+            return cs.image_urls.filter(Boolean);
+          }
+          if (cs.thumbnail_url) {
+            return [cs.thumbnail_url];
+          }
+          return [];
+        };
+
+        const hasDrawing = (cs) => {
+          return getDrawingList(cs).length > 0;
+        };
+
+        const getActiveDrawingIdx = (csId, totalLength) => {
+          if (!csId || !totalLength || totalLength <= 1) return 0;
+          const curr = activeDrawingMap.value[csId] || 0;
+          return curr % totalLength;
+        };
+
+        const setActiveDrawingIdx = (csId, idx) => {
+          if (!csId) return;
+          activeDrawingMap.value = { ...activeDrawingMap.value, [csId]: idx };
+        };
+
+        const prevDrawingIdx = (csId, totalLength) => {
+          if (!csId || !totalLength || totalLength <= 1) return;
+          const curr = getActiveDrawingIdx(csId, totalLength);
+          const next = (curr - 1 + totalLength) % totalLength;
+          setActiveDrawingIdx(csId, next);
+        };
+
+        const nextDrawingIdx = (csId, totalLength) => {
+          if (!csId || !totalLength || totalLength <= 1) return;
+          const curr = getActiveDrawingIdx(csId, totalLength);
+          const next = (curr + 1) % totalLength;
+          setActiveDrawingIdx(csId, next);
+        };
+
+        const getCurrentDrawingUrl = (cs) => {
+          const list = getDrawingList(cs);
+          if (list.length === 0) return null;
+          const idx = getActiveDrawingIdx(cs.id, list.length);
+          return list[idx] || list[0];
         };
         const quickReviewModal = ref({
           isOpen: false,
@@ -8686,6 +8778,14 @@
           thumbnailSize,
           thumbnailSizeLabel,
           cycleThumbnailSize,
+          activeDrawingMap,
+          getDrawingList,
+          hasDrawing,
+          getActiveDrawingIdx,
+          setActiveDrawingIdx,
+          prevDrawingIdx,
+          nextDrawingIdx,
+          getCurrentDrawingUrl,
           quickReviewModal,
           currentQuickImageUrl,
           openQuickImageReview,
