@@ -84,7 +84,9 @@ async def parse_and_save_checksheet(
 
     # Determine category based on file path and parser type
     fp_upper = file_path.upper().replace("\\", "/")
+    filename_upper = os.path.basename(file_path).upper()
     parser_name = parser.__class__.__name__.lower()
+
     if "MONTHLY FG" in fp_upper or "MONTHLY_FG" in fp_upper:
         category = "Accuracy"
     elif "CHILD PART" in fp_upper or "CHILD_PART" in fp_upper:
@@ -95,6 +97,10 @@ async def parse_and_save_checksheet(
         category = "Accuracy"
     elif "SSW" in fp_upper or "SPOT NUT" in fp_upper or "SPOT_NUT" in fp_upper:
         category = "Accuracy SSW"
+    elif "STD PART" in filename_upper or "NUT" in filename_upper or "/C.SHEET NUT" in fp_upper:
+        category = "Incomming Std Part"
+    elif "BLANK" in fp_upper or "IQC SHEET" in filename_upper or "IQC COIL" in filename_upper or "MATERIAL" in filename_upper:
+        category = "Incomming Material"
     elif "SUBCONT" in fp_upper or "subcont" in parser_name:
         category = "Incomming Subcont Part"
     elif "MATERIAL" in fp_upper or "incoming" in parser_name:
