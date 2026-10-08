@@ -921,416 +921,141 @@
 
         <!-- PAGE 2: CHECKSHEETS OPERATIONAL WORKSPACE -->
         <main v-show="activePage === 'checksheets'" class="flex-1 w-full max-w-[99vw] 2xl:max-w-[1920px] mx-auto px-3 sm:px-5 lg:px-6 py-4 flex flex-col gap-3.5">
-          <!-- 2-TIER WORKFLOW & CATEGORY CONTROL CENTER -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3 shadow-sm">
-            <!-- Tier 1: Alur Kerja Operasional (Workflow Status) -->
-            <div class="flex flex-wrap items-center justify-between gap-2.5">
-              <div class="flex items-center gap-2 overflow-x-auto max-w-full pb-0.5">
-                <!-- Tab 1: Perlu Dikerjakan (Default To-Do) -->
-                <button @click="workflowTab = 'TODO'; statusFilter = 'ALL'"
-                        :class="workflowTab === 'TODO' 
-                          ? 'bg-amber-950 text-amber-200 border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/50' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
-                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
-                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'TODO' ? 'bg-amber-400 animate-pulse' : 'bg-amber-500/60'"></span>
-                  <span>Perlu Dikerjakan</span>
-                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
-                        :class="workflowTab === 'TODO' ? 'bg-amber-800/90 text-amber-100' : 'bg-zinc-800 text-zinc-400'">
-                    {{ countTodo }}
-                  </span>
-                </button>
+          <!-- COMMAND CENTER TIER 1: WORKFLOW TABS & REAL-TIME PROGRESS -->
+          <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <!-- Left: Main Workflow Status Tabs (Segmented Control) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto p-1 bg-zinc-950/80 rounded-xl border border-zinc-800/80 scrollbar-none shrink-0 max-w-full">
+              <!-- 1: Perlu Dikerjakan -->
+              <button @click="workflowTab = 'TODO'; statusFilter = 'ALL'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :class="workflowTab === 'TODO' 
+                        ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-sm ring-1 ring-amber-500/20' 
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'">
+                <span class="w-2 h-2 rounded-full" :class="workflowTab === 'TODO' ? 'bg-amber-400 animate-pulse' : 'bg-amber-500/60'"></span>
+                <span>Perlu Dikerjakan</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded-md font-bold"
+                      :class="workflowTab === 'TODO' ? 'bg-amber-900/80 text-amber-200' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countTodo }}
+                </span>
+              </button>
 
-                <!-- Tab 2: Siap Kirim (Reviewed) -->
-                <button @click="workflowTab = 'READY'; statusFilter = 'ALL'"
-                        :class="workflowTab === 'READY' 
-                          ? 'bg-sky-950 text-sky-200 border-sky-600 font-bold shadow-sm ring-1 ring-sky-500/50' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
-                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
-                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'READY' ? 'bg-sky-400' : 'bg-sky-500/60'"></span>
-                  <span>Siap Kirim</span>
-                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
-                        :class="workflowTab === 'READY' ? 'bg-sky-800/90 text-sky-100' : 'bg-zinc-800 text-zinc-400'">
-                    {{ countReady }}
-                  </span>
-                </button>
+              <!-- 2: Siap Kirim -->
+              <button @click="workflowTab = 'READY'; statusFilter = 'ALL'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :class="workflowTab === 'READY' 
+                        ? 'bg-sky-500/20 text-sky-200 border border-sky-500/50 shadow-sm ring-1 ring-sky-500/20' 
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'">
+                <span class="w-2 h-2 rounded-full" :class="workflowTab === 'READY' ? 'bg-sky-400' : 'bg-sky-500/60'"></span>
+                <span>Siap Kirim</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded-md font-bold"
+                      :class="workflowTab === 'READY' ? 'bg-sky-900/80 text-sky-200' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countReady }}
+                </span>
+              </button>
 
-                <!-- Tab 3: Selesai (Checksheet Done) -->
-                <button @click="workflowTab = 'DONE'; statusFilter = 'ALL'"
-                        :class="workflowTab === 'DONE' 
-                          ? 'bg-emerald-950 text-emerald-200 border-emerald-600 font-bold shadow-sm ring-1 ring-emerald-500/50' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
-                        class="px-4 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2.5 shrink-0 cursor-pointer">
-                  <span class="w-2.5 h-2.5 rounded-full" :class="workflowTab === 'DONE' ? 'bg-emerald-400' : 'bg-emerald-500/60'"></span>
-                  <span>Selesai</span>
-                  <span class="font-mono text-xs px-2 py-0.5 rounded-full font-bold"
-                        :class="workflowTab === 'DONE' ? 'bg-emerald-800/90 text-emerald-100' : 'bg-zinc-800 text-zinc-400'">
-                    {{ countDone }}
-                  </span>
-                </button>
+              <!-- 3: Selesai -->
+              <button @click="workflowTab = 'DONE'; statusFilter = 'ALL'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :class="workflowTab === 'DONE' 
+                        ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/50 shadow-sm ring-1 ring-emerald-500/20' 
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'">
+                <span class="w-2 h-2 rounded-full" :class="workflowTab === 'DONE' ? 'bg-emerald-400' : 'bg-emerald-500/60'"></span>
+                <span>Selesai</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded-md font-bold"
+                      :class="workflowTab === 'DONE' ? 'bg-emerald-900/80 text-emerald-200' : 'bg-zinc-800 text-zinc-400'">
+                  {{ countDone }}
+                </span>
+              </button>
 
-                <span class="h-5 w-px bg-zinc-800 mx-1"></span>
+              <!-- 4: Masalah / Pending -->
+              <button @click="workflowTab = 'ISSUES'; statusFilter = 'ALL'"
+                      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :class="workflowTab === 'ISSUES' 
+                        ? 'bg-rose-500/20 text-rose-200 border border-rose-500/50 shadow-sm ring-1 ring-rose-500/20' 
+                        : 'text-rose-400/80 hover:text-rose-300 hover:bg-zinc-800/60'"
+                      title="Part yang belum ada di Master Part FactoryHub atau Dibatalkan">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span>Masalah</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded-md font-bold"
+                      :class="workflowTab === 'ISSUES' ? 'bg-rose-900/80 text-rose-200' : 'bg-zinc-800 text-rose-400'">
+                  {{ countIssues }}
+                </span>
+              </button>
 
-                <!-- Tab 4: Semua Part (Archive & Overview) -->
-                <button @click="workflowTab = 'ALL'; statusFilter = 'ALL'"
-                        :class="workflowTab === 'ALL' 
-                          ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-sm' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-zinc-800'"
-                        class="px-3.5 py-2 rounded-lg border text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                        :title="hideNoPart ? ('Menampilkan part aktif (' + (checksheets.length - countIssues) + ' part). ' + countIssues + ' part \'Tidak Ada Part\' disembunyikan.') : 'Menampilkan seluruh ' + checksheets.length + ' part'">
-                  <span>Semua Part</span>
-                  <span class="font-mono text-xs px-2 py-0.5 rounded text-zinc-300 bg-zinc-950/80">
-                    {{ hideNoPart ? (checksheets.length - countIssues) : checksheets.length }}
-                  </span>
-                </button>
+              <!-- 5: Semua Part -->
+              <button @click="workflowTab = 'ALL'; statusFilter = 'ALL'"
+                      class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                      :class="workflowTab === 'ALL' 
+                        ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 shadow-sm' 
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'">
+                <span>Semua</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded-md text-zinc-300 bg-zinc-950/80">
+                  {{ checksheets.length }}
+                </span>
+              </button>
+            </div>
 
-                <!-- Tab 5 (Kecil/Opsional): Masalah (Tidak Ada Part & Canceled) jika ada -->
-                <div v-if="countIssues > 0" class="inline-flex items-center rounded-lg border shrink-0"
-                     :class="workflowTab === 'ISSUES' ? 'bg-rose-950 border-rose-700' : 'border-zinc-800 bg-zinc-950/40'">
-                  <button @click="workflowTab = 'ISSUES'; statusFilter = 'ALL'"
-                          :class="workflowTab === 'ISSUES' ? 'text-rose-200 font-bold' : 'text-rose-400/80 hover:text-rose-300 hover:bg-zinc-800/60'"
-                          class="px-3 py-2 text-xs sm:text-sm transition-colors flex items-center gap-2 rounded-lg cursor-pointer"
-                          title="Part yang belum ada di Master atau Dibatalkan">
-                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                    <span>Masalah / Pending</span>
-                    <span class="font-mono text-xs px-2 py-0.5 rounded font-bold"
-                          :class="workflowTab === 'ISSUES' ? 'bg-rose-800/90 text-rose-100' : 'text-rose-400'">
-                      {{ countIssues }}
-                    </span>
-                  </button>
+            <!-- Right: Real-time Progress Widget & Sync Actions -->
+            <div class="flex items-center gap-3 bg-zinc-950/60 px-3.5 py-2 rounded-xl border border-zinc-800/80 shrink-0 self-stretch md:self-auto justify-between md:justify-end">
+              <!-- Progress Details -->
+              <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-1.5 text-[11px]">
+                  <span class="text-zinc-400">{{ myQueueStats.title }}:</span>
+                  <span class="font-mono font-bold text-zinc-200">{{ myQueueStats.finished }} / {{ myQueueStats.total }} Selesai</span>
                 </div>
+                <!-- Progress Bar -->
+                <div class="w-20 sm:w-28 h-2 bg-zinc-800 rounded-full overflow-hidden flex shadow-inner">
+                  <div class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full transition-all duration-300 rounded-full"
+                       :style="{ width: myQueueStats.percent + '%' }"></div>
+                </div>
+                <span class="font-mono text-xs font-bold text-indigo-300">{{ myQueueStats.percent }}%</span>
               </div>
 
-              <!-- Statistik Kemajuan Part Kita (Berapa Part Kita, Sudah Berapa, Sisa Berapa) -->
-              <div class="flex items-center gap-2.5 bg-zinc-950/90 px-3 py-1.5 rounded-xl border border-zinc-800 shadow-sm shrink-0 ml-auto flex-wrap">
-                <!-- Label & Total Part Kita -->
-                <div class="flex items-center gap-1.5" title="Total part aktif dalam antrean kerja">
-                  <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                  <span class="text-xs font-bold text-zinc-300">{{ myQueueStats.title }}:</span>
-                  <span class="font-mono text-xs font-extrabold text-white bg-indigo-950/90 border border-indigo-700/70 px-2 py-0.5 rounded shadow-sm">
-                    {{ myQueueStats.total }}
-                  </span>
-                </div>
+              <span class="h-4 w-px bg-zinc-800 hidden sm:block"></span>
 
-                <span class="h-4 w-px bg-zinc-800 hidden sm:block"></span>
-
-                <!-- Sudah Selesai (Siap Kirim & Done) -->
-                <button type="button"
-                        @click="workflowTab = 'READY'; statusFilter = 'ALL'"
-                        class="flex items-center gap-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity" 
-                        title="Klik untuk melihat part yang sudah Siap Kirim atau Selesai">
-                  <span class="text-zinc-400">Sudah:</span>
-                  <span class="font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
-                    {{ myQueueStats.finished }}
-                  </span>
-                </button>
-
-                <!-- Sisa (Belum Dikerjakan & Revisi) -->
-                <button type="button"
-                        @click="workflowTab = 'TODO'; statusFilter = 'ALL'"
-                        class="flex items-center gap-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity" 
-                        title="Klik untuk melihat sisa part yang belum selesai atau perlu revisi">
-                  <span class="text-zinc-400">Sisa:</span>
-                  <span class="font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.5 rounded">
-                    {{ myQueueStats.remaining }}
-                  </span>
-                </button>
-
-                <!-- Mini Progress Bar & Persentase -->
-                <div class="flex items-center gap-2 pl-1 border-l border-zinc-800/80">
-                  <div class="w-14 sm:w-20 h-2 bg-zinc-800 rounded-full overflow-hidden flex shadow-inner">
-                    <div class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full transition-all duration-300 rounded-full"
-                         :style="{ width: myQueueStats.percent + '%' }"></div>
-                  </div>
-                  <span class="font-mono text-xs font-extrabold text-indigo-300">{{ myQueueStats.percent }}%</span>
-                </div>
-
-                <!-- Reset Filter jika aktif -->
-                <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name)"
+              <!-- Action Buttons: Reset & Refresh -->
+              <div class="flex items-center gap-1.5">
+                <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name) || (currentUser.role === 'admin' && activeTeam !== 'Semua')"
                         @click="resetFilters"
-                        class="px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg border border-zinc-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer ml-1"
+                        class="px-2.5 py-1 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-950/40 rounded-lg border border-amber-800/60 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
                         title="Reset semua filter">
-                  <svg class="w-3 h-3 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
                   <span>Reset</span>
                 </button>
 
-                <!-- Tombol Refresh Data Terbaru (Bypass Cache & Sync Supabase) -->
                 <button @click="loadChecksheets(false, true)"
                         :disabled="isLoading"
-                        class="px-2.5 py-1 text-xs text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg border border-zinc-700/60 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ml-1 shadow-sm disabled:opacity-50"
-                        title="Ambil data & gambar drawing terbaru dari database Supabase (sinkronisasi multi-user)">
+                        class="px-2.5 py-1 text-xs text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg border border-zinc-700/60 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm disabled:opacity-50"
+                        title="Sinkronisasi data & drawing terbaru dari Supabase">
                   <svg :class="{ 'animate-spin': isLoading }" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span class="hidden sm:inline">Refresh Data</span>
+                  <span>Refresh</span>
                 </button>
               </div>
-            </div>
-
-            <!-- Sub-filter Status Detail (Saat berada di tab Perlu Dikerjakan) -->
-            <div v-if="workflowTab === 'TODO'" class="pt-2 border-t border-zinc-800/60 flex items-center gap-1.5 overflow-x-auto max-w-full pb-0.5">
-              <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-                <span>Filter Status:</span>
-              </span>
-              <button @click="statusFilter = 'ALL'"
-                      :class="statusFilter === 'ALL'
-                        ? 'bg-zinc-200 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
-                      class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
-                Semua Antrean ({{ countTodo }})
-              </button>
-              <button @click="statusFilter = 'Belum Dikerjakan'"
-                      :class="statusFilter === 'Belum Dikerjakan'
-                        ? 'bg-amber-950 text-amber-200 border border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/40'
-                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
-                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span>Belum Dikerjakan ({{ countStatus('Belum Dikerjakan') }})</span>
-              </button>
-              <button @click="statusFilter = 'Perlu Revisi Isi'"
-                      :class="statusFilter === 'Perlu Revisi Isi'
-                        ? 'bg-amber-950 text-amber-200 border border-amber-500 font-bold shadow-sm ring-1 ring-amber-500/40'
-                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
-                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span>Perlu Revisi Isi ({{ countStatus('Perlu Revisi Isi') }})</span>
-              </button>
-              <button @click="statusFilter = 'Perlu Revisi Gambar'"
-                      :class="statusFilter === 'Perlu Revisi Gambar'
-                        ? 'bg-purple-950 text-purple-200 border border-purple-500 font-bold shadow-sm ring-1 ring-purple-500/40'
-                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800'"
-                      class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                <span>Perlu Revisi Gambar ({{ countStatus('Perlu Revisi Gambar') }})</span>
-              </button>
-            </div>
-
-            <!-- Tier 2: Kategori Part (Besar & Prominen di Bawah Workflow) -->
-            <div class="pt-2.5 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto max-w-full pb-0.5">
-              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span>Kategori:</span>
-              </span>
-
-              <!-- Tab Kategori 1: Semua Kategori -->
-              <button @click="toggleCategoryFilter('ALL')"
-                      :class="categoryFilter === 'ALL'
-                        ? 'bg-zinc-100 text-zinc-950 font-bold border-white shadow-sm'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer">
-                <span>Semua Kategori</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'ALL' ? 'bg-zinc-800 text-white' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('ALL') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 2: Subcont Part -->
-              <button @click="toggleCategoryFilter('Incomming Subcont Part')"
-                      :class="categoryFilter === 'Incomming Subcont Part'
-                        ? 'bg-amber-950 text-amber-200 border-amber-600 font-bold shadow-sm ring-1 ring-amber-500/50'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('Incomming Subcont Part')">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                <span>Subcont Part</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'Incomming Subcont Part' ? 'bg-amber-800 text-amber-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('Incomming Subcont Part') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 3: Material -->
-              <button @click="toggleCategoryFilter('Incomming Material')"
-                      :class="categoryFilter === 'Incomming Material'
-                        ? 'bg-cyan-950 text-cyan-200 border-cyan-600 font-bold shadow-sm ring-1 ring-cyan-500/50'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('Incomming Material')">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                <span>Material</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'Incomming Material' ? 'bg-cyan-800 text-cyan-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('Incomming Material') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 4: Std Part -->
-              <button @click="toggleCategoryFilter('Incomming Std Part')"
-                      :class="categoryFilter === 'Incomming Std Part'
-                        ? 'bg-emerald-950 text-emerald-200 border-emerald-600 font-bold shadow-sm ring-1 ring-emerald-500/50'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('Incomming Std Part')">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <span>Std Part</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'Incomming Std Part' ? 'bg-emerald-800 text-emerald-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('Incomming Std Part') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 5: Accuracy SSW -->
-              <button @click="toggleCategoryFilter('Accuracy SSW')"
-                      :class="categoryFilter === 'Accuracy SSW'
-                        ? 'bg-indigo-950 text-indigo-200 border-indigo-600 font-bold shadow-sm ring-1 ring-indigo-500/50'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('Accuracy SSW')">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-                <span>Accuracy SSW</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'Accuracy SSW' ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('Accuracy SSW') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 6: Accuracy -->
-              <button @click="toggleCategoryFilter('Accuracy')"
-                      :class="categoryFilter === 'Accuracy'
-                        ? 'bg-blue-950 text-blue-200 border-blue-600 font-bold shadow-sm ring-1 ring-blue-500/50'
-                        : 'bg-zinc-950/70 text-zinc-300 hover:text-white hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('Accuracy')">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
-                <span>Accuracy</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'Accuracy' ? 'bg-blue-800 text-blue-100' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('Accuracy') }}
-                </span>
-              </button>
-
-              <!-- Tab Kategori 7: General (jika ada) -->
-              <button v-if="countCategory('General') > 0 || categoryFilter === 'General'"
-                      @click="toggleCategoryFilter('General')"
-                      :class="categoryFilter === 'General'
-                        ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-sm'
-                        : 'bg-zinc-950/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border-zinc-800'"
-                      class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                      :title="'Total di database: ' + countCategory('General')">
-                <span class="w-2.5 h-2.5 rounded-full bg-zinc-400"></span>
-                <span>General</span>
-                <span class="font-mono text-[11px] px-2 py-0.2 rounded-full font-bold"
-                      :class="categoryFilter === 'General' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
-                  {{ countCategoryInWorkflow('General') }}
-                </span>
-              </button>
             </div>
           </div>
 
-          <!-- Controls Toolbar: Scope Tabs + Action Buttons + Unified Search & Category Filter -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3 shadow-sm">
-            <!-- Row 1: Scope Tabs & Action Buttons -->
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <!-- ADMIN TABS -->
-              <div v-if="currentUser.role === 'admin'" class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-full">
-                <button @click="activeTeam = 'Semua'"
-                        :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0">
-                  Semua Part
-                  <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
-                </button>
-                <button @click="activeTeam = 'Unassigned'"
-                        :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
-                  <span>Belum Ditugaskan</span>
-                  <span class="ml-1 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
-                    ({{ countUnassigned() }})
-                  </span>
-                </button>
-                <button v-for="u in operatorUsers" :key="u.id"
-                        @click="activeTeam = u.name"
-                        :class="activeTeam === u.name ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-colors shrink-0">
-                  {{ u.name }}
-                  <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ countByTeam(u.name) }})</span>
+          <!-- COMMAND CENTER TIER 2: UNIFIED FILTERS & ACTIONS TOOLBAR -->
+          <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2.5 shadow-sm">
+            <!-- Row 1: Fast Search + Display Toggles + Primary Actions -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+              <!-- Search Input -->
+              <div class="relative flex-1 min-w-[240px] max-w-xl">
+                <input v-model="searchQuery" type="text"
+                       placeholder="Cari part number, nama part, model, customer..."
+                       class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 focus:outline-none transition-colors">
+                <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button v-if="searchQuery" @click="searchQuery = ''" aria-label="Hapus pencarian" class="absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
 
-              <!-- OPERATOR TABS -->
-              <div v-else class="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto max-w-full">
-                <button @click="activeTeam = currentUser.name"
-                        :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                  <span>Task Sendiri ({{ currentUser.name }})</span>
-                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                        :class="activeTeam === currentUser.name ? 'bg-indigo-800 text-indigo-100' : 'bg-zinc-800 text-zinc-400'">
-                    {{ countByTeam(currentUser.name) }}
-                  </span>
-                </button>
-
-                <button @click="activeTeam = 'Unassigned'"
-                        :class="activeTeam === 'Unassigned' ? 'bg-amber-600 text-white font-semibold shadow-sm ring-1 ring-amber-400' : 'text-amber-400/90 hover:text-amber-300 hover:bg-zinc-900'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
-                        title="Klik untuk melihat task bebas yang bisa Anda ambil untuk dikerjakan">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                  <span>Belum Ditugaskan</span>
-                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold"
-                        :class="activeTeam === 'Unassigned' ? 'bg-amber-800 text-amber-100' : 'bg-amber-950 text-amber-300 border border-amber-800/80'">
-                    {{ countUnassigned() }}
-                  </span>
-                </button>
-
-                <button @click="activeTeam = 'LAINNYA'"
-                        :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
-                        class="px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                  <span>Task Operator Lain</span>
-                  <span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono"
-                        :class="activeTeam === 'LAINNYA' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800 text-zinc-400'">
-                    {{ countOtherTasks() }}
-                  </span>
-                </button>
-              </div>
-
-              <!-- Contextual Action Buttons -->
-              <div class="flex items-center gap-2 ml-auto shrink-0">
-                <!-- Ambil Task Button (when unassigned tasks are checked) -->
-                <button v-if="selectedUnassignedCount > 0"
-                        @click="claimSelectedTasks"
-                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
-                        :title="'Ambil ' + selectedUnassignedCount + ' task terpilih untuk dikerjakan'">
-                  <svg class="w-3.5 h-3.5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  <span>Ambil ({{ selectedUnassignedCount }}) Task</span>
-                </button>
-
-                <!-- Kirim Batch Button -->
-                <button v-if="selectedIds.length === 0 || canBatchSendSelected"
-                        @click="selectedIds.length > 0 ? startDirectBatchAutomation() : openBatchModal()"
-                        :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'"
-                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
-                        :title="selectedIds.length > 0 ? 'Kirim ' + selectedIds.length + ' part yang dicentang ke FactoryHub' : 'Kirim batch otomasi Playwright'">
-                  <svg class="w-3.5 h-3.5" :class="selectedIds.length > 0 ? 'text-white' : 'text-emerald-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                  </svg>
-                  <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Row 2: Search and Image View Options -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-zinc-800/80">
-              <div class="flex items-center gap-2.5 flex-1 max-w-xl">
-                <!-- Search Input -->
-                <div class="relative w-full">
-                  <input v-model="searchQuery" type="text"
-                         placeholder="Cari part number, nama part, model, atau kategori..."
-                         class="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none transition-colors">
-                  <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                  </svg>
-                  <button v-if="searchQuery" @click="searchQuery = ''" aria-label="Hapus pencarian" class="absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- View Controls: Hide No-Part, Mode Gambar & Ukuran Tinggi -->
+              <!-- Right Controls: Toggle Hidden Issues, Mode Gambar, Ukuran Drawing, Ambil Task, Kirim Batch -->
               <div class="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
                 <!-- Toggle Sembunyikan Tidak Ada Part -->
                 <button type="button"
@@ -1339,27 +1064,29 @@
                           ? 'bg-amber-950/60 text-amber-300 border-amber-600/70 shadow-sm ring-1 ring-amber-500/30 font-semibold' 
                           : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
                         class="px-2.5 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                        :title="hideNoPart ? ('Sedang menyembunyikan part \'Tidak Ada Part\' & \'Canceled\' (' + countIssues + ' part). Klik untuk menampilkan semua.') : 'Klik untuk menyembunyikan part \'Tidak Ada Part\' agar tidak terbuka di antrean kerja'">
+                        :title="hideNoPart ? ('Sedang menyembunyikan part \'Tidak Ada Part\' (' + countIssues + ' part). Klik untuk menampilkan.') : 'Sembunyikan part \'Tidak Ada Part\' dari tabel'">
                   <svg class="w-3.5 h-3.5" :class="hideNoPart ? 'text-amber-400' : 'text-zinc-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path v-if="hideNoPart" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                     <path v-else stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  <span>{{ hideNoPart ? 'Hidden: Tidak Ada Part (' + countIssues + ')' : 'Sembunyikan: Tidak Ada Part' }}</span>
+                  <span>{{ hideNoPart ? 'Hidden Masalah (' + countIssues + ')' : 'Sembunyikan Masalah' }}</span>
                 </button>
 
+                <!-- Toggle Mode Gambar -->
                 <button type="button"
                         @click="toggleImageThumbnails"
                         :class="showImageThumbnails 
                           ? 'bg-indigo-600/25 text-indigo-300 border-indigo-500/60 shadow-sm ring-1 ring-indigo-500/30 font-semibold' 
                           : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
-                        class="px-3 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                        :title="showImageThumbnails ? 'Sembunyikan thumbnail gambar pada tabel' : 'Aktifkan Mode Gambar untuk Quick Review visual langsung di tabel'">
+                        class="px-2.5 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+                        :title="showImageThumbnails ? 'Sembunyikan thumbnail gambar pada tabel' : 'Tampilkan thumbnail gambar drawing di tabel'">
                   <svg class="w-3.5 h-3.5" :class="showImageThumbnails ? 'text-indigo-400' : 'text-zinc-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>{{ showImageThumbnails ? 'Mode Gambar: Aktif' : 'Mode Gambar' }}</span>
+                  <span>{{ showImageThumbnails ? 'Mode Gambar' : 'Tanpa Gambar' }}</span>
                 </button>
 
+                <!-- Rotasi Ukuran Gambar -->
                 <button v-if="showImageThumbnails"
                         type="button"
                         @click="cycleThumbnailSize"
@@ -1370,6 +1097,209 @@
                   </svg>
                   <span>Ukuran: <strong class="text-indigo-300">{{ thumbnailSizeLabel }}</strong></span>
                 </button>
+
+                <!-- Tombol Ambil Task Terpilih -->
+                <button v-if="selectedUnassignedCount > 0"
+                        @click="claimSelectedTasks"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm animate-pulse"
+                        :title="'Ambil ' + selectedUnassignedCount + ' task terpilih untuk dikerjakan'">
+                  <svg class="w-3.5 h-3.5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  <span>Ambil ({{ selectedUnassignedCount }}) Task</span>
+                </button>
+
+                <!-- Tombol Kirim Batch -->
+                <button v-if="selectedIds.length === 0 || canBatchSendSelected"
+                        @click="selectedIds.length > 0 ? startDirectBatchAutomation() : openBatchModal()"
+                        :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400' : 'bg-emerald-700/80 hover:bg-emerald-600 text-white border border-emerald-600/60'"
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm">
+                  <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  </svg>
+                  <span>{{ selectedIds.length > 0 ? 'Kirim Batch (' + selectedIds.length + ')' : 'Kirim Batch' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Row 2: Unified Filter Chips (Operator + Kategori + Sub-Status Detail) -->
+            <div class="flex flex-wrap items-center gap-y-2 gap-x-4 pt-2 border-t border-zinc-800/80 text-xs">
+              <!-- Group 1: Filter Operator / Penanggung Jawab -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-0.5">
+                  <svg class="w-3 h-3 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  <span>Operator:</span>
+                </span>
+
+                <!-- ADMIN VIEW -->
+                <div v-if="currentUser.role === 'admin'" class="inline-flex items-center p-0.5 bg-zinc-950 rounded-lg border border-zinc-800 gap-0.5 overflow-x-auto">
+                  <button @click="activeTeam = 'Semua'"
+                          :class="activeTeam === 'Semua' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Semua
+                    <span class="ml-1 text-[10px] text-zinc-500 font-mono">({{ checksheets.length }})</span>
+                  </button>
+                  <button @click="activeTeam = 'Unassigned'"
+                          :class="activeTeam === 'Unassigned' ? 'bg-amber-950 text-amber-200 border border-amber-800 font-semibold' : 'text-zinc-400 hover:text-amber-300'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="countUnassigned() > 0 ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'"></span>
+                    <span>Belum Ditugaskan</span>
+                    <span class="ml-0.5 text-[10px] font-mono" :class="countUnassigned() > 0 ? 'text-amber-300 font-bold' : 'text-zinc-500'">
+                      ({{ countUnassigned() }})
+                    </span>
+                  </button>
+                  <button v-for="u in operatorUsers" :key="u.id"
+                          @click="activeTeam = u.name"
+                          :class="activeTeam === u.name ? 'bg-indigo-950 text-indigo-200 border border-indigo-700 font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    {{ u.name }}
+                    <span class="ml-1 text-[10px] font-mono" :class="activeTeam === u.name ? 'text-indigo-300' : 'text-zinc-500'">({{ countByTeam(u.name) }})</span>
+                  </button>
+                </div>
+
+                <!-- OPERATOR VIEW -->
+                <div v-else class="inline-flex items-center p-0.5 bg-zinc-950 rounded-lg border border-zinc-800 gap-0.5 overflow-x-auto">
+                  <button @click="activeTeam = currentUser.name"
+                          :class="activeTeam === currentUser.name ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Task Saya ({{ currentUser.name }})
+                    <span class="ml-1 text-[10px] font-mono opacity-80">({{ countByTeam(currentUser.name) }})</span>
+                  </button>
+                  <button @click="activeTeam = 'Unassigned'"
+                          :class="activeTeam === 'Unassigned' ? 'bg-amber-600 text-white font-semibold shadow-sm' : 'text-amber-400/90 hover:text-amber-300'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Belum Ditugaskan
+                    <span class="ml-1 text-[10px] font-mono font-bold">({{ countUnassigned() }})</span>
+                  </button>
+                  <button @click="activeTeam = 'LAINNYA'"
+                          :class="activeTeam === 'LAINNYA' ? 'bg-zinc-800 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Operator Lain
+                    <span class="ml-1 text-[10px] font-mono opacity-80">({{ countOtherTasks() }})</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Group 2: Filter Kategori Part -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-0.5">
+                  <svg class="w-3 h-3 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                  </svg>
+                  <span>Kategori:</span>
+                </span>
+
+                <div class="inline-flex items-center p-0.5 bg-zinc-950 rounded-lg border border-zinc-800 gap-0.5 overflow-x-auto">
+                  <!-- Semua Kategori -->
+                  <button @click="toggleCategoryFilter('ALL')"
+                          :class="categoryFilter === 'ALL'
+                            ? 'bg-zinc-800 text-white font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Semua
+                    <span class="ml-1 text-[10px] font-mono opacity-70">({{ countCategoryInWorkflow('ALL') }})</span>
+                  </button>
+
+                  <!-- Subcont Part -->
+                  <button @click="toggleCategoryFilter('Incomming Subcont Part')"
+                          :class="categoryFilter === 'Incomming Subcont Part'
+                            ? 'bg-amber-950 text-amber-200 border border-amber-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <span>Subcont</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Incomming Subcont Part') }})</span>
+                  </button>
+
+                  <!-- Material -->
+                  <button @click="toggleCategoryFilter('Incomming Material')"
+                          :class="categoryFilter === 'Incomming Material'
+                            ? 'bg-cyan-950 text-cyan-200 border border-cyan-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    <span>Material</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Incomming Material') }})</span>
+                  </button>
+
+                  <!-- Accuracy SSW -->
+                  <button v-if="countCategoryInWorkflow('Accuracy SSW') > 0 || categoryFilter === 'Accuracy SSW'"
+                          @click="toggleCategoryFilter('Accuracy SSW')"
+                          :class="categoryFilter === 'Accuracy SSW'
+                            ? 'bg-indigo-950 text-indigo-200 border border-indigo-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                    <span>Accuracy SSW</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Accuracy SSW') }})</span>
+                  </button>
+
+                  <!-- Accuracy -->
+                  <button v-if="countCategoryInWorkflow('Accuracy') > 0 || categoryFilter === 'Accuracy'"
+                          @click="toggleCategoryFilter('Accuracy')"
+                          :class="categoryFilter === 'Accuracy'
+                            ? 'bg-blue-950 text-blue-200 border border-blue-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                    <span>Accuracy</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Accuracy') }})</span>
+                  </button>
+
+                  <!-- Std Part (if > 0 or active) -->
+                  <button v-if="countCategoryInWorkflow('Incomming Std Part') > 0 || categoryFilter === 'Incomming Std Part'"
+                          @click="toggleCategoryFilter('Incomming Std Part')"
+                          :class="categoryFilter === 'Incomming Std Part'
+                            ? 'bg-emerald-950 text-emerald-200 border border-emerald-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Std Part</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Incomming Std Part') }})</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Group 3: Sub-Status Detail (Hanya saat workflowTab === 'TODO') -->
+              <div v-if="workflowTab === 'TODO'" class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider shrink-0 mr-0.5">Status Detail:</span>
+                <div class="inline-flex items-center p-0.5 bg-zinc-950 rounded-lg border border-zinc-800 gap-0.5 overflow-x-auto">
+                  <button @click="statusFilter = 'ALL'"
+                          :class="statusFilter === 'ALL'
+                            ? 'bg-zinc-800 text-white font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 cursor-pointer">
+                    Semua Todo ({{ countTodo }})
+                  </button>
+                  <button @click="statusFilter = 'Belum Dikerjakan'"
+                          :class="statusFilter === 'Belum Dikerjakan'
+                            ? 'bg-amber-950 text-amber-200 border border-amber-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <span>Belum Dikerjakan ({{ countStatus('Belum Dikerjakan') }})</span>
+                  </button>
+                  <button v-if="countStatus('Perlu Revisi Isi') > 0 || statusFilter === 'Perlu Revisi Isi'"
+                          @click="statusFilter = 'Perlu Revisi Isi'"
+                          :class="statusFilter === 'Perlu Revisi Isi'
+                            ? 'bg-amber-950 text-amber-200 border border-amber-500 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span>Revisi Isi ({{ countStatus('Perlu Revisi Isi') }})</span>
+                  </button>
+                  <button v-if="countStatus('Perlu Revisi Gambar') > 0 || statusFilter === 'Perlu Revisi Gambar'"
+                          @click="statusFilter = 'Perlu Revisi Gambar'"
+                          :class="statusFilter === 'Perlu Revisi Gambar'
+                            ? 'bg-purple-950 text-purple-200 border border-purple-500 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                    <span>Revisi Gambar ({{ countStatus('Perlu Revisi Gambar') }})</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
