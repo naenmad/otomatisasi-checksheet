@@ -3073,26 +3073,28 @@
                     </select>
                   </div>
 
-                  <!-- Header Status Indicator Badge -->
-                  <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800" title="Status checksheet saat ini">
-                    <span class="text-[10px] text-zinc-400 font-medium">Status:</span>
-                    <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
-                            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border cursor-pointer focus:outline-none bg-zinc-900 transition-colors shadow-sm"
-                            :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-600/80 text-emerald-300' :
-                                    (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'border-sky-600/80 text-sky-300' :
-                                    (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'border-zinc-700 text-zinc-300' :
-                                    (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'border-amber-600/80 text-amber-300' :
-                                    activeChecksheet.status === 'Perlu Revisi Gambar' ? 'border-purple-600/80 text-purple-300' :
-                                    (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-700 text-zinc-400' :
-                                    'border-rose-600/80 text-rose-300'">
-                      <option value="Belum Dikerjakan">Belum Dikerjakan</option>
-                      <option value="Siap Kirim">Siap Kirim</option>
-                      <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
-                      <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
-                      <option value="Checksheet Done">Checksheet Done</option>
-                      <option value="Tidak Ada Part">Tidak Ada Part</option>
-                      <option value="Canceled">Canceled</option>
-                    </select>
+                  <!-- Header Status Indicator Badge (Read-Only Display) -->
+                  <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800">
+                    <span class="text-[10px] text-zinc-500 font-medium tracking-wide uppercase">Status:</span>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all shadow-sm"
+                         :title="'Status saat ini: ' + (activeChecksheet.status || 'Belum Dikerjakan') + '. Untuk mengubah status, gunakan tombol di toolbar bawah.'"
+                         :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' :
+                                 (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'border-sky-500/40 bg-sky-500/10 text-sky-400' :
+                                 (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'border-zinc-700 bg-zinc-800/60 text-zinc-300' :
+                                 (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'border-amber-500/40 bg-amber-500/10 text-amber-400' :
+                                 activeChecksheet.status === 'Perlu Revisi Gambar' ? 'border-purple-500/40 bg-purple-500/10 text-purple-400' :
+                                 (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-700 bg-zinc-800/40 text-zinc-400' :
+                                 'border-rose-500/40 bg-rose-500/10 text-rose-400'">
+                      <span class="w-1.5 h-1.5 rounded-full animate-pulse"
+                            :class="activeChecksheet.status === 'Checksheet Done' ? 'bg-emerald-400' :
+                                    (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'bg-sky-400' :
+                                    (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'bg-zinc-400' :
+                                    (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'bg-amber-400' :
+                                    activeChecksheet.status === 'Perlu Revisi Gambar' ? 'bg-purple-400' :
+                                    (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'bg-zinc-500' :
+                                    'bg-rose-400'"></span>
+                      <span>{{ activeChecksheet.status || 'Belum Dikerjakan' }}</span>
+                    </div>
                   </div>
                   <!-- Quick Category Dropdown -->
                   <select v-model="activeChecksheet.category" @change="saveChecksheetMeta"
