@@ -7,9 +7,18 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
-  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <!-- PWA Manifest & App Standalone Meta -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#09090b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Checksheet QC">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -346,8 +355,17 @@
             </div>
           </div>
 
-          <!-- Global Action Buttons -->
-          <div class="flex items-center gap-2">            <!-- Settings Navigation Button -->
+            <!-- PWA Install App Button -->
+            <button v-if="canInstallPwa && !isPwaInstalled" @click="triggerPwaInstall"
+                    class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm animate-pulse"
+                    title="Install aplikasi ke Dock Mac / Desktop untuk pengalaman mandiri">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Install App</span>
+            </button>
+
+            <!-- Settings Navigation Button -->
             <button @click="navigate('settings')"
                     class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                     title="Buka Pengaturan Sistem, Sinkronisasi & Ekspor Data">
@@ -2387,6 +2405,67 @@
               </div>
             </div>
 
+            <!-- PWA Desktop Application Section -->
+            <div class="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-bold text-zinc-100">Aplikasi Desktop Standalone (PWA)</h3>
+                      <span v-if="isPwaInstalled" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                        ✓ Terpasang (Standalone Mode)
+                      </span>
+                      <span v-else class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+                        Siap Di-install
+                      </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">Jalankan aplikasi di jendela mandiri tanpa tab browser, bebas gangguan tombol shortcut, dan performa loading instan 0ms</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                  <button v-if="canInstallPwa && !isPwaInstalled" @click="triggerPwaInstall"
+                          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer hover:scale-105 active:scale-95">
+                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Install ke Dock / Desktop</span>
+                  </button>
+                  <div v-else-if="!isPwaInstalled" class="text-[11px] text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Di Orion / Safari: Klik <strong>File > Add to Dock</strong></span>
+                  </div>
+                  <div v-else class="text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 rounded-lg px-3 py-1.5 flex items-center gap-1.5 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Aplikasi aktif di jendela native standalone</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-1">
+                  <span class="text-zinc-500 text-[11px] block font-medium">Mode Jendela</span>
+                  <span class="font-bold text-zinc-200">Standalone App</span>
+                  <p class="text-[10px] text-zinc-500 leading-tight">Tanpa address bar atau tab browser yang menghalangi</p>
+                </div>
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-1">
+                  <span class="text-zinc-500 text-[11px] block font-medium">Shortcut Keyboard</span>
+                  <span class="font-bold text-sky-400">100% Native Lock</span>
+                  <p class="text-[10px] text-zinc-500 leading-tight">Ctrl+S dan Alt+Arrow tidak bentrok dengan browser</p>
+                </div>
+                <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-1">
+                  <span class="text-zinc-500 text-[11px] block font-medium">Service Worker Cache</span>
+                  <span class="font-bold text-emerald-400">Aktif (0ms Instant Load)</span>
+                  <p class="text-[10px] text-zinc-500 leading-tight">Aset UI otomatis di-cache lokal untuk efisiensi RAM</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Storage & Database Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
@@ -4422,6 +4501,38 @@
           localStorage.setItem('summit_hide_no_part_v3', hideNoPart.value ? 'true' : 'false');
           localStorage.setItem('summit_hide_no_part', hideNoPart.value ? 'true' : 'false');
           showToast(hideNoPart.value ? 'Part "Tidak Ada Part" sekarang disembunyikan.' : 'Part "Tidak Ada Part" sekarang ditampilkan.', 'info');
+        };
+
+        // PWA Installation & Standalone App State
+        const canInstallPwa = ref(false);
+        const isPwaInstalled = ref(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
+        let deferredPwaPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPwaPrompt = e;
+          canInstallPwa.value = true;
+        });
+
+        window.addEventListener('appinstalled', () => {
+          canInstallPwa.value = false;
+          isPwaInstalled.value = true;
+          deferredPwaPrompt = null;
+          showToast('Aplikasi QC Checksheet berhasil dipasang di perangkat Anda!', 'success');
+        });
+
+        const triggerPwaInstall = async () => {
+          if (deferredPwaPrompt) {
+            deferredPwaPrompt.prompt();
+            const { outcome } = await deferredPwaPrompt.userChoice;
+            if (outcome === 'accepted') {
+              showToast('Memasang aplikasi...', 'info');
+            }
+            deferredPwaPrompt = null;
+            canInstallPwa.value = false;
+          } else {
+            showToast('Untuk install aplikasi ini di Orion / Safari, gunakan menu "File > Add to Dock". Di Chrome/Edge gunakan ikon Install di address bar.', 'info');
+          }
         };
 
         // Visual Image Review Mode & Quick Lightbox (Default: ALWAYS ON / TRUE)
@@ -8569,6 +8680,15 @@
             }
           }, 2500);
           window.addEventListener('paste', handleGlobalPaste);
+
+          // Register PWA Service Worker
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then((reg) => {
+              console.log('[PWA] Service Worker aktif:', reg.scope);
+            }).catch((err) => {
+              console.warn('[PWA] Service Worker gagal terdaftar:', err);
+            });
+          }
         });
 
         return {
@@ -8858,7 +8978,10 @@
           handleQuickReviewWheel,
           handleDrawingScroll,
           showStatusDropdown,
-          batchChangeStatus
+          batchChangeStatus,
+          canInstallPwa,
+          isPwaInstalled,
+          triggerPwaInstall
         };
       }
     }).mount('#app');

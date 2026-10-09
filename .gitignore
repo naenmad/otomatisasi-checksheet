@@ -54,6 +54,7 @@ search_results.csv
 extracted_images/
 images/
 *.png
+!static/*.png
 *.jpg
 *.jpeg
 *.JPG
