@@ -3073,24 +3073,27 @@
                     </select>
                   </div>
 
-                  <!-- Quick Status Dropdown -->
-                  <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold border cursor-pointer focus:outline-none bg-zinc-900 text-zinc-100"
-                          :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-600 text-emerald-300' :
-                                  (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'border-sky-600 text-sky-300' :
-                                  (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'border-zinc-600 text-zinc-300' :
-                                  (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'border-amber-600 text-amber-300' :
-                                  activeChecksheet.status === 'Perlu Revisi Gambar' ? 'border-purple-600 text-purple-300' :
-                                  (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-700 text-zinc-400' :
-                                  'border-rose-600 text-rose-300'">
-                    <option value="Belum Dikerjakan">Belum Dikerjakan</option>
-                    <option value="Siap Kirim">Siap Kirim</option>
-                    <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
-                    <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
-                    <option value="Checksheet Done">Checksheet Done</option>
-                    <option value="Tidak Ada Part">Tidak Ada Part</option>
-                    <option value="Canceled">Canceled</option>
-                  </select>
+                  <!-- Header Status Indicator Badge -->
+                  <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800" title="Status checksheet saat ini">
+                    <span class="text-[10px] text-zinc-400 font-medium">Status:</span>
+                    <select v-model="activeChecksheet.status" @change="saveChecksheetMeta"
+                            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border cursor-pointer focus:outline-none bg-zinc-900 transition-colors shadow-sm"
+                            :class="activeChecksheet.status === 'Checksheet Done' ? 'border-emerald-600/80 text-emerald-300' :
+                                    (activeChecksheet.status === 'Siap Kirim' || activeChecksheet.status === 'Reviewed') ? 'border-sky-600/80 text-sky-300' :
+                                    (activeChecksheet.status === 'Belum Dikerjakan' || activeChecksheet.status === 'Belum Di Input' || activeChecksheet.status === 'Belum di review') ? 'border-zinc-700 text-zinc-300' :
+                                    (activeChecksheet.status === 'Perlu Revisi Isi' || activeChecksheet.status === 'Butuh Revisi') ? 'border-amber-600/80 text-amber-300' :
+                                    activeChecksheet.status === 'Perlu Revisi Gambar' ? 'border-purple-600/80 text-purple-300' :
+                                    (activeChecksheet.status && activeChecksheet.status.toLowerCase() === 'canceled') ? 'border-zinc-700 text-zinc-400' :
+                                    'border-rose-600/80 text-rose-300'">
+                      <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                      <option value="Siap Kirim">Siap Kirim</option>
+                      <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
+                      <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
+                      <option value="Checksheet Done">Checksheet Done</option>
+                      <option value="Tidak Ada Part">Tidak Ada Part</option>
+                      <option value="Canceled">Canceled</option>
+                    </select>
+                  </div>
                   <!-- Quick Category Dropdown -->
                   <select v-model="activeChecksheet.category" @change="saveChecksheetMeta"
                           class="px-2.5 py-1 rounded text-[11px] font-semibold border border-indigo-700/80 bg-zinc-900 text-indigo-300 cursor-pointer focus:outline-none"
@@ -3780,6 +3783,39 @@
                 </svg>
                 <span>Revisi Gambar</span>
               </button>
+
+              <!-- Dropdown Status Lainnya -->
+              <div class="relative inline-block text-left">
+                <button @click="showMoreStatusMenu = !showMoreStatusMenu"
+                        type="button"
+                        title="Ubah ke status lain (Checksheet Done, Tidak Ada Part, Canceled, Belum Dikerjakan)"
+                        class="px-2.5 py-2 rounded-xl text-xs font-semibold bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/60 hover:border-zinc-500 transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm">
+                  <span>⋯ Lainnya</span>
+                  <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div v-if="showMoreStatusMenu"
+                     @click="showMoreStatusMenu = false"
+                     class="absolute bottom-full mb-1.5 left-0 w-44 rounded-xl bg-zinc-900 border border-zinc-700 shadow-2xl py-1 z-50 text-xs font-medium">
+                  <button @click="setStudioStatus('Belum Dikerjakan')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-zinc-500"></span>
+                    <span>Belum Dikerjakan</span>
+                  </button>
+                  <button @click="setStudioStatus('Checksheet Done')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Checksheet Done</span>
+                  </button>
+                  <button @click="setStudioStatus('Tidak Ada Part')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-rose-400 hover:text-rose-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>Tidak Ada Part</span>
+                  </button>
+                  <button @click="setStudioStatus('Canceled')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-zinc-600"></span>
+                    <span>Canceled</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -4272,10 +4308,24 @@
         // Navigation & Page State
         const VALID_PAGES = ['dashboard', 'checksheets', 'master_part', 'automation', 'team', 'settings'];
 
+        const getPartNumberFromRoute = () => {
+          const pathSegments = window.location.pathname.replace(/^\//, '').split('/');
+          if (['checksheets', 'checksheet'].includes(pathSegments[0]) && pathSegments[1]) {
+            return decodeURIComponent(pathSegments.slice(1).join('/')).trim();
+          }
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('part')) return params.get('part').trim();
+          return null;
+        };
+
+        const targetRoutePartNumber = ref(getPartNumberFromRoute());
+
         const getPageFromRoute = () => {
           const hash = window.location.hash.replace(/^#\/?/, '').trim();
           if (VALID_PAGES.includes(hash)) return hash;
-          const path = window.location.pathname.replace(/^\//, '').split('/')[0].trim();
+          const pathSegments = window.location.pathname.replace(/^\//, '').split('/');
+          const path = pathSegments[0].trim();
+          if (['checksheets', 'checksheet'].includes(path)) return 'checksheets';
           if (VALID_PAGES.includes(path)) return path;
           return 'dashboard';
         };
@@ -4569,6 +4619,7 @@
 
         // Excel Studio & Table Grid State
         const showExcelStudio = ref(false);
+        const showMoreStatusMenu = ref(false);
         const studioPanelMode = ref('split'); // 'split' | 'image-focus' | 'table-focus'
         const showPasteExcelModal = ref(false);
         const rawPasteText = ref('');
@@ -5894,6 +5945,11 @@
                 studioDetailCache.clear();
                 preloadedImageUrls.clear();
               }
+              if (targetRoutePartNumber.value && !showExcelStudio.value) {
+                const target = targetRoutePartNumber.value;
+                targetRoutePartNumber.value = null; // consume once
+                openPartByNumber(target);
+              }
             }
           } catch (e) {
             console.error('Failed to load checksheets:', e);
@@ -5944,6 +6000,31 @@
 
         const openDetail = async (id) => {
           await openExcelStudio(id);
+        };
+
+        const openPartByNumber = async (partNo) => {
+          if (!partNo) return;
+          const cleanTarget = partNo.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+          let found = (checksheets.value || []).find(c => {
+            const p = (c.part_number || '').trim();
+            const cleanP = p.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            return p === partNo || cleanP === cleanTarget;
+          });
+          if (found) {
+            await openExcelStudio(found);
+            return;
+          }
+          try {
+            const res = await fetch(`/api/checksheets/by-part/${encodeURIComponent(partNo)}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.id) {
+                await openExcelStudio(data);
+              }
+            }
+          } catch (e) {
+            console.warn('Gagal memuat part dari URL:', e);
+          }
         };
 
         const showToast = (msg, type = 'success') => {
@@ -6187,12 +6268,30 @@
             preloadChecksheetImages(detail.images);
           }
 
+          if (!showExcelStudio.value) {
+            if (filteredChecksheets.value && filteredChecksheets.value.length > 0) {
+              studioSessionQueue.value = filteredChecksheets.value.map(c => c.id);
+            } else {
+              studioSessionQueue.value = (checksheets.value || []).map(c => c.id);
+            }
+          }
+
           // Trigger smart background prefetch for adjacent next (+1) & prev (-1) parts
           prefetchAdjacentStudioParts();
 
-          try {
-            window.history.pushState({ studioOpen: true }, '');
-          } catch (_) {}
+          const currentPn = (typeof checksheetOrId === 'object' ? checksheetOrId.part_number : (detail?.part_number || sourceObj?.part_number || activeChecksheet.value?.part_number));
+          if (currentPn) {
+            const targetUrl = `/checksheets/${encodeURIComponent(currentPn)}`;
+            if (window.location.pathname !== targetUrl) {
+              try {
+                window.history.pushState({ studioOpen: true, part: currentPn }, '', targetUrl);
+              } catch (_) {}
+            }
+          } else {
+            try {
+              window.history.pushState({ studioOpen: true }, '');
+            } catch (_) {}
+          }
         };
 
         const openExcelStudioDirect = async (cs) => {
@@ -6209,6 +6308,12 @@
           activeChecksheet.value = null;
           isPointsDirty.value = false;
           suggestionState.visible = false;
+          studioSessionQueue.value = [];
+          if (window.location.pathname.startsWith('/checksheets/')) {
+            try {
+              window.history.pushState({ page: 'checksheets' }, '', '/checksheets');
+            } catch (_) {}
+          }
           updateDocumentTitle();
         };
 
@@ -6225,8 +6330,20 @@
         // Studio Part Fast Navigation (Prev & Next Part)
         // Focus strictly on active FactoryHub parts so operators can efficiently review & mark Siap Kirim
         const studioSkipNoPart = ref(true);
+        const studioSessionQueue = ref([]);
 
         const currentStudioList = computed(() => {
+          // When studio is open and we have a session queue snapshot, stick strictly to that queue!
+          if (showExcelStudio.value && studioSessionQueue.value && studioSessionQueue.value.length > 0) {
+            const csMap = new Map((checksheets.value || []).map(c => [c.id, c]));
+            let list = studioSessionQueue.value.map(id => csMap.get(id)).filter(Boolean);
+            const isExplicitIssuesTab = workflowTab.value === 'ISSUES' || statusFilter.value === 'Tidak Ada Part';
+            if (studioSkipNoPart.value && !isExplicitIssuesTab) {
+              list = list.filter(c => !isNonFactoryHub(c));
+            }
+            return list;
+          }
+
           let list = filteredChecksheets.value;
           if (!list || list.length === 0) {
             list = checksheets.value || [];
@@ -8373,7 +8490,12 @@
         onMounted(() => {
           updateDocumentTitle();
           window.addEventListener('popstate', () => {
-            if (showExcelStudio.value) {
+            const newPn = getPartNumberFromRoute();
+            if (newPn && (!activeChecksheet.value || activeChecksheet.value.part_number !== newPn)) {
+              openPartByNumber(newPn);
+              return;
+            }
+            if (!newPn && showExcelStudio.value) {
               if (isPointsDirty.value) {
                 const leave = confirm('Ada perubahan titik ukur yang belum disimpan. Yakin ingin keluar dari halaman edit?');
                 if (!leave) {
@@ -8384,6 +8506,8 @@
                 }
               }
               showExcelStudio.value = false;
+              activeChecksheet.value = null;
+              studioSessionQueue.value = [];
               suggestionState.visible = false;
             }
             activePage.value = getPageFromRoute();
@@ -8402,12 +8526,17 @@
             isDraggingSelection.value = false;
           });
           const currentRoute = getPageFromRoute();
-          const targetPath = '/' + currentRoute;
-          if (window.location.pathname !== targetPath) {
-            window.history.replaceState({ page: currentRoute }, '', targetPath);
+          if (!targetRoutePartNumber.value && !window.location.pathname.startsWith('/checksheets/')) {
+            const targetPath = '/' + currentRoute;
+            if (window.location.pathname !== targetPath) {
+              window.history.replaceState({ page: currentRoute }, '', targetPath);
+            }
           }
           checkSavedSession();
           loadCatalogStats();
+          if (targetRoutePartNumber.value) {
+            openPartByNumber(targetRoutePartNumber.value);
+          }
           checkServerVersionPoll();
           setInterval(checkServerVersionPoll, 25000);
           if (isAutoUpdateEnabled.value) {
@@ -8656,6 +8785,7 @@
           triggerSystemUpdate,
           toggleReviewStatus,
           setStudioStatus,
+          showMoreStatusMenu,
           showAddPartModal,
           isSavingManualPart,
           newPartForm,

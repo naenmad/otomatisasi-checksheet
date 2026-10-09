@@ -327,6 +327,36 @@ async def get_checksheet_detail(
     return detail
 
 
+@router.get("/by-part/{part_number:path}")
+async def get_checksheet_by_part_number(
+    part_number: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Lookup checksheet detail directly by part_number or clean part number."""
+    pn = part_number.strip()
+    clean_pn = re.sub(r"[^A-Za-z0-9]", "", pn).upper()
+
+    # 1. Exact match or clean_part_number match
+    stmt = select(Checksheet).where(
+        (Checksheet.part_number == pn) |
+        (Checksheet.clean_part_number == clean_pn) |
+        (Checksheet.part_number.ilike(pn))
+    )
+    res = await db.execute(stmt)
+    cs = res.scalars().first()
+
+    # 2. Fallback to like search
+    if not cs:
+        stmt2 = select(Checksheet).where(Checksheet.clean_part_number.like(f"%{clean_pn}%"))
+        res2 = await db.execute(stmt2)
+        cs = res2.scalars().first()
+
+    if not cs:
+        raise HTTPException(status_code=404, detail=f"Checksheet dengan part number '{part_number}' tidak ditemukan")
+
+    return await get_checksheet_detail(cs.id, refresh=False, db=db)
+
+
 def _build_checksheet_images(cs: Checksheet) -> list:
     import os
     import re

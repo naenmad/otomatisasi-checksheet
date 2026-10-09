@@ -95,6 +95,7 @@ def build_master_tsv(checksheets: list) -> str:
         "Total Poin Inspeksi",
         "Status Checksheet",
         "Keterangan / Status FactoryHub",
+        "Akses Cepat (Local App)",
         "Link FactoryHub",
         "Terakhir Diperbarui"
     ]
@@ -103,10 +104,12 @@ def build_master_tsv(checksheets: list) -> str:
 
     for idx, cs in enumerate(checksheets, 1):
         updated = cs.updated_at.strftime("%d/%m/%Y %H:%M") if cs.updated_at else datetime.now().strftime("%d/%m/%Y %H:%M")
+        pn_clean = clean_cell(cs.part_number)
+        app_url = f"http://localhost:8000/checksheets/{pn_clean}" if pn_clean and pn_clean != "-" else "-"
         row = [
             str(idx),
             (cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Belum Ditugaskan"),
-            clean_cell(cs.part_number),
+            pn_clean,
             clean_cell(cs.part_name),
             clean_cell(cs.model),
             clean_cell(cs.customer),
@@ -114,6 +117,7 @@ def build_master_tsv(checksheets: list) -> str:
             str(len(cs.inspection_points) if cs.inspection_points else 0),
             clean_cell(cs.status),
             clean_cell(cs.keterangan),
+            app_url,
             clean_cell(cs.factoryhub_url),
             updated
         ]
@@ -135,6 +139,7 @@ def build_log_tsv(activity_logs: list, checksheets: list) -> str:
         "# Total Poin Inspeksi",
         "Status Checksheet",
         "Keterangan / Status FactoryHub",
+        "Akses Cepat (Local App)",
         "Link FactoryHub",
         "Terakhir Diperbarui"
     ]
@@ -169,11 +174,13 @@ def build_log_tsv(activity_logs: list, checksheets: list) -> str:
         cs_status = cs.status if cs else "Checksheet Done"
         cs_ket = cs.keterangan if cs else (log.details or "-")
         fh_url = log.link or (cs.factoryhub_url if cs else "-") or "-"
+        pn_clean = clean_cell(log.part_number or "-")
+        app_url = f"http://localhost:8000/checksheets/{pn_clean}" if pn_clean and pn_clean != "-" else "-"
 
         row = [
             str(log_counter),
             t_time,
-            clean_cell(log.part_number or "-"),
+            pn_clean,
             clean_cell(log.operator or (cs.assigned_to if cs else "Operator")),
             clean_cell(log.action or "SUBMIT FACTORYHUB"),
             clean_cell(log.status or "SUCCESS"),
@@ -181,6 +188,7 @@ def build_log_tsv(activity_logs: list, checksheets: list) -> str:
             pts_count,
             clean_cell(cs_status),
             clean_cell(cs_ket),
+            app_url,
             clean_cell(fh_url),
             updated_time
         ]
