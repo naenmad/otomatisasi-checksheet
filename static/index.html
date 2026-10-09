@@ -3715,8 +3715,12 @@
               <div v-if="isCurrentPartNonFactoryHub" class="text-[9px] text-amber-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-0.5" title="Part ini berstatus 'Tidak Ada Part' di FactoryHub. Tombol Next/Prev akan otomatis loncat ke part aktif yang terdaftar di FactoryHub.">
                 <span>⚠️ Non-FactoryHub (Skip)</span>
               </div>
-              <div v-else-if="studioSkipNoPart" @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer font-sans font-medium leading-none mt-0.5 flex items-center justify-center gap-1" title="Navigasi hanya melewati part aktif yang terdaftar di FactoryHub. Klik jika ingin menyertakan part arsip.">
+              <div v-else-if="studioSessionQueue && studioSessionQueue.length > 0" class="text-[9px] text-emerald-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-1" title="Antrean review terkunci sesuai filter saat studio dibuka. Status baru tidak akan merusak antrean.">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                <span>Antrean Filter ({{ totalStudioParts }})</span>
+              </div>
+              <div v-else-if="studioSkipNoPart" @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer font-sans font-medium leading-none mt-0.5 flex items-center justify-center gap-1" title="Navigasi hanya melewati part aktif yang terdaftar di FactoryHub. Klik jika ingin menyertakan part arsip.">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
                 <span>Part Aktif ({{ totalStudioParts }})</span>
               </div>
               <div v-else @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-zinc-400 hover:text-zinc-300 cursor-pointer font-sans font-medium leading-none mt-0.5" title="Semua status termasuk 'Tidak Ada Part' dimasukkan. Klik untuk memfilter kembali.">
@@ -6233,6 +6237,15 @@
             }];
           }
 
+          // Snapshot current filtered review queue BEFORE opening studio so it locks the exact filter list
+          if (!showExcelStudio.value) {
+            if (filteredChecksheets.value && filteredChecksheets.value.length > 0) {
+              studioSessionQueue.value = filteredChecksheets.value.map(c => c.id);
+            } else {
+              studioSessionQueue.value = (checksheets.value || []).map(c => c.id);
+            }
+          }
+
           isPointsDirty.value = false;
           activeSketchIdx.value = 0;
           studioPanelMode.value = 'split';
@@ -6268,14 +6281,6 @@
 
           if (detail && detail.images) {
             preloadChecksheetImages(detail.images);
-          }
-
-          if (!showExcelStudio.value) {
-            if (filteredChecksheets.value && filteredChecksheets.value.length > 0) {
-              studioSessionQueue.value = filteredChecksheets.value.map(c => c.id);
-            } else {
-              studioSessionQueue.value = (checksheets.value || []).map(c => c.id);
-            }
           }
 
           // Trigger smart background prefetch for adjacent next (+1) & prev (-1) parts
@@ -6338,12 +6343,7 @@
           // When studio is open and we have a session queue snapshot, stick strictly to that queue!
           if (showExcelStudio.value && studioSessionQueue.value && studioSessionQueue.value.length > 0) {
             const csMap = new Map((checksheets.value || []).map(c => [c.id, c]));
-            let list = studioSessionQueue.value.map(id => csMap.get(id)).filter(Boolean);
-            const isExplicitIssuesTab = workflowTab.value === 'ISSUES' || statusFilter.value === 'Tidak Ada Part';
-            if (studioSkipNoPart.value && !isExplicitIssuesTab) {
-              list = list.filter(c => !isNonFactoryHub(c));
-            }
-            return list;
+            return studioSessionQueue.value.map(id => csMap.get(id)).filter(Boolean);
           }
 
           let list = filteredChecksheets.value;
