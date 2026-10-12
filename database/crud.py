@@ -105,7 +105,7 @@ async def create_checksheet(
                 item_no=pt.get("item_no") or str(idx + 1),
                 inspection_item=pt.get("inspection_item") or f"Point {idx + 1}",
                 standard=pt.get("standard") or "",
-                method=pt.get("method") or "Visual",
+                method="Visual" if pt.get("method") is None else pt.get("method"),
                 master_data=pt.get("master_data") or "",
                 order_index=idx
             )
@@ -235,6 +235,7 @@ async def get_checksheets_summary_list(
     status: Optional[str] = None,
     category: Optional[str] = None,
     search: Optional[str] = None,
+    is_part_available: Optional[bool] = None,
     limit: int = 5000,
     offset: int = 0
 ) -> List[dict]:
@@ -273,6 +274,7 @@ async def get_checksheets_summary_list(
             Checksheet.template_type,
             Checksheet.category,
             Checksheet.status,
+            Checksheet.is_part_available,
             Checksheet.assigned_to,
             Checksheet.keterangan,
             Checksheet.factoryhub_url,
@@ -314,6 +316,8 @@ async def get_checksheets_summary_list(
             query = query.where(Checksheet.status.ilike(status))
     if category and category.upper() != "ALL":
         query = query.where(Checksheet.category.ilike(category.strip()))
+    if is_part_available is not None:
+        query = query.where(Checksheet.is_part_available == is_part_available)
     if search:
         search_pattern = f"%{search}%"
         query = query.where(
@@ -366,6 +370,7 @@ async def get_checksheets_summary_list(
             "template_type": r.template_type,
             "category": r.category or "Accuracy",
             "status": r.status,
+            "is_part_available": r.is_part_available if r.is_part_available is not None else True,
             "assigned_to": r.assigned_to,
             "keterangan": r.keterangan,
             "points_count": r.points_count,

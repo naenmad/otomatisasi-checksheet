@@ -7,13 +7,14 @@ import os
 import re
 import asyncio
 import tempfile
+import base64
 import urllib.request
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import async_playwright
 
 from database.models import User
-from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity
+from database.crud import get_checksheet_by_id, update_checksheet_status, log_activity, clean_str
 from core.automator import run_automation, launch_playwright_browser, login_factoryhub, fill_checksheet_form
 from core.version import get_full_banner
 
@@ -37,6 +38,105 @@ def is_batch_cancelled(batch_id: str = "current") -> bool:
 def clear_batch_cancellation(batch_id: str = "current"):
     """Clear cancellation flag for a batch."""
     ACTIVE_BATCH_CANCELLATIONS.discard(batch_id)
+
+
+def resolve_image_for_automation(img, cs, temp_collector: Optional[List[str]] = None) -> Optional[str]:
+    """
+    Robust image resolver for FactoryHub automation.
+    Attempts multiple resolution strategies:
+    1. Direct local disk path (if valid file)
+    2. Smart multi-path candidate matching on local disk (raw pn, clean pn, no-space pn, templates)
+       with extension cross-matching (.webp <-> .png <-> .jpg)
+    3. Decoding embedded base64 from database if present
+    4. Downloading from cloud CDN (Supabase Storage) with browser headers and extension fallbacks
+    """
+    p = (img.image_path or "").strip()
+    url = (img.image_url or "").strip()
+
+    # 1. Direct path check (if not URL)
+    if p and not p.startswith("http://") and not p.startswith("https://"):
+        local_p = p if os.path.isabs(p) else os.path.abspath(p)
+        if os.path.isfile(local_p):
+            return local_p
+
+    # 2. Extract base filename to search candidate local folders
+    fname = ""
+    if p and not p.startswith("http://") and not p.startswith("https://"):
+        fname = os.path.basename(p.replace("\\", "/"))
+    elif url:
+        fname = os.path.basename(url.split("?")[0])
+
+    if fname:
+        stem, orig_ext = os.path.splitext(fname)
+        exts = [orig_ext, ".webp", ".png", ".jpg", ".jpeg"]
+        pn = (cs.part_number or "").strip()
+        c_pn = clean_str(pn)
+        pn_nospace = pn.replace(" ", "")
+
+        cand_dirs = [
+            os.path.join("storage", "images", pn),
+            os.path.join("storage", "images", c_pn),
+            os.path.join("storage", "images", pn_nospace),
+            os.path.join("storage", "images", "templates"),
+            os.path.join("extracted_images", pn),
+            os.path.join("extracted_images", c_pn),
+        ]
+
+        for d in cand_dirs:
+            if not os.path.isdir(d):
+                continue
+            for ext in exts:
+                cand_file = os.path.abspath(os.path.join(d, stem + ext))
+                if os.path.isfile(cand_file):
+                    return cand_file
+
+    # 3. Base64 fallback from database row
+    if getattr(img, "image_base64", None) and len(img.image_base64) > 100:
+        b64 = img.image_base64.strip()
+        if "," in b64:
+            b64 = b64.split(",", 1)[1]
+        try:
+            raw_bytes = base64.b64decode(b64)
+            suffix = os.path.splitext(fname)[1] if fname else ".webp"
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix or ".webp")
+            tmp.write(raw_bytes)
+            tmp.close()
+            if temp_collector is not None:
+                temp_collector.append(tmp.name)
+            return tmp.name
+        except Exception as b64_err:
+            logger.debug(f"Failed decoding base64 image: {b64_err}")
+
+    # 4. Cloud CDN download (Supabase Storage) with browser User-Agent & extension fallback
+    download_urls = []
+    if url.startswith("http://") or url.startswith("https://"):
+        download_urls.append(url)
+        if url.endswith(".png"):
+            download_urls.append(url[:-4] + ".webp")
+        elif url.endswith(".webp"):
+            download_urls.append(url[:-5] + ".png")
+    elif p.startswith("http://") or p.startswith("https://"):
+        download_urls.append(p)
+
+    for dl_url in download_urls:
+        try:
+            suffix = os.path.splitext(dl_url.split("?")[0])[-1] or ".webp"
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            req = urllib.request.Request(
+                dl_url,
+                headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    tmp.write(resp.read())
+                    tmp.close()
+                    if temp_collector is not None:
+                        temp_collector.append(tmp.name)
+                    return tmp.name
+        except Exception:
+            continue
+
+    return None
 
 
 async def execute_checksheet_submission(
@@ -79,29 +179,15 @@ async def execute_checksheet_submission(
         for p in cs.inspection_points
     ]
 
-    # Reference images from database: prefer Supabase CDN URL, fallback to local disk
+    # Reference images from database: multi-strategy local candidate + cloud resolver
     image_paths = []
     _temp_files: List[str] = []  # track temp files to clean up after automation
     for img in cs.images:
-        p = img.image_path or ""
-        url = (img.image_url or "").strip()
-
-        # 1. Local disk fast-path (< 0ms): if image already exists locally, use it directly
-        local_p = p if os.path.isabs(p) else os.path.abspath(p)
-        if p and os.path.isfile(local_p):
-            image_paths.append(local_p)
-            continue
-
-        # 2. Cloud CDN download: only download if not available on local disk
-        if url.startswith("https://") or url.startswith("http://"):
-            try:
-                suffix = os.path.splitext(url.split("?")[0])[-1] or ".webp"
-                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-                urllib.request.urlretrieve(url, tmp.name)
-                image_paths.append(tmp.name)
-                _temp_files.append(tmp.name)
-            except Exception as dl_err:
-                logger.warning(f"[!] Gagal download gambar dari cloud: {url} ({dl_err})")
+        resolved = resolve_image_for_automation(img, cs, temp_collector=_temp_files)
+        if resolved:
+            image_paths.append(resolved)
+        else:
+            logger.warning(f"[!] Gagal resolve/download gambar untuk part {cs.part_number}: {img.image_url or img.image_path}")
 
     meta_payload = {
         "part_number": cs.part_number,
@@ -316,25 +402,11 @@ async def execute_batch_submission(
                     image_paths = []
                     _temp_files_batch: List[str] = []
                     for img in cs.images:
-                        p_img = img.image_path or ""
-                        img_url = (img.image_url or "").strip()
-
-                        # 1. Local disk fast-path (< 0ms): if image already exists locally, use it directly
-                        local_p = p_img if os.path.isabs(p_img) else os.path.abspath(p_img)
-                        if p_img and os.path.isfile(local_p):
-                            image_paths.append(local_p)
-                            continue
-
-                        # 2. Cloud CDN download: only download if not available on local disk
-                        if img_url.startswith("https://") or img_url.startswith("http://"):
-                            try:
-                                suffix = os.path.splitext(img_url.split("?")[0])[-1] or ".webp"
-                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-                                urllib.request.urlretrieve(img_url, tmp.name)
-                                image_paths.append(tmp.name)
-                                _temp_files_batch.append(tmp.name)
-                            except Exception as dl_err:
-                                yield f"[!] Gagal download gambar dari cloud: {img_url} ({dl_err})\n"
+                        resolved = resolve_image_for_automation(img, cs, temp_collector=_temp_files_batch)
+                        if resolved:
+                            image_paths.append(resolved)
+                        else:
+                            yield f"[!] Lewati gambar (gagal resolve/download): {img.image_url or img.image_path}\n"
 
                     meta_payload = {
                         "part_number": cs.part_number,

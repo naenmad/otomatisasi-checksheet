@@ -969,7 +969,7 @@ async def fill_checksheet_form(
 
                     const methodInp = tr.querySelector('input[name*="[method]"], input[name*="[instrument_tools]"]') ||
                                       (tr.cells && tr.cells[5] ? tr.cells[5].querySelector('input') : null);
-                    setVal(methodInp, item.method || 'Visual');
+                    setVal(methodInp, item.method || '');
 
                     const masterInp = tr.querySelector('input[name*="[master_data]"]') ||
                                       (tr.cells && tr.cells[6] ? tr.cells[6].querySelector('input') : null);

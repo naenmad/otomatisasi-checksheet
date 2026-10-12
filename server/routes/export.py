@@ -285,7 +285,7 @@ async def export_excel_tidak_ada_part(
     (parts not yet registered in FactoryHub Master Part), complete with customer breakdowns.
     """
     checksheets = await list_checksheets(session=db, limit=2000)
-    no_part_list = [cs for cs in checksheets if cs.status == "Tidak Ada Part"]
+    no_part_list = [cs for cs in checksheets if getattr(cs, "is_part_available", True) is False or cs.status == "Tidak Ada Part"]
     no_part_list.sort(key=lambda x: (x.customer or "", x.part_number or ""))
 
     wb = openpyxl.Workbook()

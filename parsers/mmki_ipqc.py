@@ -156,15 +156,27 @@ class MMKIIPQCParser(BaseParser):
             item_seq = 1
             for sname in valid_sheets:
                 ws = wb[sname]
+
+                # Pre-build merged cells map for col B (2)
+                merged_item_nos = {}
+                for rng in ws.merged_cells.ranges:
+                    if rng.min_col <= 2 <= rng.max_col:
+                        val = ws.cell(rng.min_row, rng.min_col).value
+                        if val is not None and str(val).strip().isdigit():
+                            for r_m in range(rng.min_row, rng.max_row + 1):
+                                merged_item_nos[r_m] = str(val).strip()
+
                 current_sec = ""
                 r = 1
+                last_item_no = str(item_seq)
+
                 while r <= ws.max_row:
                     b_val = str(ws.cell(r, 2).value or "").strip()
                     c_val = str(ws.cell(r, 3).value or "").strip()
-                    h_val = str(ws.cell(r, 8).value or "").strip()
-                    i_val = str(ws.cell(r, 9).value or "").strip()
-                    j_val = str(ws.cell(r, 10).value or "").strip()
-                    l_val = str(ws.cell(r, 12).value or "").strip()
+                    h_val = ws.cell(r, 8).value
+                    i_val = ws.cell(r, 9).value
+                    j_val = ws.cell(r, 10).value
+                    l_val = ws.cell(r, 12).value
 
                     c_u = c_val.upper()
                     if not current_sec and "APPEARANCE" in c_u and not any(x in c_u for x in ["(+", "BURRY", "CRACK"]):
@@ -178,26 +190,35 @@ class MMKIIPQCParser(BaseParser):
                     elif any(k in c_u for k in ["JUDGEMENT", "JML. PROD."]):
                         break
 
-                    if not current_sec:
+                    if not current_sec or not c_val:
                         r += 1
                         continue
                     if any(k in c_u for k in ["SPESIFIKASI", "WAKTU PENGECEKAN", "AWAL PROSES"]):
                         r += 1
                         continue
-                    if not c_val:
-                        r += 1
-                        continue
+
+                    # Determine item_no
+                    if r in merged_item_nos:
+                        ino = merged_item_nos[r]
+                        last_item_no = ino
+                    elif b_val and b_val.isdigit():
+                        ino = b_val
+                        last_item_no = ino
+                    elif current_sec == "B" and not b_val:
+                        ino = last_item_no
+                    else:
+                        ino = str(item_seq)
+                        last_item_no = ino
+                        item_seq += 1
 
                     if current_sec == "A":
-                        std_val = h_val or i_val or "OK / NG"
-                        mth_val = l_val or "Visual"
-                        if "MATA" in mth_val.upper() or "VISUAL" in mth_val.upper():
+                        std_val = str(h_val or i_val or "OK / NG").strip()
+                        mth_val = str(l_val or "Visual").strip()
+                        if any(x in mth_val.upper() for x in ["MATA", "VISUAL"]):
                             mth_val = "Visual"
-                        elif "CALIPER" in mth_val.upper() or "CAIPER" in mth_val.upper():
+                        elif any(x in mth_val.upper() for x in ["CALIPER", "CAIPER"]):
                             mth_val = "Caliper"
 
-                        ino = b_val if b_val.isdigit() else str(item_seq)
-                        item_seq += 1
                         all_points.append({
                             "item_no": ino,
                             "inspection_item": " ".join(c_val.split()),
@@ -206,17 +227,21 @@ class MMKIIPQCParser(BaseParser):
                             "master_data": ""
                         })
                         r += 1
+
                     elif current_sec == "B":
-                        nom = i_val or h_val
-                        tol = j_val
-                        next_j = str(ws.cell(r + 1, 10).value or "").strip() if r + 1 <= ws.max_row else ""
-                        skip = False
+                        nom = str(i_val or h_val or "").strip()
+                        tol = "" if j_val is None else str(j_val).strip()
+
+                        # Check next row for lower tolerance (including 0, -0.0, etc.)
+                        next_j_raw = ws.cell(r + 1, 10).value
+                        next_j = "" if next_j_raw is None else str(next_j_raw).strip()
+
                         if tol and next_j and (next_j.startswith("-") or next_j.startswith("+") or next_j == "0"):
                             tol = f"{tol} / {next_j}"
-                            skip = True
+
                         full_std = f"{nom} {tol}".strip() if tol and tol not in nom else (nom or "OK / NG")
 
-                        mth_val = l_val or "Caliper"
+                        mth_val = str(l_val or "Caliper").strip()
                         m_u = mth_val.upper()
                         if "PIN GO" in m_u:
                             mth_val = "Pin Go/No Go"
@@ -233,8 +258,6 @@ class MMKIIPQCParser(BaseParser):
                         elif "VISUAL" in m_u or "MATA" in m_u:
                             mth_val = "Visual"
 
-                        ino = b_val if b_val.isdigit() else str(item_seq)
-                        item_seq += 1
                         all_points.append({
                             "item_no": ino,
                             "inspection_item": " ".join(c_val.split()),
@@ -242,7 +265,7 @@ class MMKIIPQCParser(BaseParser):
                             "method": mth_val,
                             "master_data": ""
                         })
-                        r += (2 if skip else 1)
+                        r += 1
         finally:
             if should_close:
                 try:

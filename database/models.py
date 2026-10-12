@@ -42,8 +42,9 @@ class Checksheet(Base):
     template_type = Column(String(50), default="GENERIC")
     category = Column(String(100), default="Accuracy", nullable=False, index=True)
 
-    # Status: DRAFT, READY_FOR_SUBMIT, IN_QUEUE, SUBMITTED, TIDAK_ADA_PART
+    # Status: DRAFT, READY_FOR_SUBMIT, IN_QUEUE, SUBMITTED
     status = Column(String(50), default="DRAFT", index=True)
+    is_part_available = Column(Boolean, default=True, index=True)
     keterangan = Column(Text, default="")
 
     # Team assignment and concurrency locking
@@ -76,7 +77,7 @@ class InspectionPoint(Base):
     item_no = Column(String(50), nullable=False)
     inspection_item = Column(String(255), nullable=False)
     standard = Column(Text, default="-")
-    method = Column(String(100), default="Visual")
+    method = Column(String(100), default="")
     master_data = Column(String(255), default="")
     order_index = Column(Integer, default=0)
 

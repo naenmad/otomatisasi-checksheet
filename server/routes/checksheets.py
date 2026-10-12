@@ -160,7 +160,7 @@ class InspectionPointSchema(BaseModel):
     item_no: str
     inspection_item: str
     standard: str = ""
-    method: str = "Visual"
+    method: Optional[str] = ""
     master_data: Optional[str] = ""
 
 
@@ -171,6 +171,7 @@ class ChecksheetUpdateSchema(BaseModel):
     doc_number: Optional[str] = None
     category: Optional[str] = None
     status: Optional[str] = None
+    is_part_available: Optional[bool] = None
     assigned_to: Optional[str] = None
     keterangan: Optional[str] = None
 
@@ -182,8 +183,9 @@ class ChecksheetPointsUpdateSchema(BaseModel):
 @router.get("")
 async def get_checksheets(
     assigned_to: Optional[str] = Query(None, description="Filter by assignee: Zul, Iqbal, Rama, Yogi"),
-    status: Optional[str] = Query(None, description="Filter by status: Checksheet Done, Belum Di Input, Tidak Ada Part"),
-    category: Optional[str] = Query(None, description="Filter by category: Accuracy SSW, Incomming Material, Incomming Std Part, Incomming Subcont Part, Accuracy, General"),
+    status: Optional[str] = Query(None, description="Filter by status: Checksheet Done, Siap Kirim, etc."),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    is_part_available: Optional[bool] = Query(None, description="Filter by part availability (true/false)"),
     search: Optional[str] = Query(None, description="Search part number or name"),
     refresh: bool = Query(False, description="Force refresh cache from database"),
     limit: int = 1000,
@@ -264,6 +266,9 @@ async def get_checksheets(
         cat_clean = category.strip().lower()
         filtered = [c for c in filtered if (c.get("category") or "accuracy").lower().strip() == cat_clean]
 
+    if is_part_available is not None:
+        filtered = [c for c in filtered if c.get("is_part_available") == is_part_available]
+
     if search:
         s_lower = search.lower().strip()
         filtered = [
@@ -303,6 +308,7 @@ async def get_checksheet_detail(
         "template_type": cs.template_type,
         "category": cs.category or "Accuracy",
         "status": cs.status,
+        "is_part_available": cs.is_part_available if cs.is_part_available is not None else True,
         "assigned_to": cs.assigned_to,
         "keterangan": cs.keterangan,
         "factoryhub_id": cs.factoryhub_id,
@@ -453,6 +459,9 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
         cs.status = payload.status
         cache_updates["status"] = payload.status
         status_changed = True
+    if payload.is_part_available is not None and payload.is_part_available != cs.is_part_available:
+        cs.is_part_available = payload.is_part_available
+        cache_updates["is_part_available"] = payload.is_part_available
     if payload.assigned_to is not None and payload.assigned_to != cs.assigned_to:
         cs.assigned_to = payload.assigned_to
         cache_updates["assigned_to"] = payload.assigned_to
@@ -509,19 +518,33 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
     await db.execute(delete(InspectionPoint).where(InspectionPoint.checksheet_id == checksheet_id))
 
     for idx, p in enumerate(payload.points):
-        norm = TextNormalizer.normalize_point({
-            "item_no": p.item_no,
-            "inspection_item": p.inspection_item,
-            "standard": p.standard,
-            "method": p.method,
-            "master_data": p.master_data or "",
-        })
+        raw_m = (p.method or "").strip()
+        final_method = ""
+        if raw_m:
+            norm = TextNormalizer.normalize_point({
+                "item_no": p.item_no,
+                "inspection_item": p.inspection_item,
+                "standard": p.standard,
+                "method": raw_m,
+                "master_data": p.master_data or "",
+            })
+            final_method = norm.get("method") or raw_m
+        else:
+            # Respect user's explicit clearing of tool/method
+            norm = TextNormalizer.normalize_point({
+                "item_no": p.item_no,
+                "inspection_item": p.inspection_item,
+                "standard": p.standard,
+                "method": "",
+                "master_data": p.master_data or "",
+            })
+
         ip = InspectionPoint(
             checksheet_id=checksheet_id,
             item_no=norm.get("item_no") or p.item_no,
             inspection_item=norm.get("inspection_item") or p.inspection_item,
             standard=norm.get("standard") or p.standard,
-            method=norm.get("method") or p.method,
+            method=final_method,
             master_data=norm.get("master_data") or "",
             order_index=idx
         )
@@ -558,21 +581,29 @@ async def batch_assign_checksheets(payload: BatchAssignSchema, db: AsyncSession 
 
 class BatchStatusSchema(BaseModel):
     checksheet_ids: List[int]
-    status: str
+    status: Optional[str] = None
+    is_part_available: Optional[bool] = None
     keterangan: Optional[str] = None
 
 
 @router.post("/batch-status")
 async def batch_update_status(payload: BatchStatusSchema, db: AsyncSession = Depends(get_db)):
-    """Update status (kategori) for multiple checksheets simultaneously."""
+    """Update status or part availability for multiple checksheets simultaneously."""
     if not payload.checksheet_ids:
         return {"status": "success", "updated_count": 0}
 
-    values: Dict[str, Any] = {"status": payload.status}
+    values: Dict[str, Any] = {}
+    if payload.status is not None:
+        values["status"] = payload.status
+        if payload.status.lower() == "canceled" and payload.keterangan is None:
+            values["keterangan"] = "Dibatalkan manual oleh reviewer"
+    if payload.is_part_available is not None:
+        values["is_part_available"] = payload.is_part_available
     if payload.keterangan is not None:
         values["keterangan"] = payload.keterangan
-    elif payload.status.lower() == "canceled":
-        values["keterangan"] = "Dibatalkan manual oleh reviewer"
+
+    if not values:
+        return {"status": "success", "updated_count": 0}
 
     stmt = (
         update(Checksheet)
@@ -591,7 +622,7 @@ async def batch_update_status(payload: BatchStatusSchema, db: AsyncSession = Dep
     return {
         "status": "success",
         "updated_count": len(payload.checksheet_ids),
-        "new_status": payload.status
+        "updates": values
     }
 
 
@@ -902,7 +933,7 @@ class PointItemManualSchema(BaseModel):
     item_no: Optional[str] = "1"
     inspection_item: str
     standard: Optional[str] = ""
-    method: Optional[str] = "Visual"
+    method: Optional[str] = ""
     master_data: Optional[str] = ""
 
 
@@ -915,6 +946,7 @@ class CreateChecksheetManualSchema(BaseModel):
     category: Optional[str] = "Accuracy"
     assigned_to: Optional[str] = "Unassigned"
     status: Optional[str] = "Belum Dikerjakan"
+    is_part_available: Optional[bool] = True
     keterangan: Optional[str] = "Ditambahkan manual oleh admin"
     points: Optional[List[PointItemManualSchema]] = []
 
@@ -941,6 +973,7 @@ async def create_checksheet_manual(
         doc_number=payload.doc_number or "FO-45-01",
         category=payload.category or "Accuracy",
         status=payload.status or "Belum Dikerjakan",
+        is_part_available=payload.is_part_available if payload.is_part_available is not None else True,
         assigned_to=payload.assigned_to or "Unassigned",
         keterangan=payload.keterangan or "Ditambahkan manual oleh admin",
     )
@@ -954,7 +987,7 @@ async def create_checksheet_manual(
                 item_no=pt.item_no or str(idx + 1),
                 inspection_item=pt.inspection_item,
                 standard=pt.standard or "",
-                method=pt.method or "Visual",
+                method=(pt.method or "").strip(),
                 master_data=pt.master_data or "",
                 order_index=idx
             )
@@ -971,6 +1004,7 @@ async def create_checksheet_manual(
         "category": new_cs.category or "Accuracy",
         "template_type": "MANUAL",
         "status": new_cs.status,
+        "is_part_available": new_cs.is_part_available if new_cs.is_part_available is not None else True,
         "assigned_to": new_cs.assigned_to,
         "keterangan": new_cs.keterangan,
         "points_count": len(payload.points or []),

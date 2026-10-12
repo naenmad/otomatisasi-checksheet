@@ -768,15 +768,15 @@
               <p class="text-[11px] text-zinc-500 mt-1">Perlu perbaikan sketsa drawing</p>
             </button>
 
-            <!-- Tidak Ada Part -->
-            <button @click="goToChecksheetsWithStatus('Tidak Ada Part')"
-                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-rose-800 text-left transition-all group">
+            <!-- Belum di Katalog FH -->
+            <button @click="filterByCatalogAvailability(false)"
+                    class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/90 hover:border-amber-800 text-left transition-all group">
               <div class="flex items-center justify-between">
-                <p class="text-xs text-zinc-400 font-medium">Tidak Ada Part</p>
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <p class="text-xs text-zinc-400 font-medium">Belum di Katalog FH</p>
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
               </div>
-              <p class="text-2xl font-bold text-rose-400 font-mono mt-1">{{ countStatus('Tidak Ada Part') }}</p>
-              <p class="text-[11px] text-zinc-500 mt-1">Belum di Master Web</p>
+              <p class="text-2xl font-bold text-amber-400 font-mono mt-1">{{ countUnavailableParts }}</p>
+              <p class="text-[11px] text-zinc-500 mt-1">Part belum di FactoryHub</p>
             </button>
           </div>
 
@@ -1035,7 +1035,7 @@
 
               <!-- Action Buttons: Reset & Refresh -->
               <div class="flex items-center gap-1.5">
-                <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name) || (currentUser.role === 'admin' && activeTeam !== 'Semua')"
+                <button v-if="workflowTab !== 'TODO' || statusFilter !== 'ALL' || categoryFilter !== 'ALL' || availabilityFilter !== 'ALL' || searchQuery || (currentUser.role === 'operator' && activeTeam !== currentUser.name) || (currentUser.role === 'admin' && activeTeam !== 'Semua')"
                         @click="resetFilters"
                         class="px-2.5 py-1 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-950/40 rounded-lg border border-amber-800/60 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
                         title="Reset semua filter">
@@ -1077,19 +1077,19 @@
 
               <!-- Right Controls: Toggle Hidden Issues, Mode Gambar, Ukuran Drawing, Ambil Task, Kirim Batch -->
               <div class="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
-                <!-- Toggle Sembunyikan Tidak Ada Part -->
+                <!-- Toggle Sembunyikan Non-FH / Non-Katalog -->
                 <button type="button"
                         @click="toggleHideNoPart"
                         :class="hideNoPart 
                           ? 'bg-amber-950/60 text-amber-300 border-amber-600/70 shadow-sm ring-1 ring-amber-500/30 font-semibold' 
                           : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200 font-medium'"
                         class="px-2.5 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-                        :title="hideNoPart ? ('Sedang menyembunyikan part \'Tidak Ada Part\' (' + countIssues + ' part). Klik untuk menampilkan.') : 'Sembunyikan part \'Tidak Ada Part\' dari tabel'">
+                        :title="hideNoPart ? ('Sedang menyembunyikan part non-katalog FactoryHub (' + countUnavailableParts + ' part). Klik untuk menampilkan.') : 'Sembunyikan part non-katalog dari tabel'">
                   <svg class="w-3.5 h-3.5" :class="hideNoPart ? 'text-amber-400' : 'text-zinc-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path v-if="hideNoPart" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                     <path v-else stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  <span>{{ hideNoPart ? 'Hidden Masalah (' + countIssues + ')' : 'Sembunyikan Masalah' }}</span>
+                  <span>{{ hideNoPart ? 'Non-FH Disembunyikan (' + countUnavailableParts + ')' : 'Sembunyikan Non-FH' }}</span>
                 </button>
 
                 <!-- Toggle Mode Gambar -->
@@ -1278,6 +1278,30 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     <span>Std Part</span>
                     <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('Incomming Std Part') }})</span>
+                  </button>
+
+                  <!-- IR Child Part (if > 0 or active) -->
+                  <button v-if="countCategoryInWorkflow('IR Child Part') > 0 || categoryFilter === 'IR Child Part'"
+                          @click="toggleCategoryFilter('IR Child Part')"
+                          :class="categoryFilter === 'IR Child Part'
+                            ? 'bg-violet-950 text-violet-200 border border-violet-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                    <span>IR Child</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('IR Child Part') }})</span>
+                  </button>
+
+                  <!-- IR Monthly FG (if > 0 or active) -->
+                  <button v-if="countCategoryInWorkflow('IR Monthly FG') > 0 || categoryFilter === 'IR Monthly FG'"
+                          @click="toggleCategoryFilter('IR Monthly FG')"
+                          :class="categoryFilter === 'IR Monthly FG'
+                            ? 'bg-fuchsia-950 text-fuchsia-200 border border-fuchsia-600 font-semibold shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'"
+                          class="px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer">
+                    <span class="w-1.5 h-1.5 rounded-full bg-fuchsia-400"></span>
+                    <span>IR FG</span>
+                    <span class="ml-0.5 text-[10px] font-mono opacity-80">({{ countCategoryInWorkflow('IR Monthly FG') }})</span>
                   </button>
                 </div>
               </div>
@@ -1475,6 +1499,12 @@
                                 class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950/90 text-indigo-300 border border-indigo-700/80 cursor-pointer hover:bg-indigo-900 transition-colors"
                                 :title="'Part ini memiliki ' + partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] + ' template checksheet. Klik untuk memfilter semua varian template part ini.'">
                             {{ partTemplateCountMap[(cs.part_number || '').trim().toUpperCase()] }} Template
+                          </span>
+                          <!-- Non-FH Catalog Badge -->
+                          <span v-if="cs.is_part_available === false"
+                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-950/90 text-amber-300 border border-amber-700/80 tracking-wide select-none"
+                                title="Part belum terdaftar di master part FactoryHub">
+                            Non-FH
                           </span>
                           <button type="button"
                                   @click.stop="openGoogleDriveSearch(cs.part_number)"
@@ -1683,7 +1713,7 @@
                       <span v-else
                             class="px-2.5 py-1 rounded text-[11px] font-semibold bg-rose-950 text-rose-300 border border-rose-800 inline-flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                        <span>{{ cs.status || 'Tidak Ada Part' }}</span>
+                        <span>{{ cs.status || 'Belum Dikerjakan' }}</span>
                       </span>
                     </td>
 
@@ -2141,7 +2171,7 @@
                       <h4 class="text-xs font-bold text-zinc-200">Ekspor Part Belum Ada (Master Web)</h4>
                     </div>
                     <p class="text-[11px] text-zinc-400 leading-relaxed">
-                      Download daftar part yang berstatus 'Tidak Ada Part' / belum terdaftar di FactoryHub Master Part.
+                      Download daftar part yang belum terdaftar di FactoryHub Master Part (Non-Katalog FH).
                     </p>
                   </div>
                   <a href="/api/export/excel/tidak-ada-part" download
@@ -2285,20 +2315,20 @@
                 </div>
               </div>
 
-              <!-- Sembunyikan Tidak Ada Part Switch -->
+              <!-- Sembunyikan Non-Katalog FH Switch -->
               <div class="flex items-center justify-between p-4 bg-zinc-900/90 border border-zinc-800 rounded-xl transition-all">
                 <div class="space-y-0.5 max-w-xl">
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-zinc-100">Sembunyikan Part 'Tidak Ada Part' & Canceled ({{ countIssues }} Part)</span>
+                    <span class="text-xs font-bold text-zinc-100">Sembunyikan Part Non-Katalog & Canceled ({{ countIssues }} Part)</span>
                   </div>
                   <p class="text-[11px] text-zinc-400 leading-relaxed">
-                    Menyembunyikan part yang belum ada di Master FactoryHub dari tabel utama dan mencegah part tersebut terbuka saat navigasi Next/Prev di Excel Studio. Seluruh part ini tetap dapat diakses di tab <strong>Masalah / Pending</strong>.
+                    Menyembunyikan part yang belum ada di Katalog FactoryHub dari tabel utama dan mencegah part tersebut terbuka saat navigasi Next/Prev di Excel Studio. Seluruh part ini tetap dapat diakses di tab <strong>Masalah / Pending</strong> atau filter Non-FH.
                   </p>
                 </div>
                 <button type="button" @click="toggleHideNoPart" role="switch" :aria-checked="hideNoPart"
                         class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                         :class="hideNoPart ? 'bg-amber-600' : 'bg-zinc-700'">
-                  <span class="sr-only">Sembunyikan part tidak ada part</span>
+                  <span class="sr-only">Sembunyikan part non-katalog</span>
                   <span aria-hidden="true"
                         class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                         :class="hideNoPart ? 'translate-x-5' : 'translate-x-0'"></span>
@@ -2898,6 +2928,8 @@
                   <option value="Incomming Material">Incomming Material</option>
                   <option value="Incomming Std Part">Incomming Std Part</option>
                   <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                  <option value="IR Child Part">IR Child Part</option>
+                  <option value="IR Monthly FG">IR Monthly FG</option>
                   <option value="General">General</option>
                 </select>
               </div>
@@ -2916,7 +2948,14 @@
                   <option value="Perlu Revisi Isi">Perlu Revisi Isi</option>
                   <option value="Perlu Revisi Gambar">Perlu Revisi Gambar</option>
                   <option value="Checksheet Done">Checksheet Done</option>
-                  <option value="Tidak Ada Part">Tidak Ada Part</option>
+                  <option value="Canceled">Canceled</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-zinc-300 font-medium mb-1">Katalog FactoryHub</label>
+                <select v-model="newPartForm.is_part_available" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 focus:border-emerald-500 focus:outline-none cursor-pointer">
+                  <option :value="true">Tersedia di Katalog FH</option>
+                  <option :value="false">Belum Terdaftar di FH</option>
                 </select>
               </div>
               <div>
@@ -3186,6 +3225,8 @@
                     <option value="Incomming Material">Incomming Material</option>
                     <option value="Incomming Std Part">Incomming Std Part</option>
                     <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                    <option value="IR Child Part">IR Child Part</option>
+                    <option value="IR Monthly FG">IR Monthly FG</option>
                     <option value="General">General</option>
                   </select>
                   <!-- Quick Assignee Dropdown -->
@@ -3448,6 +3489,8 @@
                       <option value="Incomming Material">Incomming Material</option>
                       <option value="Incomming Std Part">Incomming Std Part</option>
                       <option value="Incomming Subcont Part">Incomming Subcont Part</option>
+                      <option value="IR Child Part">IR Child Part</option>
+                      <option value="IR Monthly FG">IR Monthly FG</option>
                       <option value="General">General</option>
                     </select>
                   </div>
@@ -3793,18 +3836,18 @@
                 <span class="text-zinc-500 font-normal">/</span>
                 <span class="text-zinc-400">{{ totalStudioParts }}</span>
               </div>
-              <div v-if="isCurrentPartNonFactoryHub" class="text-[9px] text-amber-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-0.5" title="Part ini berstatus 'Tidak Ada Part' di FactoryHub. Tombol Next/Prev akan otomatis loncat ke part aktif yang terdaftar di FactoryHub.">
-                <span>⚠️ Non-FactoryHub (Skip)</span>
+              <div v-if="isCurrentPartNonFactoryHub" class="text-[9px] text-amber-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-0.5" title="Part ini belum terdaftar di katalog FactoryHub. Tombol Next/Prev akan otomatis loncat ke part aktif.">
+                <span>⚠️ Non-Katalog FH</span>
               </div>
               <div v-else-if="studioSessionQueue && studioSessionQueue.length > 0" class="text-[9px] text-emerald-400 font-sans font-semibold leading-none mt-0.5 flex items-center justify-center gap-1" title="Antrean review terkunci sesuai filter saat studio dibuka. Status baru tidak akan merusak antrean.">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
                 <span>Antrean Filter ({{ totalStudioParts }})</span>
               </div>
-              <div v-else-if="studioSkipNoPart" @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer font-sans font-medium leading-none mt-0.5 flex items-center justify-center gap-1" title="Navigasi hanya melewati part aktif yang terdaftar di FactoryHub. Klik jika ingin menyertakan part arsip.">
+              <div v-else-if="studioSkipNoPart" @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer font-sans font-medium leading-none mt-0.5 flex items-center justify-center gap-1" title="Navigasi hanya melewati part aktif yang terdaftar di FactoryHub. Klik jika ingin menyertakan part non-katalog.">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                <span>Part Aktif ({{ totalStudioParts }})</span>
+                <span>Part Katalog ({{ totalStudioParts }})</span>
               </div>
-              <div v-else @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-zinc-400 hover:text-zinc-300 cursor-pointer font-sans font-medium leading-none mt-0.5" title="Semua status termasuk 'Tidak Ada Part' dimasukkan. Klik untuk memfilter kembali.">
+              <div v-else @click="studioSkipNoPart = !studioSkipNoPart" class="text-[9px] text-zinc-400 hover:text-zinc-300 cursor-pointer font-sans font-medium leading-none mt-0.5" title="Semua status termasuk part non-katalog dimasukkan. Klik untuk memfilter kembali.">
                 Semua Part
               </div>
             </div>
@@ -3875,7 +3918,7 @@
               <div class="relative inline-block text-left">
                 <button @click="showMoreStatusMenu = !showMoreStatusMenu"
                         type="button"
-                        title="Ubah ke status lain (Checksheet Done, Tidak Ada Part, Canceled, Belum Dikerjakan)"
+                        title="Ubah ke status lain (Checksheet Done, Canceled, Belum Dikerjakan)"
                         class="px-2.5 py-2 rounded-xl text-xs font-semibold bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/60 hover:border-zinc-500 transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm">
                   <span>⋯ Lainnya</span>
                   <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3893,16 +3936,30 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span>Checksheet Done</span>
                   </button>
-                  <button @click="setStudioStatus('Tidak Ada Part')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-rose-400 hover:text-rose-300 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    <span>Tidak Ada Part</span>
-                  </button>
                   <button @click="setStudioStatus('Canceled')" class="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-zinc-600"></span>
                     <span>Canceled</span>
                   </button>
                 </div>
               </div>
+
+              <!-- Separator -->
+              <div class="h-6 w-px bg-zinc-700/80 mx-0.5"></div>
+
+              <!-- Button 4: Ketersediaan Katalog FactoryHub (Tersedia / Belum) -->
+              <button @click="toggleActivePartAvailability"
+                      type="button"
+                      :title="activeChecksheet.is_part_available !== false ? 'Part terdaftar di FactoryHub (Tersedia). Klik jika belum ada di katalog.' : 'Part BELUM terdaftar di FactoryHub. Klik jika sudah didaftarkan ke katalog.'"
+                      class="px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-sm"
+                      :class="activeChecksheet.is_part_available !== false
+                        ? 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700/60 hover:border-emerald-500 hover:text-emerald-300'
+                        : 'bg-amber-950 text-amber-200 border-amber-600 ring-2 ring-amber-400/50 font-bold'">
+                <svg class="w-4 h-4" :class="activeChecksheet.is_part_available !== false ? 'text-emerald-400' : 'text-amber-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path v-if="activeChecksheet.is_part_available !== false" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path v-else stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{{ activeChecksheet.is_part_available !== false ? 'Katalog FH: Ada' : 'Belum di FH' }}</span>
+              </button>
             </div>
           </div>
 
@@ -4198,13 +4255,23 @@
                     </div>
                   </button>
 
-                  <!-- Tidak Ada Part -->
-                  <button @click="batchChangeStatus('Tidak Ada Part')"
-                          class="w-full text-left px-2.5 py-2 hover:bg-rose-950/40 text-rose-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 group-hover:ring-2 group-hover:ring-rose-500/30"></span>
+                  <!-- Tandai Non-FH (Belum Ada di Katalog) -->
+                  <button @click="batchChangeAvailability(false)"
+                          class="w-full text-left px-2.5 py-2 hover:bg-amber-950/40 text-amber-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 group-hover:ring-2 group-hover:ring-amber-500/30"></span>
                     <div class="flex flex-col">
-                      <span class="font-bold text-rose-300">Tidak Ada Part</span>
-                      <span class="text-[10px] text-rose-500/80 font-normal">Tidak ditemukan di master web</span>
+                      <span class="font-bold text-amber-300">Tandai Belum di FH</span>
+                      <span class="text-[10px] text-amber-500/80 font-normal">Tandai part belum ada di katalog FactoryHub</span>
+                    </div>
+                  </button>
+
+                  <!-- Tandai Tersedia di FH -->
+                  <button @click="batchChangeAvailability(true)"
+                          class="w-full text-left px-2.5 py-2 hover:bg-emerald-950/40 text-emerald-300 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:ring-2 group-hover:ring-emerald-500/30"></span>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-emerald-300">Tandai Tersedia di FH</span>
+                      <span class="text-[10px] text-emerald-500/80 font-normal">Tandai part terdaftar di katalog FactoryHub</span>
                     </div>
                   </button>
 
@@ -4476,6 +4543,7 @@
         const searchQuery = ref('');
         const statusFilter = ref('ALL');
         const categoryFilter = ref('ALL');
+        const availabilityFilter = ref('ALL'); // 'ALL', 'AVAILABLE', 'UNAVAILABLE'
         const workflowTab = ref('TODO');
         const selectedIds = ref([]);
 
@@ -4491,7 +4559,7 @@
           }
         };
 
-        // Hide "Tidak Ada Part" & Canceled State (Persisted in localStorage, default: true)
+        // Hide "Non-FH / Non-Katalog" & Canceled State (Persisted in localStorage, default: true)
         const savedHideNoPart = localStorage.getItem('summit_hide_no_part_v3');
         const hideNoPart = ref(savedHideNoPart !== 'false');
         if (savedHideNoPart === null) {
@@ -4502,7 +4570,7 @@
           hideNoPart.value = !hideNoPart.value;
           localStorage.setItem('summit_hide_no_part_v3', hideNoPart.value ? 'true' : 'false');
           localStorage.setItem('summit_hide_no_part', hideNoPart.value ? 'true' : 'false');
-          showToast(hideNoPart.value ? 'Part "Tidak Ada Part" sekarang disembunyikan.' : 'Part "Tidak Ada Part" sekarang ditampilkan.', 'info');
+          showToast(hideNoPart.value ? 'Part non-katalog sekarang disembunyikan.' : 'Part non-katalog sekarang ditampilkan.', 'info');
         };
 
         // PWA Installation & Standalone App State
@@ -4988,7 +5056,7 @@
                 map.set(name.toLowerCase(), {
                   item: name,
                   standard: p.standard || '',
-                  method: p.method || 'Visual'
+                  method: p.method || ''
                 });
               }
             });
@@ -5354,6 +5422,15 @@
           navigate('checksheets');
         };
 
+        const filterByCatalogAvailability = (available = false) => {
+          hideNoPart.value = false;
+          workflowTab.value = 'ALL';
+          statusFilter.value = 'ALL';
+          categoryFilter.value = 'ALL';
+          availabilityFilter.value = available ? 'AVAILABLE' : 'UNAVAILABLE';
+          navigate('checksheets');
+        };
+
         const goToChecksheetsWithTeam = (team) => {
           activeTeam.value = team;
           navigate('checksheets');
@@ -5411,7 +5488,7 @@
             const csStatus = (c.status || '').toLowerCase().trim();
             if (csStatus === 'checksheet done') cust.done += 1;
             else if (csStatus === 'siap kirim' || csStatus === 'reviewed') cust.ready += 1;
-            else if (csStatus === 'tidak ada part') cust.noPart += 1;
+            if (c.is_part_available === false) cust.noPart += 1;
           });
 
           return list.map(l => ({
@@ -5461,7 +5538,7 @@
           if (hideNoPart.value && workflowTab.value !== 'ISSUES') {
             list = list.filter(c => {
               const s = (c.status || '').toLowerCase().trim();
-              return s !== 'tidak ada part' && s !== 'canceled';
+              return c.is_part_available !== false && s !== 'canceled';
             });
           }
           if (member === 'Semua') return list.length;
@@ -5474,7 +5551,7 @@
           if (hideNoPart.value && workflowTab.value !== 'ISSUES') {
             list = list.filter(c => {
               const s = (c.status || '').toLowerCase().trim();
-              return s !== 'tidak ada part' && s !== 'canceled';
+              return c.is_part_available !== false && s !== 'canceled';
             });
           }
           const target = (cat || '').toLowerCase().trim();
@@ -5499,12 +5576,12 @@
           } else if (workflowTab.value === 'ISSUES') {
             list = list.filter(c => {
               const s = (c.status || '').toLowerCase().trim();
-              return s === 'tidak ada part' || s === 'canceled';
+              return c.is_part_available === false || s === 'canceled';
             });
           } else if (workflowTab.value === 'ALL' && hideNoPart.value) {
             list = list.filter(c => {
               const s = (c.status || '').toLowerCase().trim();
-              return s !== 'tidak ada part' && s !== 'canceled';
+              return c.is_part_available !== false && s !== 'canceled';
             });
           }
 
@@ -5543,11 +5620,16 @@
           return checksheets.value.filter(c => (c.status || '').toLowerCase().trim() === 'checksheet done').length;
         });
 
+        const countUnavailableParts = computed(() => {
+          if (!checksheets.value) return 0;
+          return checksheets.value.filter(c => c.is_part_available === false).length;
+        });
+
         const countIssues = computed(() => {
           if (!checksheets.value) return 0;
           return checksheets.value.filter(c => {
             const s = (c.status || '').toLowerCase().trim();
-            return s === 'tidak ada part' || s === 'canceled';
+            return c.is_part_available === false || s === 'canceled';
           }).length;
         });
 
@@ -5557,10 +5639,10 @@
           const isOp = currentUser.value?.role === 'operator';
           const targetPic = isOp ? currentUser.value?.name : (activeTeam.value !== 'Semua' ? activeTeam.value : null);
 
-          // Only consider active parts (exclude Tidak Ada Part and Canceled)
+          // Only consider active parts (exclude non-catalog part and Canceled)
           const activeList = list.filter(c => {
             const s = (c.status || '').toLowerCase().trim();
-            if (s === 'tidak ada part' || s === 'canceled') return false;
+            if (c.is_part_available === false || s === 'canceled') return false;
             if (targetPic) {
               if (targetPic === 'Unassigned') return isUnassigned(c);
               return c.assigned_to === targetPic;
@@ -5601,6 +5683,8 @@
           if (cat === 'Incomming Subcont Part') return 'Subcont';
           if (cat === 'Incomming Material') return 'Material';
           if (cat === 'Incomming Std Part') return 'Std Part';
+          if (cat === 'IR Child Part') return 'IR Child';
+          if (cat === 'IR Monthly FG') return 'IR FG';
           return cat;
         };
 
@@ -5622,6 +5706,8 @@
           if (c.includes('subcont')) return 'bg-amber-950/80 text-amber-300 border-amber-700/80';
           if (c.includes('material')) return 'bg-cyan-950/80 text-cyan-300 border-cyan-700/80';
           if (c.includes('std')) return 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80';
+          if (c.includes('child')) return 'bg-violet-950/80 text-violet-300 border-violet-700/80';
+          if (c.includes('fg') || c.includes('monthly')) return 'bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-700/80';
           if (c.includes('general')) return 'bg-zinc-800 text-zinc-300 border-zinc-700';
           return 'bg-blue-950/80 text-blue-300 border-blue-700/80';
         };
@@ -5632,6 +5718,8 @@
           if (c.includes('subcont')) return 'bg-amber-400';
           if (c.includes('material')) return 'bg-cyan-400';
           if (c.includes('std')) return 'bg-emerald-400';
+          if (c.includes('child')) return 'bg-violet-400';
+          if (c.includes('fg') || c.includes('monthly')) return 'bg-fuchsia-400';
           if (c.includes('general')) return 'bg-zinc-400';
           return 'bg-blue-400';
         };
@@ -5701,7 +5789,7 @@
             } else if (workflowTab.value === 'DONE') {
               matchWorkflow = cStatus === 'checksheet done';
             } else if (workflowTab.value === 'ISSUES') {
-              matchWorkflow = cStatus === 'tidak ada part' || cStatus === 'canceled';
+              matchWorkflow = c.is_part_available === false || cStatus === 'canceled';
             }
 
             let matchStatus = true;
@@ -5717,8 +5805,6 @@
                 matchStatus = cStatus === 'perlu revisi gambar';
               } else if (sf === 'checksheet done') {
                 matchStatus = cStatus === 'checksheet done';
-              } else if (sf === 'tidak ada part') {
-                matchStatus = cStatus === 'tidak ada part';
               } else if (sf === 'canceled') {
                 matchStatus = cStatus === 'canceled';
               } else {
@@ -5731,9 +5817,16 @@
               matchCategory = (c.category || 'Accuracy').toLowerCase().trim() === categoryFilter.value.toLowerCase().trim();
             }
 
+            let matchAvailability = true;
+            if (availabilityFilter.value === 'AVAILABLE') {
+              matchAvailability = c.is_part_available !== false;
+            } else if (availabilityFilter.value === 'UNAVAILABLE') {
+              matchAvailability = c.is_part_available === false;
+            }
+
             let matchHideNoPart = true;
-            if (hideNoPart.value && workflowTab.value !== 'ISSUES' && statusFilter.value !== 'Tidak Ada Part') {
-              if (cStatus === 'tidak ada part' || cStatus === 'canceled') {
+            if (hideNoPart.value && workflowTab.value !== 'ISSUES' && availabilityFilter.value !== 'UNAVAILABLE') {
+              if (c.is_part_available === false || cStatus === 'canceled') {
                 matchHideNoPart = false;
               }
             }
@@ -5744,7 +5837,7 @@
               (c.part_name && c.part_name.toLowerCase().includes(q)) ||
               (c.model && c.model.toLowerCase().includes(q)) ||
               (c.category && c.category.toLowerCase().includes(q));
-            return matchTeam && matchWorkflow && matchStatus && matchCategory && matchHideNoPart && matchQuery;
+            return matchTeam && matchWorkflow && matchStatus && matchCategory && matchAvailability && matchHideNoPart && matchQuery;
           });
 
           // Smart Sorting & Grouping
@@ -5828,6 +5921,7 @@
           searchQuery.value = '';
           statusFilter.value = 'ALL';
           categoryFilter.value = 'ALL';
+          availabilityFilter.value = 'ALL';
           workflowTab.value = 'TODO';
           activeTeam.value = currentUser.value?.role === 'operator' ? currentUser.value.name : 'Semua';
           sortBy.value = 'category';
@@ -6156,8 +6250,9 @@
         };
 
         const normalizeToolName = (toolStr) => {
-          if (!toolStr) return 'Visual';
-          const trimmed = toolStr.trim();
+          if (!toolStr) return '';
+          const trimmed = String(toolStr).trim();
+          if (!trimmed) return '';
           const cleaned = trimmed.toLowerCase().replace(/\s+/g, ' ');
           return STANDARD_TOOL_MAP[cleaned] || trimmed;
         };
@@ -6165,7 +6260,7 @@
         const normalizeRowTool = (rIdx) => {
           if (!excelPoints.value[rIdx]) return;
           const current = excelPoints.value[rIdx].method;
-          if (!current) return;
+          if (!current || !current.trim()) return;
           const normalized = normalizeToolName(current);
           if (normalized !== current) {
             excelPoints.value[rIdx].method = normalized;
@@ -6338,14 +6433,14 @@
           if (existingPoints && existingPoints.length) {
             excelPoints.value = existingPoints.map(p => ({
               ...p,
-              method: normalizeToolName(p.method || 'Visual')
+              method: p.method ? normalizeToolName(p.method) : ''
             }));
           } else if (!detail) {
             excelPoints.value = [{
               item_no: '1',
               inspection_item: '',
               standard: '',
-              method: 'Visual',
+              method: '',
               master_data: ''
             }];
           }
@@ -6381,7 +6476,7 @@
                   if (!isPointsDirty.value && freshDetail.points && freshDetail.points.length > 0) {
                     excelPoints.value = freshDetail.points.map(p => ({
                       ...p,
-                      method: normalizeToolName(p.method || 'Visual')
+                      method: p.method ? normalizeToolName(p.method) : ''
                     }));
                   }
                   if (freshDetail.images && freshDetail.images.length > 0) {
@@ -6439,8 +6534,7 @@
 
         const isNonFactoryHub = (c) => {
           if (!c) return false;
-          const s = (c.status || '').toLowerCase().trim();
-          return s === 'tidak ada part' || s === 'canceled';
+          return c.is_part_available === false;
         };
 
         const isCurrentPartNonFactoryHub = computed(() => {
@@ -6469,9 +6563,9 @@
             }
           }
 
-          // Unless user explicitly chose ISSUES workflow tab or 'Tidak Ada Part' filter,
-          // ALWAYS filter out 'Tidak Ada Part' and 'Canceled' parts when studioSkipNoPart is active
-          const isExplicitIssuesTab = workflowTab.value === 'ISSUES' || statusFilter.value === 'Tidak Ada Part';
+          // Unless user explicitly chose ISSUES workflow tab or UNAVAILABLE filter,
+          // ALWAYS filter out non-katalog parts when studioSkipNoPart is active
+          const isExplicitIssuesTab = workflowTab.value === 'ISSUES' || availabilityFilter.value === 'UNAVAILABLE';
           if (studioSkipNoPart.value && !isExplicitIssuesTab) {
             list = list.filter(c => !isNonFactoryHub(c));
           }
@@ -6857,7 +6951,8 @@
               category: activeChecksheet.value.category,
               status: activeChecksheet.value.status,
               assigned_to: activeChecksheet.value.assigned_to,
-              keterangan: activeChecksheet.value.keterangan
+              keterangan: activeChecksheet.value.keterangan,
+              is_part_available: activeChecksheet.value.is_part_available
             };
             const res = await fetch(`/api/checksheets/${activeChecksheet.value.id}`, {
               method: 'PATCH',
@@ -6904,6 +6999,20 @@
           activeChecksheet.value.status = status;
           await saveChecksheetMeta();
           showToast(`Status part ${activeChecksheet.value.part_number} diubah ke ${status}.`, 'success');
+        };
+
+        const toggleActivePartAvailability = async () => {
+          if (!activeChecksheet.value) return;
+          const current = activeChecksheet.value.is_part_available !== false;
+          const nextVal = !current;
+          activeChecksheet.value.is_part_available = nextVal;
+          await saveChecksheetMeta();
+          showToast(
+            nextVal
+              ? `Part ${activeChecksheet.value.part_number} ditandai TERSEDIA di Katalog FactoryHub.`
+              : `Part ${activeChecksheet.value.part_number} ditandai BELUM ADA di Katalog FactoryHub.`,
+            'info'
+          );
         };
 
         const toggleAutoUpdate = () => {
@@ -7033,7 +7142,7 @@
           if (isInlineEditing.value && activeChecksheet.value) {
             excelPoints.value = (activeChecksheet.value.points || []).map(p => ({
               ...p,
-              method: normalizeToolName(p.method || 'Visual')
+              method: p.method ? normalizeToolName(p.method) : ''
             }));
             if (excelPoints.value.length === 0) {
               excelPoints.value = [{
@@ -7323,7 +7432,7 @@
             item_no: item_no || String(rOffset + 1),
             inspection_item: inspection_item || '',
             standard: standard || '',
-            method: method || 'Visual',
+            method: method || '',
             master_data: master_data || ''
           };
         };
@@ -7701,7 +7810,7 @@
                 item_no: p.item_no || String(idx + 1),
                 inspection_item: p.inspection_item || '',
                 standard: p.standard ?? '',
-                method: p.method || 'Visual',
+                method: (p.method ?? '').trim(),
                 master_data: p.master_data || ''
               }))
             };
@@ -7828,6 +7937,43 @@
             }
           } catch (e) {
             console.error('Error batch status update:', e);
+            showToast('Gagal menghubungi server.', 'error');
+          }
+        };
+
+        const batchChangeAvailability = async (isAvailable) => {
+          showStatusDropdown.value = false;
+          if (!selectedIds.value.length) return;
+          const count = selectedIds.value.length;
+          try {
+            const res = await fetch('/api/checksheets/batch-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                checksheet_ids: selectedIds.value,
+                is_part_available: isAvailable
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+              const idSet = new Set(selectedIds.value);
+              checksheets.value.forEach(cs => {
+                if (idSet.has(cs.id)) {
+                  cs.is_part_available = isAvailable;
+                }
+              });
+              selectedIds.value = [];
+              showToast(
+                isAvailable
+                  ? `${count} part berhasil ditandai TERSEDIA di katalog FactoryHub`
+                  : `${count} part berhasil ditandai BELUM ADA di katalog FactoryHub`,
+                'success'
+              );
+            } else {
+              showToast(data.detail || 'Gagal mengubah ketersediaan part.', 'error');
+            }
+          } catch (e) {
+            console.error('Error batch availability update:', e);
             showToast('Gagal menghubungi server.', 'error');
           }
         };
@@ -8228,6 +8374,7 @@
           category: 'Accuracy',
           assigned_to: 'Unassigned',
           status: 'Belum Dikerjakan',
+          is_part_available: true,
           keterangan: 'Ditambahkan manual oleh admin'
         });
 
@@ -8241,6 +8388,7 @@
             category: 'Accuracy',
             assigned_to: 'Unassigned',
             status: 'Belum Dikerjakan',
+            is_part_available: true,
             keterangan: 'Ditambahkan manual oleh admin'
           };
           showAddPartModal.value = true;
@@ -8736,6 +8884,9 @@
           hideNoPart,
           toggleHideNoPart,
           workflowTab,
+          availabilityFilter,
+          filterByCatalogAvailability,
+          countUnavailableParts,
           countTodo,
           countReady,
           countDone,
@@ -8909,6 +9060,7 @@
           triggerSystemUpdate,
           toggleReviewStatus,
           setStudioStatus,
+          toggleActivePartAvailability,
           showMoreStatusMenu,
           showAddPartModal,
           isSavingManualPart,
@@ -8981,6 +9133,7 @@
           handleDrawingScroll,
           showStatusDropdown,
           batchChangeStatus,
+          batchChangeAvailability,
           canInstallPwa,
           isPwaInstalled,
           triggerPwaInstall
