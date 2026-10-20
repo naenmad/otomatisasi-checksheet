@@ -41,6 +41,7 @@ class Checksheet(Base):
     doc_number = Column(String(100), default="Form 1")
     template_type = Column(String(50), default="GENERIC")
     category = Column(String(100), default="FINAL INSPECTION ASSY", nullable=False, index=True)
+    format = Column(String(50), default="daily", nullable=False, index=True)
 
     # Status: DRAFT, READY_FOR_SUBMIT, IN_QUEUE, SUBMITTED
     status = Column(String(50), default="DRAFT", index=True)

@@ -171,6 +171,7 @@ class ChecksheetUpdateSchema(BaseModel):
     customer: Optional[str] = None
     doc_number: Optional[str] = None
     category: Optional[str] = None
+    format: Optional[str] = None
     status: Optional[str] = None
     is_part_available: Optional[bool] = None
     assigned_to: Optional[str] = None
@@ -310,6 +311,7 @@ async def get_checksheet_detail(
         "doc_number": cs.doc_number,
         "template_type": cs.template_type,
         "category": cs.category or "Accuracy",
+        "format": getattr(cs, "format", "daily") or "daily",
         "status": cs.status,
         "is_part_available": cs.is_part_available if cs.is_part_available is not None else True,
         "assigned_to": cs.assigned_to,
@@ -469,6 +471,9 @@ async def update_checksheet(checksheet_id: int, payload: ChecksheetUpdateSchema,
     if payload.category is not None:
         cs.category = payload.category.strip()
         cache_updates["category"] = cs.category
+    if payload.format is not None:
+        cs.format = payload.format.strip()
+        cache_updates["format"] = cs.format
     if payload.status is not None and payload.status != cs.status:
         cs.status = payload.status
         cache_updates["status"] = payload.status
@@ -960,6 +965,7 @@ class CreateChecksheetManualSchema(BaseModel):
     customer: Optional[str] = "PT. HPM"
     doc_number: Optional[str] = "FO-45-01"
     category: Optional[str] = "Accuracy"
+    format: Optional[str] = "daily"
     assigned_to: Optional[str] = "Unassigned"
     status: Optional[str] = "Belum Dikerjakan"
     is_part_available: Optional[bool] = True
@@ -988,6 +994,7 @@ async def create_checksheet_manual(
         customer=payload.customer or "PT. HPM",
         doc_number=payload.doc_number or "FO-45-01",
         category=payload.category or "Accuracy",
+        format=payload.format or ("monthly_mmki" if payload.category == "IR MONTHLY REPORT" else "daily"),
         status=payload.status or "Belum Dikerjakan",
         is_part_available=payload.is_part_available if payload.is_part_available is not None else True,
         assigned_to=payload.assigned_to or "Unassigned",

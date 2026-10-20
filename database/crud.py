@@ -36,6 +36,7 @@ async def create_checksheet(
     doc_number: str = "Form 1",
     template_type: str = "GENERIC",
     category: str = "Accuracy",
+    format: str = "daily",
     status: str = "DRAFT",
     assigned_to: str = "Unassigned",
     keterangan: str = "",
@@ -45,6 +46,7 @@ async def create_checksheet(
 ) -> Checksheet:
     clean_pno = clean_str(part_number)
     category_val = (category or "Accuracy").strip()
+    format_val = (format or "daily").strip()
 
     # Check if a template for this part number and category already exists
     query_filters = [
@@ -66,6 +68,8 @@ async def create_checksheet(
         existing.doc_number = doc_number or existing.doc_number
         existing.template_type = template_type or existing.template_type
         existing.category = category_val or existing.category
+        if format_val:
+            existing.format = format_val
         if existing.status != "Reviewed":
             if status != "DRAFT" or existing.status == "DRAFT":
                 existing.status = status
@@ -82,6 +86,7 @@ async def create_checksheet(
             doc_number=doc_number,
             template_type=template_type,
             category=category_val,
+            format=format_val,
             status=status,
             assigned_to=assigned_to,
             keterangan=keterangan,
@@ -278,6 +283,7 @@ async def get_checksheets_summary_list(
             Checksheet.doc_number,
             Checksheet.template_type,
             Checksheet.category,
+            Checksheet.format,
             Checksheet.status,
             Checksheet.is_part_available,
             Checksheet.assigned_to,
@@ -374,6 +380,7 @@ async def get_checksheets_summary_list(
             "doc_number": r.doc_number,
             "template_type": r.template_type,
             "category": r.category or "Accuracy",
+            "format": getattr(r, "format", "daily") or "daily",
             "status": r.status,
             "is_part_available": r.is_part_available if r.is_part_available is not None else True,
             "assigned_to": r.assigned_to,
