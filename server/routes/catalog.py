@@ -3,13 +3,14 @@ Catalog API router for FactoryHub Master Parts search, statistics, and live sync
 """
 from typing import List, Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db
 from services.catalog_service import (
     get_catalog_stats,
     search_and_match_parts,
+    search_catalog_autocomplete,
     sync_catalog_from_factoryhub,
     parse_part_input
 )
@@ -28,14 +29,34 @@ async def get_stats():
     return get_catalog_stats()
 
 
+@router.get("/search")
+async def api_catalog_autocomplete(
+    q: Optional[str] = Query(None, description="Search term for part number or name"),
+    query: Optional[str] = Query(None, description="Search term alias"),
+    category: Optional[str] = Query(None, description="Filter by REGULAR or NEW PROJECT"),
+    limit: int = Query(10, description="Max results")
+):
+    """
+    Instant in-memory autocomplete for search bars and dropdowns.
+    """
+    search_term = (q or query or "").strip()
+    results = search_catalog_autocomplete(query=search_term, limit=limit, category=category)
+    return {
+        "results": results,
+        "total": len(results)
+    }
+
+
 @router.post("/search")
 async def search_parts(
     payload: CatalogSearchRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Search part numbers (single query or batch list) against FactoryHub master
-    and Supabase checksheet database.
+    Search part numbers (single query or batch list) against:
+    - FactoryHub master
+    - Supabase checksheet database
+    - Local multi-sheet Excel files in documents/
     """
     to_check = []
     if payload.parts:

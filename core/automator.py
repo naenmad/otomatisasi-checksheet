@@ -91,18 +91,25 @@ async def login_factoryhub(page: Page, nik: str = DEFAULT_NIK, password: str = D
         await page.keyboard.press("Enter")
 
     # Wait for navigation
-    await page.wait_for_load_state("networkidle")
+    try:
+        await page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=10000)
+        except Exception:
+            pass
     print(f"[+] Login complete. Current URL: {page.url}")
 
 
 def standardize_part_number(s: str) -> str:
-    """Normalize and clean part numbers from rogue spaces, messy hyphens, and casing."""
+    """Normalize and clean part numbers from rogue spaces, messy hyphens, single-quotes, and casing."""
     if not s:
         return ""
     val = str(s).strip().upper()
+    val = val.strip('"' + "\x27`")
     val = re.sub(r"\s*-\s*", "-", val)
     val = re.sub(r"\s+", " ", val)
-    val = val.strip("-_ /.,")
+    val = val.strip("-_ /.," + '"' + "\x27`")
     return val
 
 
@@ -126,15 +133,28 @@ async def find_existing_template(page: Page, part_no: str, target_category: Opti
     if clean_target and clean_target not in candidates:
         candidates.append(clean_target)
 
+    # Strip revision/subcont suffixes (e.g., 65118-TG2-K000-50 -> 65118-TG2-K000, 17522-TG4 -T000-21 -> 17522-TG4-T000)
+    base_match = re.match(r"^([A-Z0-9]+-[A-Z0-9\s]+-[A-Z0-9]+)(?:-[A-Z0-9]+)?$", clean_pn)
+    if base_match:
+        base_cand = base_match.group(1).replace(" ", "")
+        if base_cand not in candidates:
+            candidates.append(base_cand)
+
+    # Suzuki -000 suffix (e.g. 58651-68P10 -> 58651-68P10-000)
+    if re.match(r"^[0-9]{5}-[A-Z0-9]{5}$", clean_pn):
+        suzuki_cand = f"{clean_pn}-000"
+        if suzuki_cand not in candidates:
+            candidates.append(suzuki_cand)
+
     # Prefix with hyphen if available (e.g. 68124-3M0)
     if "-" in clean_pn:
         tokens = clean_pn.split("-")
         if len(tokens) >= 2:
-            dash_pref = f"{tokens[0]}-{tokens[1]}"
+            dash_pref = f"{tokens[0]}-{tokens[1]}".strip()
             if dash_pref not in candidates:
                 candidates.append(dash_pref)
-        if tokens[0] not in candidates:
-            candidates.append(tokens[0])
+        if tokens[0].strip() not in candidates:
+            candidates.append(tokens[0].strip())
     elif len(clean_pn) >= 5:
         pref = clean_pn[:5]
         if pref not in candidates:
@@ -169,8 +189,20 @@ async def find_existing_template(page: Page, part_no: str, target_category: Opti
                     editUrl: editLink.href
                 };
 
-                // Alphanumeric clean match
-                if (cleanPart === target) {
+                // Alphanumeric clean match & multi-tier fallback (visual O/0, revision suffix, suzuki -000)
+                let isPartMatch = false;
+                const fuzzyPart = cleanPart.replace(/O/g, '0').replace(/I/g, '1');
+                const fuzzyTarget = target.replace(/O/g, '0').replace(/I/g, '1');
+
+                if (cleanPart === target || fuzzyPart === fuzzyTarget) {
+                    isPartMatch = true;
+                } else if (cleanPart === target + '000' || (target.length >= 8 && cleanPart.startsWith(target))) {
+                    isPartMatch = true;
+                } else if (target.length >= 7 && target.startsWith(cleanPart)) {
+                    isPartMatch = true;
+                }
+
+                if (isPartMatch) {
                     if (targetCat) {
                         const tc = targetCat.toLowerCase().trim();
                         const cc = categoryCell.toLowerCase().trim();
@@ -636,7 +668,13 @@ async def fill_checksheet_form(
                     if (target.includes('std') && (val.includes('std') || txt.includes('std'))) {
                         catSelect.selectedIndex = i; matched = true; break;
                     }
-                    if (target.includes('accuracy') && (val.includes('accuracy') || txt.includes('accuracy'))) {
+                    if ((target.includes('ir monthly') || target.includes('ir_monthly')) && (val.includes('ir monthly') || txt.includes('ir monthly'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('stamping') && (val.includes('stamping') || txt.includes('stamping'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if ((target.includes('accuracy') || target.includes('final') || target.includes('assy')) && (val.includes('final inspection assy') || txt.includes('final inspection assy') || val.includes('accuracy') || txt.includes('accuracy'))) {
                         catSelect.selectedIndex = i; matched = true; break;
                     }
                     if (target.includes('general') && (val.includes('general') || txt.includes('general'))) {
@@ -708,6 +746,11 @@ async def fill_checksheet_form(
                     const itemInp = tr.querySelector('input[name*="[inspection_item]"]');
                     setVal(itemInp, item.inspection_item || '');
 
+                    const posInp = tr.querySelector('input[name*="[measuring_position]"]');
+                    if (posInp) {
+                        setVal(posInp, item.measuring_position || item.position || '');
+                    }
+
                     const stdInp = tr.querySelector('input[name*="[standard]"]');
                     setVal(stdInp, item.standard || '');
 
@@ -733,47 +776,77 @@ async def fill_checksheet_form(
         print(f"[*] Membuka mode CREATE baru: {CREATE_URL}")
         await page.goto(CREATE_URL, wait_until="networkidle")
 
-        # 1. Part Category Type Selection
+        # 1. Part Category Type Selection with Multi-Tier Fallback Matching
         print(f"[*] Checking Part Number: {part_no}...")
         part_selection_result = await page.evaluate(r"""(partNo) => {
-            const cleanStr = (s) => (s || '').toUpperCase().replace(/[-\s_]/g, '');
+            const cleanStr = (s) => (s || '').toUpperCase().replace(/[^A-Za-z0-9]/g, '');
+            const fuzzyStr = (s) => cleanStr(s).replace(/O/g, '0').replace(/I/g, '1');
             const targetClean = cleanStr(partNo);
+            const targetFuzzy = fuzzyStr(partNo);
             const prefixClean = targetClean.slice(0, 5);
+
+            const matchScore = (candClean, candFuzzy) => {
+                if (!candClean) return 0;
+                // 1. Exact clean match
+                if (candClean === targetClean) return 100;
+                // 2. Fuzzy visual match (O/0, I/1)
+                if (candFuzzy === targetFuzzy) return 90;
+                // 3. Suzuki -000 suffix
+                if (candClean === targetClean + '000') return 88;
+                // 4. Target starts with candidate (revision suffixes like -50, -H1, -21, -R)
+                if (candClean.length >= 7 && targetClean.startsWith(candClean)) return 80 + candClean.length;
+                if (targetClean.length >= 8 && candClean.startsWith(targetClean)) return 75;
+                // 5. Fuzzy variant
+                if (candFuzzy.length >= 7 && targetFuzzy.startsWith(candFuzzy)) return 70;
+                if (targetFuzzy.length >= 8 && candFuzzy.startsWith(targetFuzzy)) return 68;
+                // 6. Substring match
+                if (candClean.length >= 7 && (targetClean.includes(candClean) || candClean.includes(targetClean))) return 60;
+                return 0;
+            };
 
             // Step 1: Check Regular Production Part select options
             const regularSelect = document.getElementById('part_num_select');
-            let regularFound = false;
+            let bestRegular = null;
+            let bestRegularScore = 0;
             let similar = [];
 
             if (regularSelect) {
                 for (let i = 0; i < regularSelect.options.length; i++) {
                     const opt = regularSelect.options[i];
-                    const optValClean = cleanStr(opt.value);
-                    const optTextClean = cleanStr(opt.text);
-                    if (optValClean.includes(targetClean) || optTextClean.includes(targetClean)) {
-                        regularSelect.selectedIndex = i;
-                        regularSelect.value = opt.value;
-                        regularSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                        regularSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                        regularFound = true;
-                        
-                        const tmplName = document.getElementById('template_name');
-                        if (tmplName) {
-                            tmplName.value = opt.value;
-                            tmplName.dispatchEvent(new Event('input', { bubbles: true }));
-                            tmplName.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                        if (typeof updateTemplateName === 'function') {
-                            updateTemplateName();
-                        }
-                        break;
-                    } else if (prefixClean && (optValClean.includes(prefixClean) || optTextClean.includes(prefixClean))) {
+                    if (!opt.value) continue;
+                    const vClean = cleanStr(opt.value);
+                    const tClean = cleanStr(opt.text);
+                    const vFuzzy = fuzzyStr(opt.value);
+                    const tFuzzy = fuzzyStr(opt.text);
+
+                    const scoreV = matchScore(vClean, vFuzzy);
+                    const scoreT = matchScore(tClean, tFuzzy);
+                    const maxScore = Math.max(scoreV, scoreT);
+
+                    if (maxScore >= 60 && maxScore > bestRegularScore) {
+                        bestRegularScore = maxScore;
+                        bestRegular = { index: i, value: opt.value, text: opt.text, score: maxScore };
+                    } else if (prefixClean && (vClean.includes(prefixClean) || tClean.includes(prefixClean))) {
                         similar.push(opt.text || opt.value);
                     }
                 }
             }
 
-            if (regularFound) {
+            if (bestRegular) {
+                regularSelect.selectedIndex = bestRegular.index;
+                regularSelect.value = bestRegular.value;
+                regularSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                regularSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+                const tmplName = document.getElementById('template_name');
+                if (tmplName) {
+                    tmplName.value = bestRegular.value;
+                    tmplName.dispatchEvent(new Event('input', { bubbles: true }));
+                    tmplName.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (typeof updateTemplateName === 'function') {
+                    updateTemplateName();
+                }
                 return { type: 'regular', found: true, selectedValue: regularSelect.value, similar: [] };
             }
 
@@ -787,29 +860,50 @@ async def fill_checksheet_form(
             }
 
             const projSelect = document.getElementById('part_project_id');
-            let projFound = false;
+            let bestProj = null;
+            let bestProjScore = 0;
             if (projSelect) {
                 for (let i = 0; i < projSelect.options.length; i++) {
                     const opt = projSelect.options[i];
-                    const optTextClean = cleanStr(opt.text);
-                    const dataNumClean = cleanStr(opt.getAttribute('data-num'));
-                    if (optTextClean.includes(targetClean) || dataNumClean.includes(targetClean)) {
-                        projSelect.selectedIndex = i;
-                        projFound = true;
-                        if (typeof updateTemplateNameProject === 'function') {
-                            updateTemplateNameProject();
-                        }
-                        break;
-                    } else if (prefixClean && (optTextClean.includes(prefixClean) || dataNumClean.includes(prefixClean))) {
-                        similar.push(opt.text || dataNumClean);
+                    if (!opt.value) continue;
+                    const tClean = cleanStr(opt.text);
+                    const dClean = cleanStr(opt.getAttribute('data-num'));
+                    const tFuzzy = fuzzyStr(opt.text);
+                    const dFuzzy = fuzzyStr(opt.getAttribute('data-num'));
+
+                    const scoreT = matchScore(tClean, tFuzzy);
+                    const scoreD = matchScore(dClean, dFuzzy);
+                    const maxScore = Math.max(scoreT, scoreD);
+
+                    if (maxScore >= 60 && maxScore > bestProjScore) {
+                        bestProjScore = maxScore;
+                        bestProj = { index: i, value: opt.value, score: maxScore };
+                    } else if (prefixClean && (tClean.includes(prefixClean) || dClean.includes(prefixClean))) {
+                        similar.push(opt.text || dClean);
                     }
                 }
             }
 
+            if (bestProj) {
+                projSelect.selectedIndex = bestProj.index;
+                projSelect.value = bestProj.value;
+                projSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                projSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof updateTemplateNameProject === 'function') {
+                    updateTemplateNameProject();
+                }
+                return {
+                    type: 'project',
+                    found: true,
+                    selectedValue: projSelect.value,
+                    similar: []
+                };
+            }
+
             return {
                 type: 'project',
-                found: projFound,
-                selectedValue: projSelect ? projSelect.value : null,
+                found: false,
+                selectedValue: null,
                 similar: similar.slice(0, 5)
             };
         }""", part_no)
@@ -890,7 +984,13 @@ async def fill_checksheet_form(
                     if (target.includes('std') && (val.includes('std') || txt.includes('std'))) {
                         catSelect.selectedIndex = i; matched = true; break;
                     }
-                    if (target.includes('accuracy') && (val.includes('accuracy') || txt.includes('accuracy'))) {
+                    if ((target.includes('ir monthly') || target.includes('ir_monthly')) && (val.includes('ir monthly') || txt.includes('ir monthly'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if (target.includes('stamping') && (val.includes('stamping') || txt.includes('stamping'))) {
+                        catSelect.selectedIndex = i; matched = true; break;
+                    }
+                    if ((target.includes('accuracy') || target.includes('final') || target.includes('assy')) && (val.includes('final inspection assy') || txt.includes('final inspection assy') || val.includes('accuracy') || txt.includes('accuracy'))) {
                         catSelect.selectedIndex = i; matched = true; break;
                     }
                     if (target.includes('general') && (val.includes('general') || txt.includes('general'))) {
@@ -903,17 +1003,33 @@ async def fill_checksheet_form(
             catSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }""", checksheet_cat)
 
-        # 2. Checksheet Format: Daily Checksheet
-        print("[*] Selecting Format: daily (Daily Checksheet)...")
-        await page.evaluate("""() => {
-            const formatSelect = document.getElementById('format_select');
+        # 2. Checksheet Format: daily, monthly_mmki, or monthly_hpm
+        target_fmt = "daily"
+        explicit_fmt = meta.get("format") or meta.get("checksheet_format")
+        if explicit_fmt in ["daily", "monthly_mmki", "monthly_hpm"]:
+            target_fmt = explicit_fmt
+        else:
+            cat_lower = str(meta.get("category") or "").lower()
+            doc_lower = str(meta.get("doc_number") or "").lower()
+            cust_lower = str(meta.get("customer") or "").lower()
+            if "ir monthly" in cat_lower or "ir monthly" in doc_lower or "ir report" in cat_lower:
+                if "mmki" in cust_lower or "mmki" in doc_lower:
+                    target_fmt = "monthly_mmki"
+                else:
+                    target_fmt = "monthly_hpm"
+
+        print(f"[*] Selecting Format: {target_fmt}...")
+        await page.evaluate("""(fmt) => {
+            const formatSelect = document.getElementById('format_select') || document.querySelector('select[name="format"]');
             if (formatSelect) {
-                formatSelect.value = 'daily';
+                formatSelect.value = fmt;
+                formatSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 if (typeof updateTableHead === 'function') {
                     updateTableHead();
                 }
             }
-        }""")
+        }""", target_fmt)
 
         # 4. Doc Number
         doc_no = meta["doc_number"]
@@ -963,6 +1079,11 @@ async def fill_checksheet_form(
 
                     const itemInp = tr.querySelector('input[name*="[inspection_item]"]');
                     setVal(itemInp, item.inspection_item || ('Point ' + (index + 1)));
+
+                    const posInp = tr.querySelector('input[name*="[measuring_position]"]');
+                    if (posInp) {
+                        setVal(posInp, item.measuring_position || item.position || '');
+                    }
 
                     const stdInp = tr.querySelector('input[name*="[standard]"]');
                     setVal(stdInp, item.standard || '-');

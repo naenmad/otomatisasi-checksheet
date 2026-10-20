@@ -104,6 +104,7 @@ async def create_checksheet(
                 checksheet_id=target.id,
                 item_no=pt.get("item_no") or str(idx + 1),
                 inspection_item=pt.get("inspection_item") or f"Point {idx + 1}",
+                measuring_position=pt.get("measuring_position") or pt.get("position") or "",
                 standard=pt.get("standard") or "",
                 method="Visual" if pt.get("method") is None else pt.get("method"),
                 master_data=pt.get("master_data") or "",
@@ -201,11 +202,15 @@ def _normalize_thumbnail_url(url: Optional[str], path: Optional[str], cache_vers
     return res
 
 
-def extract_process_label(raw_path: Optional[str], doc_number: Optional[str] = None) -> str:
-    """Helper to determine the exact manufacturing/inspection stage badge from file path."""
+def extract_process_label(raw_path: Optional[str], doc_number: Optional[str] = None, category: Optional[str] = None) -> str:
+    """Helper to determine the exact manufacturing/inspection stage badge from file path and category."""
     if not raw_path:
         return ""
     p = raw_path.upper().replace("\\", "/")
+    if "BLANK" in p or "COIL" in p or "IQC SHEET.XLSX" in p or "CS IQC MATERIAL" in p or "CS MATERIAL" in p:
+        return "IQC Material"
+    if category and "MATERIAL" in str(category).upper():
+        return "IQC Material"
     if "1. STAMPING" in p or "/STAMPING/" in p:
         return "IPQC Stamping"
     if "2. SSW" in p or "SPOT NUT" in p or "SPOT_NUT" in p:
@@ -379,7 +384,7 @@ async def get_checksheets_summary_list(
             "image_urls": all_imgs,
             "factoryhub_url": r.factoryhub_url,
             "raw_file_path": r.raw_file_path,
-            "process_label": extract_process_label(r.raw_file_path, r.doc_number),
+            "process_label": extract_process_label(r.raw_file_path, r.doc_number, r.category),
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         })
     return items

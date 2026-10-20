@@ -70,6 +70,7 @@ async def submit_checksheet(
     checksheet_id: int,
     headless: bool = Query(False, description="Run browser headless or visible"),
     browser_channel: str = Query("chrome", description="Browser channel: chrome or msedge"),
+    authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -80,6 +81,8 @@ async def submit_checksheet(
     if not cs:
         raise HTTPException(status_code=404, detail=f"Checksheet ID {checksheet_id} tidak ditemukan.")
 
+    req_user = await resolve_user_from_request(db, None, authorization)
+
     logs = []
     final_url = ""
     is_success = False
@@ -89,7 +92,8 @@ async def submit_checksheet(
         session=db,
         submit=True,
         headless=headless,
-        browser_channel=browser_channel
+        browser_channel=browser_channel,
+        requesting_user=req_user
     ):
         clean_l = line.strip()
         if clean_l:
@@ -121,6 +125,7 @@ async def dry_run_checksheet(
     checksheet_id: int,
     headless: bool = Query(False, description="Run browser headless or visible"),
     browser_channel: str = Query("chrome", description="Browser channel: chrome or msedge"),
+    authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -132,13 +137,16 @@ async def dry_run_checksheet(
     if not cs:
         raise HTTPException(status_code=404, detail=f"Checksheet ID {checksheet_id} tidak ditemukan.")
 
+    req_user = await resolve_user_from_request(db, None, authorization)
+
     logs = []
     async for line in execute_checksheet_submission(
         checksheet_id=checksheet_id,
         session=db,
         submit=False,
         headless=headless,
-        browser_channel=browser_channel
+        browser_channel=browser_channel,
+        requesting_user=req_user
     ):
         clean_l = line.strip()
         if clean_l:

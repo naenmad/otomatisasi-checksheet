@@ -165,6 +165,17 @@ def match_part(
         if not local_status:
             local_status = "Tidak ada"
 
+    if not local_status or local_status == "Tidak ada" or local_status == "-":
+        try:
+            from services.document_search_service import search_part_in_documents
+            doc_matches = search_part_in_documents(target_part, max_results=1)
+            if doc_matches:
+                d = doc_matches[0]
+                sheet_str = f" ({d['sheet_name']})" if d.get("sheet_name") and d["sheet_name"] != "-" else ""
+                local_status = f"{d['filename']}{sheet_str}"
+        except Exception:
+            pass
+
     similar = []
 
     def check_candidate_match(cand_val: str, cand_text: str = "", cand_extra: str = "") -> bool:
@@ -395,6 +406,11 @@ def main():
         action="store_true",
         help="Cek semua part number yang ada di folder documents/"
     )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Paksa scraping langsung dari FactoryHub via Playwright (bukan cache lokal)"
+    )
 
     args = parser.parse_args()
 
@@ -414,11 +430,26 @@ def main():
         sys.exit(1)
 
     print(f"\n[*] Memulai pengecekan {len(parts_to_check)} part number...")
-    master_data = asyncio.run(fetch_master_options())
+    cat_file = os.path.join(PROJECT_ROOT, "data", "factoryhub_catalog.json")
+    master_data = None
+    if not args.live and os.path.isfile(cat_file):
+        try:
+            import json
+            with open(cat_file, "r", encoding="utf-8") as cf:
+                cdata = json.load(cf)
+                parts_list = cdata.get("parts", [])
+                regular_parts = [{"value": p.get("part_number") or p.get("value"), "text": f"{p.get('part_number')} - {p.get('part_name', '')}"} for p in parts_list if p.get("category") == "REGULAR"]
+                project_parts = [{"value": p.get("part_number") or p.get("value"), "text": f"{p.get('part_number')} - {p.get('part_name', '')}", "dataNum": p.get("part_number")} for p in parts_list if p.get("category") == "NEW PROJECT"]
+                master_data = {"regular": regular_parts, "project": project_parts}
+                print(f"[+] Memuat katalog lokal: {len(regular_parts)} Regular Parts, {len(project_parts)} Project Parts (instan).")
+        except Exception:
+            master_data = None
 
-    total_reg = len(master_data.get("regular", []))
-    total_proj = len(master_data.get("project", []))
-    print(f"[+] Berhasil memuat master data: {total_reg} Regular Parts, {total_proj} Project Parts.")
+    if not master_data:
+        master_data = asyncio.run(fetch_master_options())
+        total_reg = len(master_data.get("regular", []))
+        total_proj = len(master_data.get("project", []))
+        print(f"[+] Berhasil memuat master data: {total_reg} Regular Parts, {total_proj} Project Parts.")
     print(f"[*] Mencocokkan {len(parts_to_check)} part...")
 
     local_map = build_local_parts_map()

@@ -248,8 +248,27 @@ class MMKIIRParser(BaseParser):
                     item_name = v_item if v_item else last_item_name
                     if v_item:
                         last_item_name = v_item
+
+                    # Check sub-row r+1 for continuation of item name or coordinate
+                    sub_col3 = str(ws.cell(r + 1, 3).value or "").strip() if r + 1 <= ws.max_row else ""
+                    if sub_col3 and sub_col3 not in ("OK / NG", "OK/NG") and not any(k in sub_col3.upper() for k in ["JUDGMENT", "MMKI"]):
+                        item_name = f"{item_name} {sub_col3}".strip()
+
+                    sub_col4 = str(ws.cell(r + 1, 4).value or "").strip() if r + 1 <= ws.max_row else ""
+                    if sub_col4 and not v_coord:
+                        v_coord = sub_col4
+
+                    # Extract measuring position (e.g. [ BL ], [ WL ], [ TL ])
+                    measuring_pos = ""
                     if v_coord:
-                        item_name = f"{item_name} {v_coord}".strip()
+                        measuring_pos = v_coord.strip("[] ").strip()
+
+                    if item_name and "[" in item_name and "]" in item_name:
+                        coord_match = re.search(r"\[\s*([A-Za-z0-9,\s]+)\s*\]", item_name)
+                        if coord_match:
+                            if not measuring_pos:
+                                measuring_pos = coord_match.group(1).strip()
+                            item_name = re.sub(r"\[\s*[A-Za-z0-9,\s]+\s*\]", "", item_name).strip()
 
                     nom_str = str(v_nom).strip() if v_nom is not None else ""
                     if nom_str.endswith(".0") and nom_str[:-2].isdigit():
@@ -287,6 +306,7 @@ class MMKIIRParser(BaseParser):
                     all_points.append({
                         "item_no": str(current_balloon),
                         "inspection_item": " ".join(item_name.split()),
+                        "measuring_position": measuring_pos,
                         "standard": " ".join(full_std.split()),
                         "method": method,
                         "master_data": ""

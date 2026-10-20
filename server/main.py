@@ -16,13 +16,15 @@ for p in (BASE_DIR, CORE_DIR):
         sys.path.insert(0, p)
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, ORJSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.connection import init_db
+from database.connection import init_db, get_db
+from services.catalog_service import parse_part_input, search_and_match_parts
 from server.routes.checksheets import router as checksheets_router
 from server.routes.upload import router as upload_router
 from server.routes.automation import router as automation_router
@@ -81,6 +83,61 @@ app.include_router(automation_router)
 app.include_router(export_router)
 app.include_router(system_router)
 app.include_router(tools_router)
+
+
+@app.post("/api/search")
+async def api_search_batch(
+    payload: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Batch search endpoint for checking multiple part numbers against
+    FactoryHub Master, Local Checksheet DB, and Physical Excel files.
+    """
+    raw_query = payload.get("query", "")
+    parts = parse_part_input(raw_query)
+    if not parts:
+        return {
+            "total": 0,
+            "ada_count": 0,
+            "tidak_ada_count": 0,
+            "missing_parts": [],
+            "results": []
+        }
+
+    match_res = await search_and_match_parts(parts[:200], db)
+
+    total_ada = match_res["summary"]["found_in_master"]
+    total_tidak = match_res["summary"]["missing_in_master"]
+    missing_parts = []
+
+    formatted_results = []
+    for r in match_res["results"]:
+        status = "ADA" if r["status_master"] == "TERDAFTAR" else "TIDAK"
+        if status == "TIDAK":
+            missing_parts.append(r["part_number"])
+
+        detail_str = f"{r['part_number']} - {r['part_name']}" if r.get("part_name") and r["part_name"] != "-" else r["part_number"]
+        if r.get("has_template"):
+            detail_str += " (Template Checksheet Terdaftar)"
+
+        formatted_results.append({
+            "part_number": r["part_number"],
+            "status": status,
+            "category": r["category"],
+            "local_doc": r.get("local_doc", "-"),
+            "details": detail_str,
+            "similar": r.get("similar", [])
+        })
+
+    return {
+        "total": len(formatted_results),
+        "ada_count": total_ada,
+        "tidak_ada_count": total_tidak,
+        "missing_parts": missing_parts,
+        "results": formatted_results
+    }
+
 
 class NoCacheStaticFiles(StaticFiles):
     """StaticFiles subclass that enforces Cache-Control: no-cache on all served assets."""

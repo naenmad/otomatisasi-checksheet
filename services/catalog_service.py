@@ -1,7 +1,7 @@
 """
 Catalog Service for FactoryHub Master Parts & Checksheets.
 Provides in-memory caching, instant fuzzy matching, Supabase DB cross-referencing,
-and live Playwright synchronization.
+multi-sheet document deep search, and live Playwright synchronization.
 """
 import os
 import re
@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database.models import Checksheet
+from services.document_search_service import search_part_in_documents
 
 CATALOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "factoryhub_catalog.json")
 
@@ -87,6 +88,65 @@ def get_catalog_stats() -> Dict[str, Any]:
     }
 
 
+def search_catalog_autocomplete(
+    query: str,
+    limit: int = 10,
+    category: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Instant in-memory autocomplete for search dropdowns."""
+    if not query or not query.strip():
+        return []
+
+    q_clean = clean_code(query)
+    q_fuzzy = fuzzy_code(query)
+    if not q_clean:
+        return []
+
+    cat = load_catalog()
+    parts = cat.get("parts", [])
+    matches = []
+    seen = set()
+
+    cat_filter = category.strip().upper() if category and category.upper() != "ALL" else None
+
+    # Exact / prefix priority
+    for p in parts:
+        if cat_filter and p.get("category", "").upper() != cat_filter:
+            continue
+
+        c_num = clean_code(p.get("part_number") or p.get("value", ""))
+        p_name = p.get("part_name", "")
+
+        if c_num in seen:
+            continue
+
+        if c_num.startswith(q_clean) or q_clean in c_num:
+            seen.add(c_num)
+            matches.append(p)
+            if len(matches) >= limit:
+                return matches
+
+    # Fuzzy fallback
+    if len(matches) < limit:
+        for p in parts:
+            if cat_filter and p.get("category", "").upper() != cat_filter:
+                continue
+
+            c_num = clean_code(p.get("part_number") or p.get("value", ""))
+            f_num = fuzzy_code(c_num)
+
+            if c_num in seen:
+                continue
+
+            if q_fuzzy in f_num or f_num in q_fuzzy:
+                seen.add(c_num)
+                matches.append(p)
+                if len(matches) >= limit:
+                    break
+
+    return matches
+
+
 def parse_part_input(raw: str) -> List[str]:
     """Split comma, newline, or tab separated parts."""
     raw = raw.replace("\r\n", "\n").replace("\r", "\n")
@@ -95,7 +155,6 @@ def parse_part_input(raw: str) -> List[str]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        # Split by comma or tab or semicolon
         items = re.split(r"[,;\t]+", line)
         for item in items:
             p = item.strip()
@@ -109,7 +168,10 @@ async def search_and_match_parts(
     db: AsyncSession
 ) -> Dict[str, Any]:
     """
-    Search list of part numbers against FactoryHub catalog and Supabase database.
+    Search list of part numbers against:
+    1. FactoryHub Master Catalog
+    2. Supabase Checksheet Database
+    3. Multi-sheet Excel files & documents in documents/ directory
     """
     cat = load_catalog()
     parts_db = cat.get("parts", [])
@@ -157,16 +219,22 @@ async def search_and_match_parts(
             if fh_match:
                 match_type = "fuzzy"
 
-        # Check token matching if still not found
-        if not fh_match and len(q_clean) >= 6:
+        # Check substring matching if still not found
+        if not fh_match and len(q_clean) >= 5:
             for c_key, item in clean_catalog.items():
                 if q_clean in c_key or c_key in q_clean:
                     fh_match = item
                     match_type = "substring"
                     break
 
-        # Check DB presence
+        # 2. Check Database presence (exact, fuzzy, or partial/prefix match)
         cs_item = db_map.get(q_clean) or db_fuzzy_map.get(q_fuzzy)
+        if not cs_item and len(q_clean) >= 5:
+            for db_clean, item in db_map.items():
+                if q_clean in db_clean or db_clean in q_clean:
+                    cs_item = item
+                    break
+
         db_info = None
         if cs_item:
             total_found_db += 1
@@ -179,6 +247,16 @@ async def search_and_match_parts(
                 "doc_number": cs_item.doc_number
             }
 
+        # 3. Check physical documents in documents/ directory (multi-sheet Excel files)
+        local_docs = search_part_in_documents(query, max_results=3)
+        local_doc_label = "-"
+        if local_docs:
+            first_doc = local_docs[0]
+            sheet_info = f" (Sheet: {first_doc['sheet_name']})" if first_doc.get("sheet_name") and first_doc["sheet_name"] != "-" else ""
+            local_doc_label = f"{first_doc['filename']}{sheet_info}"
+        elif cs_item:
+            local_doc_label = f"Checksheet #{cs_item.id} ({cs_item.status})"
+
         if fh_match:
             total_found_fh += 1
             results.append({
@@ -190,7 +268,9 @@ async def search_and_match_parts(
                 "has_template": bool(fh_match.get("has_template")),
                 "template_info": fh_match.get("template_info"),
                 "match_type": match_type or "exact",
-                "checksheet": db_info
+                "checksheet": db_info,
+                "local_doc": local_doc_label,
+                "documents": local_docs
             })
         else:
             total_missing_fh += 1
@@ -209,14 +289,16 @@ async def search_and_match_parts(
             results.append({
                 "query": query,
                 "part_number": query,
-                "part_name": "-",
+                "part_name": cs_item.part_name if cs_item else "-",
                 "category": "-",
                 "status_master": "BELUM TERDAFTAR",
                 "has_template": False,
                 "template_info": None,
                 "match_type": "none",
                 "similar": similar,
-                "checksheet": db_info
+                "checksheet": db_info,
+                "local_doc": local_doc_label,
+                "documents": local_docs
             })
 
     return {

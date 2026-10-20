@@ -34,14 +34,17 @@ CATEGORY_OPTIONS_MAP = {
     "subcont": "Incomming Subcont Part",
     "material": "Incomming Material",
     "std": "Incomming Std Part",
-    "ssw": "Accuracy SSW",
-    "accuracy": "Accuracy",
+    "ssw": "SSW",
+    "accuracy": "FINAL INSPECTION ASSY",
+    "assy": "FINAL INSPECTION ASSY",
+    "stamping": "FINAL INSPECTION STAMPING",
+    "ir": "IR MONTHLY REPORT",
     "general": "General"
 }
 
 
 def resolve_factoryhub_category(cat: Optional[str]) -> str:
-    s = (cat or "Accuracy").lower().strip()
+    s = (cat or "FINAL INSPECTION ASSY").lower().strip()
     if "subcont" in s:
         return "Incomming Subcont Part"
     if "material" in s:
@@ -49,12 +52,16 @@ def resolve_factoryhub_category(cat: Optional[str]) -> str:
     if "std" in s:
         return "Incomming Std Part"
     if "ssw" in s:
-        return "Accuracy SSW"
-    if "accuracy" in s:
-        return "Accuracy"
+        return "SSW"
+    if "stamping" in s:
+        return "FINAL INSPECTION STAMPING"
+    if "ir" in s or "report" in s:
+        return "IR MONTHLY REPORT"
+    if "accuracy" in s or "assy" in s:
+        return "FINAL INSPECTION ASSY"
     if "general" in s:
         return "General"
-    return cat or "Accuracy"
+    return cat or "FINAL INSPECTION ASSY"
 
 
 async def sync_categories(limit: Optional[int] = None, dry_run: bool = False, target_part: Optional[str] = None):

@@ -162,8 +162,9 @@ async def execute_checksheet_submission(
             yield f"[ERROR] Ditolak: Part {cs.part_number} bukan tugas Anda (Pemilik: '{owner_str}'). Hanya pemilik task atau Admin yang dapat mengirim part ini.\n"
             return
 
+    op_name = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Operator"
     yield f"[*] {get_full_banner()}\n"
-    yield f"[*] Memulai otomatisasi untuk Part: {cs.part_number} ({cs.part_name})\n"
+    yield f"[*] Memulai otomatisasi untuk Part: {cs.part_number} ({cs.part_name}) | PIC Revisi: {op_name}\n"
     yield f"[*] Model: {cs.model} | Customer: {cs.customer} | Doc No: {cs.doc_number}\n"
     yield f"[*] Total Inspection Points: {len(cs.inspection_points)}\n"
 
@@ -230,7 +231,10 @@ async def execute_checksheet_submission(
                     resolved_url = cat_match["edit_url"]
 
         if status == "submitted":
-            yield f"[✓] Sukses submit ke FactoryHub: {resolved_url}\n"
+            op_name = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Operator"
+            is_admin = getattr(requesting_user, "role", "") == "admin"
+            submitter_note = f" (disubmit oleh Admin {requesting_user.name})" if requesting_user and is_admin and requesting_user.name != cs.assigned_to else ""
+            yield f"[✓] Sukses submit ke FactoryHub (PIC Revisi: {op_name}): {resolved_url}\n"
             await update_checksheet_status(
                 session=session,
                 checksheet_id=checksheet_id,
@@ -242,14 +246,14 @@ async def execute_checksheet_submission(
                 session=session,
                 action="SUBMIT FACTORYHUB",
                 part_number=cs.part_number,
-                operator=cs.assigned_to or "Operator",
+                operator=op_name,
                 status="SUCCESS",
-                details=f"Berhasil submit form dengan {len(cs.inspection_points)} poin inspeksi",
+                details=f"Berhasil submit form dengan {len(cs.inspection_points)} poin inspeksi{submitter_note}",
                 link=resolved_url
             )
             from services.google_sheets_service import trigger_background_sheet_sync
             trigger_background_sheet_sync()
-            yield f"[i] Sinkronisasi baris ke Google Sheet dipicu secara otomatis.\n"
+            yield f"[i] Sinkronisasi baris ke Google Sheet dipicu secara otomatis (PIC: {op_name}).\n"
         elif status == "part_not_registered":
             yield f"[!] Part number belum terdaftar di Master Part FactoryHub.\n"
             await update_checksheet_status(
@@ -383,8 +387,9 @@ async def execute_batch_submission(
                     yield f"\n[!] BATCH DIHENTIKAN OLEH PENGGUNA pada antrean ke-{idx}/{total} (Part: {cs.part_number}).\n"
                     break
 
+                op_name = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Operator"
                 yield f"\n==================================================\n"
-                yield f"[BATCH {idx}/{total}] Memproses: {cs.part_number} ({cs.part_name or '-'})\n"
+                yield f"[BATCH {idx}/{total}] Memproses: {cs.part_number} ({cs.part_name or '-'}) | PIC Revisi: {op_name}\n"
                 yield f"==================================================\n"
 
                 try:
@@ -444,7 +449,9 @@ async def execute_batch_submission(
                                 resolved_url = cat_match["edit_url"]
 
                     if status == "submitted":
-                        yield f"[✓] Sukses submit {cs.part_number} ke FactoryHub: {resolved_url}\n"
+                        op_name = cs.assigned_to if (cs.assigned_to and cs.assigned_to not in ("Unassigned", "Belum Ditugaskan")) else "Operator"
+                        submitter_note = f" (disubmit oleh Admin {requesting_user.name})" if requesting_user and is_admin and requesting_user.name != cs.assigned_to else ""
+                        yield f"[✓] Sukses submit {cs.part_number} ke FactoryHub (PIC Revisi: {op_name}): {resolved_url}\n"
                         await update_checksheet_status(
                             session=session,
                             checksheet_id=cs.id,
@@ -456,9 +463,9 @@ async def execute_batch_submission(
                             session=session,
                             action="SUBMIT FACTORYHUB",
                             part_number=cs.part_number,
-                            operator=cs.assigned_to or (requesting_user.name if requesting_user else "Operator"),
+                            operator=op_name,
                             status="SUCCESS",
-                            details=f"Batch submit berhasil ({len(points_payload)} poin)",
+                            details=f"Batch submit berhasil ({len(points_payload)} poin){submitter_note}",
                             link=resolved_url
                         )
                         success_count += 1

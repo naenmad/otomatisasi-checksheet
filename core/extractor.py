@@ -842,6 +842,23 @@ def resolve_part_document(
                         status = p.get("status", "belum")
                         break
 
+        doc_path = None
+        if not folder_path or not os.path.isdir(folder_path):
+            try:
+                from services.document_search_service import search_part_in_documents
+                doc_matches = search_part_in_documents(raw_path, max_results=1)
+                if doc_matches:
+                    cand_fp = os.path.abspath(doc_matches[0]["file_path"])
+                    if os.path.isfile(cand_fp):
+                        folder_path = os.path.dirname(cand_fp)
+                        doc_path = cand_fp
+                        meta = extract_metadata(doc_path)
+                        part_no = doc_matches[0].get("sheet_name") or meta.get("part_number") or raw_path
+                        file_type = "pdf" if doc_path.lower().endswith(".pdf") else "excel"
+                        status = "belum"
+            except Exception:
+                pass
+
         if not folder_path or not os.path.isdir(folder_path):
             available = [f"[{p.get('status', 'belum')}] {p['folder_name']}" for p in list_available_parts(documents_dir)]
             avail_str = ", ".join(available) if available else "(folder documents/ kosong)"
@@ -850,19 +867,20 @@ def resolve_part_document(
                 f"Part yang tersedia: {avail_str}"
             )
 
-        # Locate Excel or PDF in folder
-        doc_candidates = [
-            os.path.join(folder_path, f)
-            for f in sorted(os.listdir(folder_path))
-            if f.lower().endswith((".xlsx", ".xls", ".pdf")) and not f.startswith("~$")
-        ]
-        if not doc_candidates:
-            raise FileNotFoundError(f"Tidak ada file Excel/PDF di dalam folder: {folder_path}")
+        if not doc_path:
+            # Locate Excel or PDF in folder
+            doc_candidates = [
+                os.path.join(folder_path, f)
+                for f in sorted(os.listdir(folder_path))
+                if f.lower().endswith((".xlsx", ".xls", ".pdf")) and not f.startswith("~$")
+            ]
+            if not doc_candidates:
+                raise FileNotFoundError(f"Tidak ada file Excel/PDF di dalam folder: {folder_path}")
 
-        # Prefer xlsx if multiple, prefer 'rev' in name, else first
-        doc_candidates.sort(key=lambda x: (not x.lower().endswith((".xlsx", ".xls")), 0 if "rev" in os.path.basename(x).lower() else 1, x))
-        doc_path = doc_candidates[0]
-        meta = extract_metadata(doc_path)
+            # Prefer xlsx if multiple, prefer 'rev' in name, else first
+            doc_candidates.sort(key=lambda x: (not x.lower().endswith((".xlsx", ".xls")), 0 if "rev" in os.path.basename(x).lower() else 1, x))
+            doc_path = doc_candidates[0]
+            meta = extract_metadata(doc_path)
         folder_base = os.path.basename(folder_path).upper().strip()
         if re.match(r"^[0-9A-Z\-\s]+$", folder_base) and any(c.isdigit() for c in folder_base) and len(folder_base) >= 5:
             part_no = folder_base

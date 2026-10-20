@@ -159,6 +159,7 @@ def prepend_checksheet_to_cache(item: Dict[str, Any]):
 class InspectionPointSchema(BaseModel):
     item_no: str
     inspection_item: str
+    measuring_position: Optional[str] = ""
     standard: str = ""
     method: Optional[str] = ""
     master_data: Optional[str] = ""
@@ -271,12 +272,14 @@ async def get_checksheets(
 
     if search:
         s_lower = search.lower().strip()
+        s_clean = re.sub(r"[^A-Za-z0-9]", "", s_lower)
         filtered = [
             c for c in filtered
-            if s_lower in (c.get("part_number") or "").lower()
-            or s_lower in (c.get("part_name") or "").lower()
-            or s_lower in (c.get("model") or "").lower()
-            or s_lower in (c.get("category") or "").lower()
+            if (s_lower in (c.get("part_number") or "").lower())
+            or (s_clean and s_clean in re.sub(r"[^A-Za-z0-9]", "", c.get("part_number") or "").lower())
+            or (s_lower in (c.get("part_name") or "").lower())
+            or (s_lower in (c.get("model") or "").lower())
+            or (s_lower in (c.get("category") or "").lower())
         ]
 
     return filtered[offset:offset + limit]
@@ -318,6 +321,7 @@ async def get_checksheet_detail(
                 "id": p.id,
                 "item_no": p.item_no,
                 "inspection_item": p.inspection_item,
+                "measuring_position": getattr(p, "measuring_position", "") or "",
                 "standard": p.standard,
                 "method": p.method,
                 "master_data": p.master_data or ""
@@ -356,6 +360,16 @@ async def get_checksheet_by_part_number(
         stmt2 = select(Checksheet).where(Checksheet.clean_part_number.like(f"%{clean_pn}%"))
         res2 = await db.execute(stmt2)
         cs = res2.scalars().first()
+
+    # 3. Fallback to prefix matching if query is longer (e.g. 74176-T7A-0000 vs 74176-T7A)
+    if not cs and len(clean_pn) >= 5:
+        for p_len in (8, 6, 5):
+            prefix = clean_pn[:p_len]
+            stmt3 = select(Checksheet).where(Checksheet.clean_part_number.like(f"%{prefix}%"))
+            res3 = await db.execute(stmt3)
+            cs = res3.scalars().first()
+            if cs:
+                break
 
     if not cs:
         raise HTTPException(status_code=404, detail=f"Checksheet dengan part number '{part_number}' tidak ditemukan")
@@ -543,6 +557,7 @@ async def update_checksheet_points(checksheet_id: int, payload: ChecksheetPoints
             checksheet_id=checksheet_id,
             item_no=norm.get("item_no") or p.item_no,
             inspection_item=norm.get("inspection_item") or p.inspection_item,
+            measuring_position=getattr(p, "measuring_position", "") or norm.get("measuring_position") or "",
             standard=norm.get("standard") or p.standard,
             method=final_method,
             master_data=norm.get("master_data") or "",
@@ -932,6 +947,7 @@ async def reconcile_status_endpoint(
 class PointItemManualSchema(BaseModel):
     item_no: Optional[str] = "1"
     inspection_item: str
+    measuring_position: Optional[str] = ""
     standard: Optional[str] = ""
     method: Optional[str] = ""
     master_data: Optional[str] = ""
@@ -986,6 +1002,7 @@ async def create_checksheet_manual(
                 checksheet_id=new_cs.id,
                 item_no=pt.item_no or str(idx + 1),
                 inspection_item=pt.inspection_item,
+                measuring_position=pt.measuring_position or "",
                 standard=pt.standard or "",
                 method=(pt.method or "").strip(),
                 master_data=pt.master_data or "",

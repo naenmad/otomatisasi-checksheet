@@ -87,16 +87,16 @@ async def parse_and_save_checksheet(
     filename_upper = os.path.basename(file_path).upper()
     parser_name = parser.__class__.__name__.lower()
 
-    if "MONTHLY FG" in fp_upper or "MONTHLY_FG" in fp_upper:
-        category = "Accuracy"
+    if "MONTHLY FG" in fp_upper or "MONTHLY_FG" in fp_upper or "IR MONTHLY" in fp_upper:
+        category = "IR MONTHLY REPORT"
     elif "CHILD PART" in fp_upper or "CHILD_PART" in fp_upper:
-        category = "Incomming Subcont Part"
+        category = "IR MONTHLY REPORT"
     elif "STAMPING" in fp_upper:
-        category = "Accuracy"
-    elif "FINAL" in fp_upper:
-        category = "Accuracy"
+        category = "FINAL INSPECTION STAMPING"
+    elif "FINAL" in fp_upper or "ASSY" in fp_upper:
+        category = "FINAL INSPECTION ASSY"
     elif "SSW" in fp_upper or "SPOT NUT" in fp_upper or "SPOT_NUT" in fp_upper:
-        category = "Accuracy SSW"
+        category = "SSW"
     elif "STD PART" in filename_upper or "NUT" in filename_upper or "/C.SHEET NUT" in fp_upper:
         category = "Incomming Std Part"
     elif "BLANK" in fp_upper or "IQC SHEET" in filename_upper or "IQC COIL" in filename_upper or "MATERIAL" in filename_upper:
@@ -108,9 +108,9 @@ async def parse_and_save_checksheet(
     elif "STD PART" in fp_upper:
         category = "Incomming Std Part"
     elif "ipqc" in parser_name or "ssw" in parser_name:
-        category = "Accuracy SSW"
+        category = "SSW"
     else:
-        category = meta.get("category") or "Accuracy"
+        category = meta.get("category") or "FINAL INSPECTION ASSY"
 
     # Save to database
     cs = await create_checksheet(

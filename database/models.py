@@ -40,7 +40,7 @@ class Checksheet(Base):
     customer = Column(String(100), default="PT. HPM")
     doc_number = Column(String(100), default="Form 1")
     template_type = Column(String(50), default="GENERIC")
-    category = Column(String(100), default="Accuracy", nullable=False, index=True)
+    category = Column(String(100), default="FINAL INSPECTION ASSY", nullable=False, index=True)
 
     # Status: DRAFT, READY_FOR_SUBMIT, IN_QUEUE, SUBMITTED
     status = Column(String(50), default="DRAFT", index=True)
@@ -76,6 +76,7 @@ class InspectionPoint(Base):
     checksheet_id = Column(Integer, ForeignKey("checksheets.id", ondelete="CASCADE"), nullable=False, index=True)
     item_no = Column(String(50), nullable=False)
     inspection_item = Column(String(255), nullable=False)
+    measuring_position = Column(String(100), default="", nullable=True)
     standard = Column(Text, default="-")
     method = Column(String(100), default="")
     master_data = Column(String(255), default="")
