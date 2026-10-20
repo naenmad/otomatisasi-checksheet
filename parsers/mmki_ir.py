@@ -288,16 +288,33 @@ class MMKIIRParser(BaseParser):
                         r += (2 if skip_next else 1)
                         continue
 
-                    # Standardize method
+                    # Standardize method according to QC standards
                     m_upper = f"{item_name} {full_std}".upper()
-                    if "INSERT PIN" in m_upper or "DATUM PIN" in m_upper:
+                    std_upper = full_std.upper()
+                    item_upper = item_name.upper()
+
+                    if "PIN GO" in std_upper or "GO/NO GO" in std_upper or "GO / NO GO" in std_upper:
+                        method = "Go / No Go"
+                    elif "MARKING CTR LINE" in std_upper or "MARK CTR LINE" in std_upper or "CTR LINE" in std_upper:
+                        method = "Marking Ctr Line"
+                    elif ("IDENTIFICATION" in item_upper or "IDENTIFICATON" in item_upper) and not ("HOLE" in item_upper or "Ø" in std_upper):
+                        method = "Visual"
+                    elif "TRIM" in item_upper or "TRIM" in std_upper:
+                        if "HOLE" in item_upper or "Ø" in std_upper or "Ø" in item_upper:
+                            method = "Caliper"
+                        else:
+                            method = "Steel Ruler"
+                    elif "SHIM" in item_upper or "SHIM" in std_upper:
+                        if "HOLE" in item_upper or "Ø" in std_upper or "Ø" in item_upper:
+                            method = "Caliper"
+                        else:
+                            method = "Feeler Gauge"
+                    elif "INSERT PIN" in m_upper or "DATUM PIN" in m_upper or "GUIDE DIAMOND PIN" in m_upper or "GUIDE ROUND PIN" in m_upper:
                         method = "Insert Pin Datum"
-                    elif "TRIM" in m_upper or "GAP" in m_upper or "TAPPER" in m_upper:
+                    elif "GAP" in m_upper or "TAPPER" in m_upper:
                         method = "Tapper Gg"
                     elif "BOLT" in m_upper or "NUT WELD" in m_upper or "THREAD" in m_upper:
                         method = "Bolt"
-                    elif "SHIM" in m_upper:
-                        method = "Caliper"
                     elif "Ø" in m_upper or "HOLE" in m_upper:
                         method = "Caliper"
                     else:

@@ -18,7 +18,7 @@ from database.connection import AsyncSessionLocal
 from database.models import Checksheet, InspectionPoint
 from parsers.mmki_ir import MMKIIRParser
 
-ALREADY_DONE_TIDS = {48, 50}
+ALREADY_DONE_TIDS = set()
 
 async def get_all_ir_targets():
     parser = MMKIIRParser()
@@ -81,6 +81,7 @@ async def update_local_db(target, points):
             
         for cs in cs_records:
             cs.category = "IR MONTHLY REPORT"
+            cs.format = "monthly_mmki"
             if target.get("part_name"):
                 cs.part_name = target["part_name"]
             if target.get("model"):
