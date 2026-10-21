@@ -12,6 +12,61 @@ from parsers.base import BaseParser
 from parsers.image_extractor import extract_excel_images
 
 
+def determine_measuring_position(item_name: str, standard: str) -> str:
+    item_u = item_name.upper().strip()
+    std_u = standard.upper().strip()
+
+    # Rule 3: Hole Position -> Off Center
+    if "HOLE POSITION" in item_u:
+        return "Off Center"
+
+    # Rule 2: Hole ... (except hole position), where standard has Ø -> Hole Site
+    if "HOLE" in item_u and "Ø" in std_u:
+        return "Hole Site"
+
+    # Rule 4: Shim -> Datum Surface
+    if "SHIM" in item_u:
+        return "Datum Surface"
+
+    # Rule 5: Trimline -> Trimline
+    if "TRIMLINE" in item_u or "TRIM LINE" in item_u or "TRIM" in item_u:
+        return "Trimline"
+
+    # Rule 6: Gap -> Surface
+    if "GAP" in item_u:
+        return "Surface"
+
+    # Rule 7 & 8: Position (bukan Hole Position)
+    if "POSITION" in item_u:
+        clean_std = std_u.replace("DEV. WITHIN", "").replace("DEV.WITHIN", "").strip()
+        if "DEV. WITHIN" in std_u or "DEV.WITHIN" in std_u or std_u.startswith("0") or clean_std.startswith("0"):
+            return "Off Center"
+        else:
+            return "Surface"
+
+    # Rule 9: Qty Spot -> Spot Welding
+    if "SPOT" in item_u:
+        return "Spot Welding"
+
+    # Rule 10: Qty Hole -> Hole
+    if "QTY HOLE" in item_u:
+        return "Hole"
+
+    # Rule 11: NUT -> Nut
+    if "NUT" in item_u:
+        return "Nut"
+
+    # Rule 12: BOLT -> Bolt
+    if "BOLT" in item_u:
+        return "Bolt"
+
+    # Rule 13: Identification Marking -> Marking
+    if "IDENTIFICATION" in item_u or "MARKING" in item_u:
+        return "Marking"
+
+    return ""
+
+
 class MMKIIRParser(BaseParser):
     """Parser dedicated to MMKI Inspection Report Checksheets."""
 
@@ -173,6 +228,7 @@ class MMKIIRParser(BaseParser):
                                 all_points.append({
                                     "item_no": "1",
                                     "inspection_item": "Appearance",
+                                    "measuring_position": "",
                                     "standard": clean_std,
                                     "method": "Visual",
                                     "master_data": ""
@@ -182,6 +238,7 @@ class MMKIIRParser(BaseParser):
                                 all_points.append({
                                     "item_no": "2",
                                     "inspection_item": "Burry",
+                                    "measuring_position": "",
                                     "standard": "≤ 0.3 mm",
                                     "method": "Caliper",
                                     "master_data": ""
@@ -258,17 +315,22 @@ class MMKIIRParser(BaseParser):
                     if sub_col4 and not v_coord:
                         v_coord = sub_col4
 
-                    # Extract measuring position (e.g. [ BL ], [ WL ], [ TL ])
-                    measuring_pos = ""
+                    # Keep coordinate tags [TL], [WL], [BL] in inspection_item
+                    coord_str = ""
                     if v_coord:
-                        measuring_pos = v_coord.strip("[] ").strip()
+                        clean_c = v_coord.strip("[] ").strip()
+                        if clean_c:
+                            coord_str = clean_c
 
                     if item_name and "[" in item_name and "]" in item_name:
                         coord_match = re.search(r"\[\s*([A-Za-z0-9,\s]+)\s*\]", item_name)
                         if coord_match:
-                            if not measuring_pos:
-                                measuring_pos = coord_match.group(1).strip()
+                            if not coord_str:
+                                coord_str = coord_match.group(1).strip()
                             item_name = re.sub(r"\[\s*[A-Za-z0-9,\s]+\s*\]", "", item_name).strip()
+
+                    if coord_str:
+                        item_name = f"{item_name} [{coord_str}]".strip()
 
                     nom_str = str(v_nom).strip() if v_nom is not None else ""
                     if nom_str.endswith(".0") and nom_str[:-2].isdigit():
@@ -287,6 +349,8 @@ class MMKIIRParser(BaseParser):
                     if not item_name or not full_std:
                         r += (2 if skip_next else 1)
                         continue
+
+                    measuring_pos = determine_measuring_position(item_name, full_std)
 
                     # Standardize method according to QC standards
                     m_upper = f"{item_name} {full_std}".upper()
