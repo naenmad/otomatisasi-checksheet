@@ -20,9 +20,10 @@ def determine_measuring_position(item_name: str, standard: str) -> str:
     if "HOLE POSITION" in item_u:
         return "Off Center"
 
-    # Rule 2: Hole ... (except hole position), where standard has Ø -> Hole Site
-    if "HOLE" in item_u and "Ø" in std_u:
-        return "Hole Site"
+    # Rule 2: Hole ... (except hole position), where standard has Ø or starts with dimension -> Hole Site
+    if "HOLE" in item_u and "HOLE POSITION" not in item_u and "QTY" not in item_u and "PITCH" not in item_u:
+        if "Ø" in std_u or re.match(r"^\d", std_u):
+            return "Hole Site"
 
     # Rule 4: Shim -> Datum Surface
     if "SHIM" in item_u:
