@@ -337,6 +337,8 @@ class MMKIIRParser(BaseParser):
                     if nom_str.endswith(".0") and nom_str[:-2].isdigit():
                         nom_str = nom_str[:-2]
 
+                    was_insert_pin = "INSERT PIN" in nom_str.upper() or "DATUM PIN" in nom_str.upper() or "INSERT PIN" in item_name.upper()
+
                     if v_tol and v_tol not in nom_str:
                         if nom_str and not nom_str.upper().startswith("INSERT PIN") and "OK" not in nom_str.upper():
                             full_std = f"{nom_str} {v_tol}".strip()
@@ -347,19 +349,22 @@ class MMKIIRParser(BaseParser):
                     else:
                         full_std = nom_str
 
+                    if was_insert_pin:
+                        full_std = "OK / NG"
+
                     if not item_name or not full_std:
                         r += (2 if skip_next else 1)
                         continue
 
-                    measuring_pos = determine_measuring_position(item_name, full_std)
+                    measuring_pos = ""
 
                     # Standardize method according to QC standards
                     m_upper = f"{item_name} {full_std}".upper()
                     std_upper = full_std.upper()
                     item_upper = item_name.upper()
 
-                    if "PIN GO" in std_upper or "GO/NO GO" in std_upper or "GO / NO GO" in std_upper:
-                        method = "Go / No Go"
+                    if was_insert_pin or "INSERT PIN" in m_upper or "DATUM PIN" in m_upper or "GUIDE DIAMOND PIN" in m_upper or "GUIDE ROUND PIN" in m_upper:
+                        method = "Insert Pin Datum"
                     elif "MARKING CTR LINE" in std_upper or "MARK CTR LINE" in std_upper or "CTR LINE" in std_upper:
                         method = "Marking Ctr Line"
                     elif ("IDENTIFICATION" in item_upper or "IDENTIFICATON" in item_upper) and not ("HOLE" in item_upper or "Ø" in std_upper):
